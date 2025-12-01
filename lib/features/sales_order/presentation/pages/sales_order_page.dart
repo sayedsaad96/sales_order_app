@@ -3,9 +3,12 @@ import 'package:intl/intl.dart';
 import '../../data/models/sales_order.dart';
 import '../../pdf/pdf_generator.dart';
 import 'package:printing/printing.dart';
+import '../../data/datasources/invoice_local_data_source.dart';
+import 'saved_invoices_page.dart';
 
 class SalesOrderPage extends StatefulWidget {
-  const SalesOrderPage({super.key});
+  final SalesOrder? existingOrder;
+  const SalesOrderPage({super.key, this.existingOrder});
 
   @override
   State<SalesOrderPage> createState() => _SalesOrderPageState();
@@ -21,6 +24,8 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
   final _salesResponsibleController = TextEditingController();
   final _deliveryPlaceController = TextEditingController();
   // Removed unused _branchController
+
+  final List<ItemControllers> _itemControllers = [];
 
   String? _selectedBranch;
   final Map<String, bool> _orderTypes = {
@@ -38,9 +43,89 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
   @override
   void initState() {
     super.initState();
-    // Initialize with empty rows
-    for (int i = 0; i < 1; i++) {
-      _items.add(SalesOrderItem());
+    if (widget.existingOrder != null) {
+      final order = widget.existingOrder!;
+      _snController.text = order.sn ?? '';
+      _selectedBranch = order.branch;
+      _customerNameController.text = order.customerName ?? '';
+      _regionController.text = order.region ?? '';
+      _salesResponsibleController.text = order.salesResponsible ?? '';
+      _deliveryPlaceController.text = order.deliveryPlace ?? '';
+      _paymentMethod = order.paymentMethod;
+      _deliveryIncluded = order.deliveryIncluded;
+      _orderDate = order.orderDate;
+      _deliveryDate = order.deliveryDate;
+
+      // Reset order types
+      _orderTypes.updateAll((key, value) => false);
+      for (var type in order.orderTypes) {
+        if (_orderTypes.containsKey(type)) {
+          _orderTypes[type] = true;
+        }
+      }
+
+      _items.clear();
+      _items.addAll(order.items);
+
+      // Initialize controllers
+      for (var item in _items) {
+        _itemControllers.add(
+          ItemControllers(
+            name: item.itemName,
+            quantity: item.quantity == 0 ? '' : item.quantity.toString(),
+            unit: item.unit,
+            price: item.price == 0 ? '' : item.price.toString(),
+          ),
+        );
+      }
+    } else {
+      // Initialize with empty rows
+      for (int i = 0; i < 1; i++) {
+        _items.add(SalesOrderItem());
+        _itemControllers.add(ItemControllers());
+      }
+    }
+  }
+
+  Future<void> _saveInvoice() async {
+    if (_formKey.currentState!.validate()) {
+      final validItems = _items
+          .where((item) => item.itemName.isNotEmpty || item.quantity > 0)
+          .toList();
+
+      if (validItems.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('يجب إضافة صنف واحد على الأقل')),
+        );
+        return;
+      }
+
+      final order = widget.existingOrder ?? SalesOrder(orderDate: _orderDate);
+
+      // Update fields
+      order.sn = _snController.text;
+      order.branch = _selectedBranch;
+      order.orderTypes = _orderTypes.entries
+          .where((e) => e.value)
+          .map((e) => e.key)
+          .toList();
+      order.customerName = _customerNameController.text;
+      order.region = _regionController.text;
+      order.deliveryIncluded = _deliveryIncluded;
+      order.deliveryDate = _deliveryDate;
+      order.orderDate = _orderDate;
+      order.salesResponsible = _salesResponsibleController.text;
+      order.paymentMethod = _paymentMethod;
+      order.deliveryPlace = _deliveryPlaceController.text;
+      order.items = validItems;
+
+      await InvoiceLocalDataSource().saveInvoice(order);
+
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('تم حفظ الفاتورة بنجاح')));
+      }
     }
   }
 
@@ -51,6 +136,13 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
         defaultPrice = _items.first.price;
       }
       _items.add(SalesOrderItem(price: defaultPrice ?? 0));
+      _itemControllers.add(
+        ItemControllers(
+          price: (defaultPrice != null && defaultPrice > 0)
+              ? defaultPrice.toString()
+              : '',
+        ),
+      );
     });
   }
 
@@ -58,8 +150,23 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
     setState(() {
       if (_items.length > 1) {
         _items.removeAt(index);
+        _itemControllers[index].dispose();
+        _itemControllers.removeAt(index);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _snController.dispose();
+    _customerNameController.dispose();
+    _regionController.dispose();
+    _salesResponsibleController.dispose();
+    _deliveryPlaceController.dispose();
+    for (var controller in _itemControllers) {
+      controller.dispose();
+    }
+    super.dispose();
   }
 
   double get _totalValue => _items.fold(0, (sum, item) => sum + item.value);
@@ -108,7 +215,23 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('طلب بيع'), centerTitle: true),
+      appBar: AppBar(
+        title: const Text('طلب بيع'),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.list),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SavedInvoicesPage(),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -418,6 +541,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                       itemCount: _items.length,
                       itemBuilder: (context, index) {
                         final item = _items[index];
+                        final controllers = _itemControllers[index];
                         return Container(
                           key: ValueKey(index),
                           color: index % 2 == 0
@@ -425,13 +549,13 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                               : Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 4),
                           child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Expanded(
                                 flex: 2,
                                 child: TextFormField(
-                                  controller: TextEditingController(
-                                    text: item.itemName,
-                                  ),
+                                  controller: controllers.nameController,
                                   decoration: const InputDecoration(
                                     border: InputBorder.none,
                                     contentPadding: EdgeInsets.symmetric(
@@ -444,12 +568,9 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                               Expanded(
                                 flex: 1,
                                 child: TextFormField(
-                                  controller: TextEditingController(
-                                    text: item.quantity == 0
-                                        ? ''
-                                        : item.quantity.toString(),
-                                  ),
+                                  controller: controllers.quantityController,
                                   keyboardType: TextInputType.number,
+                                  textAlign: TextAlign.right,
                                   decoration: const InputDecoration(
                                     border: InputBorder.none,
                                     contentPadding: EdgeInsets.symmetric(
@@ -466,9 +587,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                               Expanded(
                                 flex: 1,
                                 child: TextFormField(
-                                  controller: TextEditingController(
-                                    text: item.unit,
-                                  ),
+                                  controller: controllers.unitController,
                                   decoration: const InputDecoration(
                                     border: InputBorder.none,
                                     contentPadding: EdgeInsets.symmetric(
@@ -481,11 +600,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                               Expanded(
                                 flex: 1,
                                 child: TextFormField(
-                                  controller: TextEditingController(
-                                    text: item.price == 0
-                                        ? ''
-                                        : item.price.toString(),
-                                  ),
+                                  controller: controllers.priceController,
                                   keyboardType: TextInputType.number,
                                   decoration: const InputDecoration(
                                     border: InputBorder.none,
@@ -551,19 +666,37 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
               ),
               const SizedBox(height: 30),
               Center(
-                child: ElevatedButton.icon(
-                  onPressed: _generatePdf,
-                  icon: const Icon(Icons.picture_as_pdf),
-                  label: const Text(
-                    'إنشاء PDF',
-                    style: TextStyle(fontSize: 18),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 40,
-                      vertical: 15,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: _saveInvoice,
+                      icon: const Icon(Icons.save),
+                      label: const Text('حفظ', style: TextStyle(fontSize: 18)),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 30,
+                          vertical: 15,
+                        ),
+                        backgroundColor: Colors.green,
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 20),
+                    ElevatedButton.icon(
+                      onPressed: _generatePdf,
+                      icon: const Icon(Icons.picture_as_pdf),
+                      label: const Text(
+                        'إنشاء PDF',
+                        style: TextStyle(fontSize: 18),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 30,
+                          vertical: 15,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -571,5 +704,29 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
         ),
       ),
     );
+  }
+}
+
+class ItemControllers {
+  final TextEditingController nameController;
+  final TextEditingController quantityController;
+  final TextEditingController unitController;
+  final TextEditingController priceController;
+
+  ItemControllers({
+    String name = '',
+    String quantity = '',
+    String unit = '',
+    String price = '',
+  }) : nameController = TextEditingController(text: name),
+       quantityController = TextEditingController(text: quantity),
+       unitController = TextEditingController(text: unit),
+       priceController = TextEditingController(text: price);
+
+  void dispose() {
+    nameController.dispose();
+    quantityController.dispose();
+    unitController.dispose();
+    priceController.dispose();
   }
 }

@@ -1,16 +1,32 @@
+import 'package:hive/hive.dart';
 
-class SalesOrder {
+part 'sales_order.g.dart';
+
+@HiveType(typeId: 1)
+class SalesOrder extends HiveObject {
+  @HiveField(0)
   String? sn;
+  @HiveField(1)
   String? branch;
+  @HiveField(2)
   List<String> orderTypes;
+  @HiveField(3)
   String? customerName;
+  @HiveField(4)
   String? region;
+  @HiveField(5)
   bool deliveryIncluded;
+  @HiveField(6)
   DateTime? deliveryDate;
+  @HiveField(7)
   DateTime orderDate;
+  @HiveField(8)
   String? salesResponsible;
+  @HiveField(9)
   String? paymentMethod;
+  @HiveField(10)
   String? deliveryPlace;
+  @HiveField(11)
   List<SalesOrderItem> items;
 
   SalesOrder({
@@ -31,10 +47,15 @@ class SalesOrder {
   double get totalValue => items.fold(0, (sum, item) => sum + item.value);
 }
 
-class SalesOrderItem {
+@HiveType(typeId: 2)
+class SalesOrderItem extends HiveObject {
+  @HiveField(0)
   String itemName;
+  @HiveField(1)
   int quantity;
+  @HiveField(2)
   String unit;
+  @HiveField(3)
   double price;
 
   SalesOrderItem({
