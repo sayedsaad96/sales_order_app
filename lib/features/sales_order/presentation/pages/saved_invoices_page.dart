@@ -32,6 +32,31 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
     _loadInvoices();
   }
 
+  Future<void> _confirmDelete(BuildContext context, SalesOrder invoice) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('تأكيد الحذف'),
+        content: const Text('هل أنت متأكد من حذف هذه الفاتورة؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('حذف'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      _deleteInvoice(invoice);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -67,6 +92,10 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
                         'التاريخ: ${DateFormat('dd-MMM-yyyy').format(invoice.orderDate)}\nالقيمة: ${invoice.totalValue.toStringAsFixed(2)}',
                       ),
                       isThreeLine: true,
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () => _confirmDelete(context, invoice),
+                      ),
                       onTap: () async {
                         await Navigator.push(
                           context,

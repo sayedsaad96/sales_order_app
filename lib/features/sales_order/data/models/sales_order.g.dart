@@ -29,13 +29,14 @@ class SalesOrderAdapter extends TypeAdapter<SalesOrder> {
       paymentMethod: fields[9] as String?,
       deliveryPlace: fields[10] as String?,
       items: (fields[11] as List).cast<SalesOrderItem>(),
+      category: fields[12] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, SalesOrder obj) {
     writer
-      ..writeByte(12)
+      ..writeByte(13)
       ..writeByte(0)
       ..write(obj.sn)
       ..writeByte(1)
@@ -59,7 +60,9 @@ class SalesOrderAdapter extends TypeAdapter<SalesOrder> {
       ..writeByte(10)
       ..write(obj.deliveryPlace)
       ..writeByte(11)
-      ..write(obj.items);
+      ..write(obj.items)
+      ..writeByte(12)
+      ..write(obj.category);
   }
 
   @override
@@ -88,13 +91,14 @@ class SalesOrderItemAdapter extends TypeAdapter<SalesOrderItem> {
       quantity: fields[1] as int,
       unit: fields[2] as String,
       price: fields[3] as double,
+      category: fields[4] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, SalesOrderItem obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(5)
       ..writeByte(0)
       ..write(obj.itemName)
       ..writeByte(1)
@@ -102,7 +106,9 @@ class SalesOrderItemAdapter extends TypeAdapter<SalesOrderItem> {
       ..writeByte(2)
       ..write(obj.unit)
       ..writeByte(3)
-      ..write(obj.price);
+      ..write(obj.price)
+      ..writeByte(4)
+      ..write(obj.category);
   }
 
   @override

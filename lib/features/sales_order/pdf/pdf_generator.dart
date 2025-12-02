@@ -136,82 +136,112 @@ class PdfSalesOrderGenerator {
                   ),
                 ],
               ),
+              pw.SizedBox(height: 10),
+              // Items Tables
+              ...(() {
+                final groupedItems = <String, List<SalesOrderItem>>{};
+                for (var item in order.items) {
+                  final cat = item.category ?? order.category ?? '';
+                  groupedItems.putIfAbsent(cat, () => []).add(item);
+                }
+
+                return groupedItems.entries.map((entry) {
+                  final category = entry.key;
+                  final items = entry.value;
+
+                  return pw.Column(
+                    children: [
+                      if (category.isNotEmpty)
+                        pw.Container(
+                          alignment: pw.Alignment.centerRight,
+                          padding: const pw.EdgeInsets.only(bottom: 5, top: 10),
+                          child: pw.Text(
+                            'التصنيف: $category',
+                            style: pw.TextStyle(
+                              fontWeight: pw.FontWeight.bold,
+                              color: PdfColors.blue900,
+                            ),
+                          ),
+                        ),
+                      pw.Table(
+                        border: pw.TableBorder.all(color: PdfColors.grey300),
+                        columnWidths: const {
+                          4: pw.FlexColumnWidth(2), // الصنف
+                          3: pw.FlexColumnWidth(1), // الكمية
+                          2: pw.FlexColumnWidth(1), // الوحدة
+                          1: pw.FlexColumnWidth(1), // السعر
+                          0: pw.FlexColumnWidth(1), // القيمة
+                        },
+                        children: [
+                          // Header row
+                          pw.TableRow(
+                            decoration: pw.BoxDecoration(
+                              color: PdfColor.fromInt(0xFF1565C0),
+                            ),
+                            children: [
+                              _buildHeaderCell('القيمة'),
+                              _buildHeaderCell('السعر'),
+                              _buildHeaderCell('الوحدة'),
+                              _buildHeaderCell('الكمية'),
+                              _buildHeaderCell('الصنف'),
+                            ],
+                          ),
+                          // Data rows
+                          ...items.map((item) {
+                            return pw.TableRow(
+                              decoration: const pw.BoxDecoration(
+                                color: PdfColors.white,
+                              ),
+                              children: [
+                                _buildCell(item.value.toStringAsFixed(2)),
+                                _buildCell(item.price.toString()),
+                                _buildCell(item.unit),
+                                _buildCell(item.quantity.toString()),
+                                _buildCell(item.itemName),
+                              ],
+                            );
+                          }),
+                        ],
+                      ),
+                    ],
+                  );
+                });
+              })(),
+
               pw.SizedBox(height: 20),
 
-              // Items Table
-              pw.Table(
-                border: pw.TableBorder.all(color: PdfColors.grey300),
-                columnWidths: const {
-                  4: pw.FlexColumnWidth(2), // الصنف
-                  3: pw.FlexColumnWidth(1), // الكمية
-                  2: pw.FlexColumnWidth(1), // الوحدة
-                  1: pw.FlexColumnWidth(1), // السعر
-                  0: pw.FlexColumnWidth(1), // القيمة
-                },
+              // Grand Total
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.end,
                 children: [
-                  // Header row
-                  pw.TableRow(
+                  pw.Container(
+                    width: 200,
                     decoration: pw.BoxDecoration(
+                      border: pw.Border.all(color: PdfColors.grey300),
                       color: PdfColor.fromInt(0xFF1565C0),
                     ),
-                    children: [
-                      _buildHeaderCell('القيمة'),
-                      _buildHeaderCell('السعر'),
-                      _buildHeaderCell('الوحدة'),
-                      _buildHeaderCell('الكمية'),
-                      _buildHeaderCell('الصنف'),
-                    ],
-                  ),
-
-                  // Data rows
-                  ...order.items.map((item) {
-                    return pw.TableRow(
-                      decoration: const pw.BoxDecoration(
-                        color: PdfColors.white,
+                    child: pw.Padding(
+                      padding: const pw.EdgeInsets.all(5),
+                      child: pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                        children: [
+                          pw.Text(
+                            'الإجمالي',
+                            style: pw.TextStyle(
+                              color: PdfColors.white,
+                              fontWeight: pw.FontWeight.bold,
+                            ),
+                          ),
+                          pw.Text(
+                            order.totalValue.toStringAsFixed(2),
+                            style: pw.TextStyle(
+                              color: PdfColors.white,
+                              fontWeight: pw.FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
-                      children: [
-                        _buildCell(item.value.toStringAsFixed(2)),
-                        _buildCell(item.price.toString()),
-                        _buildCell(item.unit),
-                        _buildCell(item.quantity.toString()),
-                        _buildCell(item.itemName),
-                      ],
-                    );
-                  }),
-
-                  // Total row inside table
-                  pw.TableRow(
-                    decoration: pw.BoxDecoration(
-                      color: PdfColor.fromInt(0xFF1565C0),
                     ),
-                    children: [
-                      pw.Padding(
-                        padding: const pw.EdgeInsets.all(5),
-                        child: pw.Text(
-                          order.totalValue.toStringAsFixed(2),
-                          style: pw.TextStyle(
-                            color: PdfColors.white,
-                            fontWeight: pw.FontWeight.bold,
-                          ),
-                          textAlign: pw.TextAlign.center,
-                        ),
-                      ),
-                      _buildCell(''),
-                      _buildCell(''),
-                      _buildCell(''),
-                      // "الإجمالي" في أول خانة
-                      pw.Padding(
-                        padding: const pw.EdgeInsets.all(5),
-                        child: pw.Text(
-                          'الإجمالي',
-                          style: pw.TextStyle(
-                            color: PdfColors.white,
-                            fontWeight: pw.FontWeight.bold,
-                          ),
-                          textAlign: pw.TextAlign.center,
-                        ),
-                      ),
-                    ],
                   ),
                 ],
               ),
