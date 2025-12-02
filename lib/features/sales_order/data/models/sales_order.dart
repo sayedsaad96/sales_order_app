@@ -30,6 +30,8 @@ class SalesOrder extends HiveObject {
   List<SalesOrderItem> items;
   @HiveField(12)
   String? category;
+  @HiveField(13)
+  String? notes;
 
   SalesOrder({
     this.sn,
@@ -45,6 +47,7 @@ class SalesOrder extends HiveObject {
     this.deliveryPlace,
     this.items = const [],
     this.category,
+    this.notes,
   });
 
   double get totalValue => items.fold(0, (sum, item) => sum + item.value);

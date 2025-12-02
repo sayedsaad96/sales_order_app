@@ -63,54 +63,59 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
       appBar: AppBar(title: const Text('الفواتير المحفوظة')),
       body: _invoices.isEmpty
           ? const Center(child: Text('لا توجد فواتير محفوظة'))
-          : ListView.builder(
-              itemCount: _invoices.length,
-              itemBuilder: (context, index) {
-                final invoice = _invoices[index];
-                return Dismissible(
-                  key: Key(invoice.key.toString()),
-                  background: Container(
-                    color: Colors.red,
-                    alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.only(right: 20),
-                    child: const Icon(Icons.delete, color: Colors.white),
-                  ),
-                  direction: DismissDirection.startToEnd,
-                  onDismissed: (direction) {
-                    _deleteInvoice(invoice);
-                  },
-                  child: Card(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 5,
-                    ),
-                    child: ListTile(
-                      title: Text(
-                        '${invoice.customerName ?? "بدون اسم"} - ${invoice.sn}',
+          : Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 800),
+                child: ListView.builder(
+                  itemCount: _invoices.length,
+                  itemBuilder: (context, index) {
+                    final invoice = _invoices[index];
+                    return Dismissible(
+                      key: Key(invoice.key.toString()),
+                      background: Container(
+                        color: Colors.red,
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: 20),
+                        child: const Icon(Icons.delete, color: Colors.white),
                       ),
-                      subtitle: Text(
-                        'التاريخ: ${DateFormat('dd-MMM-yyyy').format(invoice.orderDate)}\nالقيمة: ${invoice.totalValue.toStringAsFixed(2)}',
-                      ),
-                      isThreeLine: true,
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => _confirmDelete(context, invoice),
-                      ),
-                      onTap: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => SalesOrderPage(
-                              existingOrder: invoice,
-                            ),
-                          ),
-                        );
-                        _loadInvoices();
+                      direction: DismissDirection.startToEnd,
+                      onDismissed: (direction) {
+                        _deleteInvoice(invoice);
                       },
-                    ),
-                  ),
-                );
-              },
+                      child: Card(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        child: ListTile(
+                          title: Text(
+                            '${invoice.customerName ?? "بدون اسم"} - ${invoice.sn}',
+                          ),
+                          subtitle: Text(
+                            'التاريخ: ${DateFormat('dd-MMM-yyyy').format(invoice.orderDate)}\nالقيمة: ${invoice.totalValue.toStringAsFixed(2)}',
+                          ),
+                          isThreeLine: true,
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () => _confirmDelete(context, invoice),
+                          ),
+                          onTap: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SalesOrderPage(
+                                  existingOrder: invoice,
+                                ),
+                              ),
+                            );
+                            _loadInvoices();
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
             ),
     );
   }

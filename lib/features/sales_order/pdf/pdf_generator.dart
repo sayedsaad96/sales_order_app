@@ -208,6 +208,36 @@ class PdfSalesOrderGenerator {
                 });
               })(),
 
+              pw.SizedBox(height: 10),
+
+              // Notes Section
+              if (order.notes != null && order.notes!.isNotEmpty)
+                pw.Container(
+                  width: double.infinity,
+                  padding: const pw.EdgeInsets.all(10),
+                  decoration: pw.BoxDecoration(
+                    border: pw.Border.all(color: PdfColors.grey300),
+                    color: PdfColors.blue50,
+                  ),
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text(
+                        'ملاحظات:',
+                        style: pw.TextStyle(
+                          fontWeight: pw.FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                      pw.SizedBox(height: 5),
+                      pw.Text(
+                        order.notes!,
+                        style: const pw.TextStyle(fontSize: 10),
+                      ),
+                    ],
+                  ),
+                ),
+
               pw.SizedBox(height: 20),
 
               // Grand Total

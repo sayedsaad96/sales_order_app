@@ -10,6 +10,7 @@ import 'saved_invoices_page.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import '../../../user/data/datasources/user_local_data_source.dart';
+import '../../../../core/utils/responsive_constants.dart';
 
 class SalesOrderPage extends StatefulWidget {
   final SalesOrder? existingOrder;
@@ -28,6 +29,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
   final _regionController = TextEditingController();
   final _salesResponsibleController = TextEditingController();
   final _deliveryPlaceController = TextEditingController();
+  final _notesController = TextEditingController();
   final List<OrderSection> _sections = [];
 
   String? _selectedBranch;
@@ -52,6 +54,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
       _regionController.text = order.region ?? '';
       _salesResponsibleController.text = order.salesResponsible ?? '';
       _deliveryPlaceController.text = order.deliveryPlace ?? '';
+      _notesController.text = order.notes ?? '';
       _paymentMethod = order.paymentMethod;
       _deliveryIncluded = order.deliveryIncluded;
       _orderDate = order.orderDate;
@@ -120,6 +123,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
       _customerNameController.clear();
       _regionController.clear();
       _deliveryPlaceController.clear();
+      _notesController.clear();
       _selectedBranch = null;
       _paymentMethod = null;
       _deliveryIncluded = true;
@@ -229,6 +233,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
       order.salesResponsible = _salesResponsibleController.text;
       order.paymentMethod = _paymentMethod;
       order.deliveryPlace = _deliveryPlaceController.text;
+      order.notes = _notesController.text;
       // order.category = _categoryController.text; // Deprecated
       order.items = validItems;
 
@@ -249,6 +254,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
     _regionController.dispose();
     _salesResponsibleController.dispose();
     _deliveryPlaceController.dispose();
+    _notesController.dispose();
     for (var section in _sections) {
       section.dispose();
     }
@@ -322,6 +328,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
           salesResponsible: _salesResponsibleController.text,
           paymentMethod: _paymentMethod,
           deliveryPlace: _deliveryPlaceController.text,
+          notes: _notesController.text,
           // category: _categoryController.text,
           items: validItems,
         );
@@ -348,7 +355,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
               duration: const Duration(seconds: 8),
               action: SnackBarAction(
                 label: 'مشاركة',
-                textColor: Colors.yellow,
+                textColor: Colors.white,
                 onPressed: () {
                   Printing.sharePdf(bytes: bytes, filename: fileName);
                 },
@@ -405,220 +412,91 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header Section
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Center(
-                          child: Text(
-                            'طلب بيع',
-                            style: Theme.of(context).textTheme.headlineMedium
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: 150,
-                        child: TextFormField(
-                          controller: _snController,
-                          decoration: const InputDecoration(labelText: 'S/N'),
-                          validator: (value) =>
-                              value?.isEmpty ?? true ? 'مطلوب' : null,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Branch and Store
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Container(
-                          width: 150,
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: DropdownButtonFormField<String>(
-                            initialValue: _selectedBranch,
-                            decoration: const InputDecoration(
-                              labelText: 'الفرع',
-                            ),
-                            items: ['القاهرة', 'المحلة']
-                                .map(
-                                  (e) => DropdownMenuItem(
-                                    value: e,
-                                    child: Text(e),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isMobile =
+              constraints.maxWidth < ResponsiveConstants.kMobileBreakpoint;
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header Section
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: isMobile
+                          ? Column(
+                              children: [
+                                Center(
+                                  child: Text(
+                                    'طلب بيع',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headlineMedium
+                                        ?.copyWith(fontWeight: FontWeight.bold),
                                   ),
-                                )
-                                .toList(),
-                            onChanged: (v) =>
-                                setState(() => _selectedBranch = v),
-                            validator: (v) => v == null ? 'مطلوب' : null,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-
-                      const SizedBox(width: 20),
-                      const Text('النوع: '),
-                      ..._orderTypes.keys.map((key) {
-                        return Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Checkbox(
-                              value: _orderTypes[key],
-                              onChanged: (v) =>
-                                  setState(() => _orderTypes[key] = v ?? false),
+                                ),
+                                const SizedBox(height: 10),
+                                TextFormField(
+                                  controller: _snController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'S/N',
+                                  ),
+                                  validator: (value) =>
+                                      value?.isEmpty ?? true ? 'مطلوب' : null,
+                                ),
+                              ],
+                            )
+                          : Row(
+                              children: [
+                                Expanded(
+                                  child: Center(
+                                    child: Text(
+                                      'طلب بيع',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .headlineMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: 150,
+                                  child: TextFormField(
+                                    controller: _snController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'S/N',
+                                    ),
+                                    validator: (value) =>
+                                        value?.isEmpty ?? true ? 'مطلوب' : null,
+                                  ),
+                                ),
+                              ],
                             ),
-                            Text(key),
-                          ],
-                        );
-                      }),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
-              // Info Grid
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Right Column
-                      Expanded(
-                        child: Column(
-                          children: [
-                            TextFormField(
-                              controller: _customerNameController,
-                              decoration: const InputDecoration(
-                                labelText: 'اسم العميل',
-                              ),
-                              validator: (v) =>
-                                  v?.isEmpty ?? true ? 'مطلوب' : null,
-                            ),
-                            const SizedBox(height: 10),
-                            TextFormField(
-                              controller: _regionController,
-                              decoration: const InputDecoration(
-                                labelText: 'المنطقة',
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            RadioGroup<bool>(
-                              groupValue: _deliveryIncluded,
-                              onChanged: (v) {
-                                if (v != null) {
-                                  setState(() => _deliveryIncluded = v);
-                                }
-                              },
-                              child: Row(
-                                children: [
-                                  const Text('شامل التوصيل: '),
-                                  Radio<bool>(value: true),
-                                  const Text('نعم'),
-                                  Radio<bool>(value: false),
-                                  const Text('لا'),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 18),
-                            InkWell(
-                              onTap: () async {
-                                final date = await showDatePicker(
-                                  context: context,
-                                  initialDate: _deliveryDate ?? DateTime.now(),
-                                  firstDate: DateTime(2000),
-                                  lastDate: DateTime(2100),
-                                );
-                                if (date != null) {
-                                  setState(() => _deliveryDate = date);
-                                }
-                              },
-                              child: InputDecorator(
-                                decoration: const InputDecoration(
-                                  labelText: 'تاريخ التوصيل',
-                                ),
-                                child: Text(
-                                  _deliveryDate != null
-                                      ? DateFormat(
-                                          'dd-MMM-yyyy',
-                                        ).format(_deliveryDate!)
-                                      : '',
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 20),
-                      // Left Column
-                      Expanded(
-                        child: Column(
-                          children: [
-                            InkWell(
-                              onTap: () async {
-                                final date = await showDatePicker(
-                                  context: context,
-                                  initialDate: _orderDate,
-                                  firstDate: DateTime(2000),
-                                  lastDate: DateTime(2100),
-                                );
-                                if (date != null) {
-                                  setState(() => _orderDate = date);
-                                }
-                              },
-                              child: InputDecorator(
-                                decoration: const InputDecoration(
-                                  labelText: 'التاريخ',
-                                ),
-                                child: Text(
-                                  DateFormat('dd-MMM-yyyy').format(_orderDate),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            TextFormField(
-                              controller: _salesResponsibleController,
-                              decoration: const InputDecoration(
-                                labelText: 'مسؤول البيع',
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            DropdownButtonFormField<String>(
-                              initialValue: _paymentMethod,
-                              decoration: const InputDecoration(
-                                labelText: 'طريقة السداد',
-                              ),
-                              items:
-                                  [
-                                        'كاش',
-                                        'تحويل بنكي',
-                                        'اسبوعين',
-                                        ' شهر',
-                                        ' شهرين',
-                                        ' 3 شهور',
-                                      ]
+                  // Branch and Store
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: isMobile
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                DropdownButtonFormField<String>(
+                                  initialValue: _selectedBranch,
+                                  decoration: const InputDecoration(
+                                    labelText: 'الفرع',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  items: ['القاهرة', 'المحلة']
                                       .map(
                                         (e) => DropdownMenuItem(
                                           value: e,
@@ -626,368 +504,932 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                                         ),
                                       )
                                       .toList(),
-                              onChanged: (v) =>
-                                  setState(() => _paymentMethod = v),
+                                  onChanged: (v) =>
+                                      setState(() => _selectedBranch = v),
+                                  validator: (v) => v == null ? 'مطلوب' : null,
+                                ),
+                                const SizedBox(height: 10),
+                                const Text('النوع: '),
+                                Wrap(
+                                  spacing: 10,
+                                  children: _orderTypes.keys.map((key) {
+                                    return Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Checkbox(
+                                          value: _orderTypes[key],
+                                          onChanged: (v) => setState(
+                                            () => _orderTypes[key] = v ?? false,
+                                          ),
+                                        ),
+                                        Text(key),
+                                      ],
+                                    );
+                                  }).toList(),
+                                ),
+                              ],
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    width: 150,
+                                    decoration: BoxDecoration(
+                                      border: Border.all(color: Colors.grey),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: DropdownButtonFormField<String>(
+                                      initialValue: _selectedBranch,
+                                      decoration: const InputDecoration(
+                                        labelText: 'الفرع',
+                                        contentPadding: EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                        ),
+                                        border: InputBorder.none,
+                                      ),
+                                      items: ['القاهرة', 'المحلة']
+                                          .map(
+                                            (e) => DropdownMenuItem(
+                                              value: e,
+                                              child: Text(e),
+                                            ),
+                                          )
+                                          .toList(),
+                                      onChanged: (v) =>
+                                          setState(() => _selectedBranch = v),
+                                      validator: (v) =>
+                                          v == null ? 'مطلوب' : null,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                const SizedBox(width: 20),
+                                const Text('النوع: '),
+                                ..._orderTypes.keys.map((key) {
+                                  return Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Checkbox(
+                                        value: _orderTypes[key],
+                                        onChanged: (v) => setState(
+                                          () => _orderTypes[key] = v ?? false,
+                                        ),
+                                      ),
+                                      Text(key),
+                                    ],
+                                  );
+                                }),
+                              ],
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Info Grid
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: isMobile
+                          ? Column(
+                              children: [
+                                TextFormField(
+                                  controller: _customerNameController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'اسم العميل',
+                                  ),
+                                  validator: (v) =>
+                                      v?.isEmpty ?? true ? 'مطلوب' : null,
+                                ),
+                                const SizedBox(height: 10),
+                                TextFormField(
+                                  controller: _regionController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'المنطقة',
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+                                RadioGroup<bool>(
+                                  groupValue: _deliveryIncluded,
+                                  onChanged: (v) {
+                                    if (v != null) {
+                                      setState(() => _deliveryIncluded = v);
+                                    }
+                                  },
+                                  child: Row(
+                                    children: [
+                                      const Text('شامل التوصيل: '),
+                                      Radio<bool>(value: true),
+                                      const Text('نعم'),
+                                      Radio<bool>(value: false),
+                                      const Text('لا'),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 18),
+                                InkWell(
+                                  onTap: () async {
+                                    final date = await showDatePicker(
+                                      context: context,
+                                      initialDate: _orderDate,
+                                      firstDate: DateTime(2000),
+                                      lastDate: DateTime(2100),
+                                    );
+                                    if (date != null) {
+                                      setState(() => _orderDate = date);
+                                    }
+                                  },
+                                  child: InputDecorator(
+                                    decoration: const InputDecoration(
+                                      labelText: 'التاريخ',
+                                    ),
+                                    child: Text(
+                                      DateFormat(
+                                        'dd-MMM-yyyy',
+                                      ).format(_orderDate),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+
+                                InkWell(
+                                  onTap: () async {
+                                    final date = await showDatePicker(
+                                      context: context,
+                                      initialDate:
+                                          _deliveryDate ?? DateTime.now(),
+                                      firstDate: DateTime(2000),
+                                      lastDate: DateTime(2100),
+                                    );
+                                    if (date != null) {
+                                      setState(() => _deliveryDate = date);
+                                    }
+                                  },
+                                  child: InputDecorator(
+                                    decoration: const InputDecoration(
+                                      labelText: 'تاريخ التوصيل',
+                                    ),
+                                    child: Text(
+                                      _deliveryDate != null
+                                          ? DateFormat(
+                                              'dd-MMM-yyyy',
+                                            ).format(_deliveryDate!)
+                                          : '',
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                TextFormField(
+                                  controller: _salesResponsibleController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'مسؤول البيع',
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                DropdownButtonFormField<String>(
+                                  initialValue: _paymentMethod,
+                                  decoration: const InputDecoration(
+                                    labelText: 'طريقة السداد',
+                                  ),
+                                  items:
+                                      [
+                                            'كاش',
+                                            'تحويل بنكي',
+                                            'اسبوعين',
+                                            ' شهر',
+                                            ' شهرين',
+                                            ' 3 شهور',
+                                          ]
+                                          .map(
+                                            (e) => DropdownMenuItem(
+                                              value: e,
+                                              child: Text(e),
+                                            ),
+                                          )
+                                          .toList(),
+                                  onChanged: (v) =>
+                                      setState(() => _paymentMethod = v),
+                                ),
+                                const SizedBox(height: 10),
+                                TextFormField(
+                                  controller: _deliveryPlaceController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'مكان التسليم',
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                              ],
+                            )
+                          : Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Right Column
+                                Expanded(
+                                  child: Column(
+                                    children: [
+                                      TextFormField(
+                                        controller: _customerNameController,
+                                        decoration: const InputDecoration(
+                                          labelText: 'اسم العميل',
+                                        ),
+                                        validator: (v) =>
+                                            v?.isEmpty ?? true ? 'مطلوب' : null,
+                                      ),
+                                      const SizedBox(height: 10),
+                                      TextFormField(
+                                        controller: _regionController,
+                                        decoration: const InputDecoration(
+                                          labelText: 'المنطقة',
+                                        ),
+                                      ),
+                                      const SizedBox(height: 20),
+                                      RadioGroup<bool>(
+                                        groupValue: _deliveryIncluded,
+                                        onChanged: (v) {
+                                          if (v != null) {
+                                            setState(
+                                              () => _deliveryIncluded = v,
+                                            );
+                                          }
+                                        },
+                                        child: Row(
+                                          children: [
+                                            const Text('شامل التوصيل: '),
+                                            Radio<bool>(value: true),
+                                            const Text('نعم'),
+                                            Radio<bool>(value: false),
+                                            const Text('لا'),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 18),
+                                      InkWell(
+                                        onTap: () async {
+                                          final date = await showDatePicker(
+                                            context: context,
+                                            initialDate:
+                                                _deliveryDate ?? DateTime.now(),
+                                            firstDate: DateTime(2000),
+                                            lastDate: DateTime(2100),
+                                          );
+                                          if (date != null) {
+                                            setState(
+                                              () => _deliveryDate = date,
+                                            );
+                                          }
+                                        },
+                                        child: InputDecorator(
+                                          decoration: const InputDecoration(
+                                            labelText: 'تاريخ التوصيل',
+                                          ),
+                                          child: Text(
+                                            _deliveryDate != null
+                                                ? DateFormat(
+                                                    'dd-MMM-yyyy',
+                                                  ).format(_deliveryDate!)
+                                                : '',
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 20),
+                                // Left Column
+                                Expanded(
+                                  child: Column(
+                                    children: [
+                                      InkWell(
+                                        onTap: () async {
+                                          final date = await showDatePicker(
+                                            context: context,
+                                            initialDate: _orderDate,
+                                            firstDate: DateTime(2000),
+                                            lastDate: DateTime(2100),
+                                          );
+                                          if (date != null) {
+                                            setState(() => _orderDate = date);
+                                          }
+                                        },
+                                        child: InputDecorator(
+                                          decoration: const InputDecoration(
+                                            labelText: 'التاريخ',
+                                          ),
+                                          child: Text(
+                                            DateFormat(
+                                              'dd-MMM-yyyy',
+                                            ).format(_orderDate),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      TextFormField(
+                                        controller: _salesResponsibleController,
+                                        decoration: const InputDecoration(
+                                          labelText: 'مسؤول البيع',
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      DropdownButtonFormField<String>(
+                                        initialValue: _paymentMethod,
+                                        decoration: const InputDecoration(
+                                          labelText: 'طريقة السداد',
+                                        ),
+                                        items:
+                                            [
+                                                  'كاش',
+                                                  'تحويل بنكي',
+                                                  'اسبوعين',
+                                                  ' شهر',
+                                                  ' شهرين',
+                                                  ' 3 شهور',
+                                                ]
+                                                .map(
+                                                  (e) => DropdownMenuItem(
+                                                    value: e,
+                                                    child: Text(e),
+                                                  ),
+                                                )
+                                                .toList(),
+                                        onChanged: (v) =>
+                                            setState(() => _paymentMethod = v),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      TextFormField(
+                                        controller: _deliveryPlaceController,
+                                        decoration: const InputDecoration(
+                                          labelText: 'مكان التسليم',
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Items Table
+                  // Items Sections
+                  ..._sections.asMap().entries.map((entry) {
+                    final sectionIndex = entry.key;
+                    final section = entry.value;
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 20),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                isMobile
+                                    ? Expanded(
+                                        child: TextFormField(
+                                          controller:
+                                              section.categoryController,
+                                          decoration: const InputDecoration(
+                                            labelText: 'التصنيف',
+                                          ),
+                                        ),
+                                      )
+                                    : SizedBox(
+                                        width: 250,
+                                        height: 50,
+                                        child: TextFormField(
+                                          controller:
+                                              section.categoryController,
+                                          decoration: const InputDecoration(
+                                            labelText: 'التصنيف',
+                                          ),
+                                        ),
+                                      ),
+                                if (_sections.length > 1)
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.delete,
+                                      color: Colors.red,
+                                    ),
+                                    onPressed: () =>
+                                        _removeSection(sectionIndex),
+                                  ),
+                              ],
                             ),
                             const SizedBox(height: 10),
-                            TextFormField(
-                              controller: _deliveryPlaceController,
-                              decoration: const InputDecoration(
-                                labelText: 'مكان التسليم',
+                            Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey),
+                                borderRadius: BorderRadius.circular(8),
                               ),
+                              child: Column(
+                                children: [
+                                  // Header
+                                  if (!isMobile)
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context).primaryColor,
+                                        borderRadius:
+                                            const BorderRadius.vertical(
+                                              top: Radius.circular(8),
+                                            ),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 8,
+                                      ),
+                                      child: const Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Expanded(
+                                            flex: 2,
+                                            child: Text(
+                                              'الصنف',
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 1,
+                                            child: Text(
+                                              'الكمية',
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 1,
+                                            child: Text(
+                                              'الوحدة',
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 1,
+                                            child: Text(
+                                              'السعر',
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 1,
+                                            child: Text(
+                                              'القيمة',
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                          SizedBox(
+                                            width: 40,
+                                          ), // For delete button
+                                        ],
+                                      ),
+                                    ),
+                                  // Rows
+                                  ListView.builder(
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    itemCount: section.items.length,
+                                    itemBuilder: (context, index) {
+                                      final item = section.items[index];
+                                      final controllers =
+                                          section.itemControllers[index];
+                                      return AnimatedContainer(
+                                        duration: const Duration(
+                                          milliseconds: 300,
+                                        ),
+                                        key: ValueKey(index),
+                                        color: index % 2 == 0
+                                            ? Theme.of(context)
+                                                  .colorScheme
+                                                  .surfaceContainerHighest
+                                                  .withValues(alpha: 0.3)
+                                            : Theme.of(
+                                                context,
+                                              ).colorScheme.surface,
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 4,
+                                        ),
+                                        child: isMobile
+                                            ? Padding(
+                                                padding: const EdgeInsets.all(
+                                                  8.0,
+                                                ),
+                                                child: Column(
+                                                  children: [
+                                                    TextFormField(
+                                                      controller: controllers
+                                                          .nameController,
+                                                      decoration:
+                                                          const InputDecoration(
+                                                            labelText: 'الصنف',
+                                                            border:
+                                                                OutlineInputBorder(),
+                                                          ),
+                                                      onChanged: (v) =>
+                                                          item.itemName = v,
+                                                    ),
+                                                    const SizedBox(height: 8),
+                                                    Row(
+                                                      children: [
+                                                        Expanded(
+                                                          child: TextFormField(
+                                                            controller: controllers
+                                                                .quantityController,
+                                                            decoration:
+                                                                const InputDecoration(
+                                                                  labelText:
+                                                                      'الكمية',
+                                                                  border:
+                                                                      OutlineInputBorder(),
+                                                                ),
+                                                            keyboardType:
+                                                                TextInputType
+                                                                    .number,
+                                                            onChanged: (v) {
+                                                              setState(() {
+                                                                item.quantity =
+                                                                    int.tryParse(
+                                                                      v,
+                                                                    ) ??
+                                                                    0;
+                                                              });
+                                                            },
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 8,
+                                                        ),
+                                                        Expanded(
+                                                          child: TextFormField(
+                                                            controller: controllers
+                                                                .unitController,
+                                                            decoration:
+                                                                const InputDecoration(
+                                                                  labelText:
+                                                                      'الوحدة',
+                                                                  border:
+                                                                      OutlineInputBorder(),
+                                                                ),
+                                                            onChanged: (v) =>
+                                                                item.unit = v,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    const SizedBox(height: 8),
+                                                    Row(
+                                                      children: [
+                                                        Expanded(
+                                                          child: TextFormField(
+                                                            controller: controllers
+                                                                .priceController,
+                                                            decoration:
+                                                                const InputDecoration(
+                                                                  labelText:
+                                                                      'السعر',
+                                                                  border:
+                                                                      OutlineInputBorder(),
+                                                                ),
+                                                            keyboardType:
+                                                                TextInputType
+                                                                    .number,
+                                                            onChanged: (v) {
+                                                              setState(() {
+                                                                item.price =
+                                                                    double.tryParse(
+                                                                      v,
+                                                                    ) ??
+                                                                    0;
+                                                              });
+                                                            },
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 8,
+                                                        ),
+                                                        Expanded(
+                                                          child: Container(
+                                                            padding:
+                                                                const EdgeInsets.all(
+                                                                  12,
+                                                                ),
+                                                            decoration: BoxDecoration(
+                                                              border: Border.all(
+                                                                color:
+                                                                    Colors.grey,
+                                                              ),
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    4,
+                                                                  ),
+                                                            ),
+                                                            child: Text(
+                                                              '${item.value.toStringAsFixed(2)} ج.م',
+                                                              textAlign:
+                                                                  TextAlign
+                                                                      .center,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    Align(
+                                                      alignment:
+                                                          Alignment.centerLeft,
+                                                      child: IconButton(
+                                                        icon: const Icon(
+                                                          Icons.delete,
+                                                          color: Colors.red,
+                                                        ),
+                                                        onPressed: () =>
+                                                            _removeItem(
+                                                              sectionIndex,
+                                                              index,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              )
+                                            : Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.center,
+                                                children: [
+                                                  Expanded(
+                                                    flex: 2,
+                                                    child: TextFormField(
+                                                      controller: controllers
+                                                          .nameController,
+                                                      decoration:
+                                                          const InputDecoration(
+                                                            border: InputBorder
+                                                                .none,
+                                                            enabledBorder:
+                                                                InputBorder
+                                                                    .none,
+                                                            focusedBorder:
+                                                                InputBorder
+                                                                    .none,
+                                                            contentPadding:
+                                                                EdgeInsets.symmetric(
+                                                                  horizontal: 8,
+                                                                ),
+                                                          ),
+                                                      onChanged: (v) =>
+                                                          item.itemName = v,
+                                                    ),
+                                                  ),
+                                                  Expanded(
+                                                    flex: 1,
+                                                    child: TextFormField(
+                                                      controller: controllers
+                                                          .quantityController,
+                                                      keyboardType:
+                                                          TextInputType.number,
+                                                      textAlign:
+                                                          TextAlign.right,
+                                                      decoration:
+                                                          const InputDecoration(
+                                                            border: InputBorder
+                                                                .none,
+                                                            enabledBorder:
+                                                                InputBorder
+                                                                    .none,
+                                                            focusedBorder:
+                                                                InputBorder
+                                                                    .none,
+                                                            contentPadding:
+                                                                EdgeInsets.symmetric(
+                                                                  horizontal: 8,
+                                                                ),
+                                                            filled: false,
+                                                          ),
+                                                      onChanged: (v) {
+                                                        setState(() {
+                                                          item.quantity =
+                                                              int.tryParse(v) ??
+                                                              0;
+                                                        });
+                                                      },
+                                                    ),
+                                                  ),
+                                                  Expanded(
+                                                    flex: 1,
+                                                    child: TextFormField(
+                                                      controller: controllers
+                                                          .unitController,
+                                                      decoration:
+                                                          const InputDecoration(
+                                                            border: InputBorder
+                                                                .none,
+                                                            enabledBorder:
+                                                                InputBorder
+                                                                    .none,
+                                                            focusedBorder:
+                                                                InputBorder
+                                                                    .none,
+                                                            contentPadding:
+                                                                EdgeInsets.symmetric(
+                                                                  horizontal: 8,
+                                                                ),
+                                                            filled: false,
+                                                          ),
+                                                      onChanged: (v) =>
+                                                          item.unit = v,
+                                                    ),
+                                                  ),
+                                                  Expanded(
+                                                    flex: 1,
+                                                    child: TextFormField(
+                                                      controller: controllers
+                                                          .priceController,
+                                                      keyboardType:
+                                                          TextInputType.number,
+                                                      decoration:
+                                                          const InputDecoration(
+                                                            border: InputBorder
+                                                                .none,
+                                                            enabledBorder:
+                                                                InputBorder
+                                                                    .none,
+                                                            focusedBorder:
+                                                                InputBorder
+                                                                    .none,
+                                                            contentPadding:
+                                                                EdgeInsets.symmetric(
+                                                                  horizontal: 8,
+                                                                ),
+                                                            filled: false,
+                                                          ),
+                                                      onChanged: (v) {
+                                                        setState(() {
+                                                          item.price =
+                                                              double.tryParse(
+                                                                v,
+                                                              ) ??
+                                                              0;
+                                                        });
+                                                      },
+                                                    ),
+                                                  ),
+                                                  Expanded(
+                                                    flex: 1,
+                                                    child: Text(
+                                                      item.value
+                                                          .toStringAsFixed(2),
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                    ),
+                                                  ),
+                                                  IconButton(
+                                                    icon: Icon(
+                                                      Icons.delete,
+                                                      color: Theme.of(
+                                                        context,
+                                                      ).colorScheme.error,
+                                                      size: 20,
+                                                    ),
+                                                    onPressed: () =>
+                                                        _removeItem(
+                                                          sectionIndex,
+                                                          index,
+                                                        ),
+                                                  ),
+                                                ],
+                                              ),
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            TextButton.icon(
+                              onPressed: () => _addItem(sectionIndex),
+                              icon: const Icon(Icons.add),
+                              label: const Text('إضافة صنف'),
                             ),
                           ],
                         ),
                       ),
-                    ],
+                    );
+                  }),
+                  const SizedBox(height: 10),
+                  Center(
+                    child: ElevatedButton.icon(
+                      onPressed: () => setState(() => _addSection()),
+                      icon: const Icon(Icons.add_circle_outline),
+                      label: const Text('إضافة تصنيف جديد'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue[100],
+                        foregroundColor: Colors.blue[900],
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Items Table
-              // Items Sections
-              ..._sections.asMap().entries.map((entry) {
-                final sectionIndex = entry.key;
-                final section = entry.value;
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 20),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    controller: _notesController,
+                    decoration: const InputDecoration(
+                      labelText: 'ملاحظات',
+                      hintText: 'أضف ملاحظات أو تعليقات (اختياري)',
+                    ),
+                    maxLines: 3,
+                    minLines: 2,
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1565C0),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SizedBox(
-                              width: 250,
-                              height: 50,
-                              child: TextFormField(
-                                controller: section.categoryController,
-                                decoration: const InputDecoration(
-                                  labelText: 'التصنيف',
-                                ),
-                              ),
-                            ),
-                            if (_sections.length > 1)
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.delete,
-                                  color: Colors.red,
-                                ),
-                                onPressed: () => _removeSection(sectionIndex),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Column(
-                            children: [
-                              // Header
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).primaryColor,
-                                  borderRadius: const BorderRadius.vertical(
-                                    top: Radius.circular(8),
-                                  ),
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                ),
-                                child: const Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Expanded(
-                                      flex: 2,
-                                      child: Text(
-                                        'الصنف',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 1,
-                                      child: Text(
-                                        'الكمية',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 1,
-                                      child: Text(
-                                        'الوحدة',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 1,
-                                      child: Text(
-                                        'السعر',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 1,
-                                      child: Text(
-                                        'القيمة',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(width: 40), // For delete button
-                                  ],
-                                ),
-                              ),
-                              // Rows
-                              ListView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: section.items.length,
-                                itemBuilder: (context, index) {
-                                  final item = section.items[index];
-                                  final controllers =
-                                      section.itemControllers[index];
-                                  return AnimatedContainer(
-                                    duration: const Duration(milliseconds: 300),
-                                    key: ValueKey(index),
-                                    color: index % 2 == 0
-                                        ? Theme.of(context)
-                                              .colorScheme
-                                              .surfaceContainerHighest
-                                              .withValues(alpha: 0.3)
-                                        : Theme.of(context).colorScheme.surface,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 4,
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      children: [
-                                        Expanded(
-                                          flex: 2,
-                                          child: TextFormField(
-                                            controller:
-                                                controllers.nameController,
-                                            decoration: const InputDecoration(
-                                              border: InputBorder.none,
-                                              enabledBorder: InputBorder.none,
-                                              focusedBorder: InputBorder.none,
-                                              contentPadding:
-                                                  EdgeInsets.symmetric(
-                                                    horizontal: 8,
-                                                  ),
-                                              filled: false,
-                                            ),
-                                            onChanged: (v) => item.itemName = v,
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 1,
-                                          child: TextFormField(
-                                            controller:
-                                                controllers.quantityController,
-                                            keyboardType: TextInputType.number,
-                                            textAlign: TextAlign.right,
-                                            decoration: const InputDecoration(
-                                              border: InputBorder.none,
-                                              enabledBorder: InputBorder.none,
-                                              focusedBorder: InputBorder.none,
-                                              contentPadding:
-                                                  EdgeInsets.symmetric(
-                                                    horizontal: 8,
-                                                  ),
-                                              filled: false,
-                                            ),
-                                            onChanged: (v) {
-                                              setState(() {
-                                                item.quantity =
-                                                    int.tryParse(v) ?? 0;
-                                              });
-                                            },
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 1,
-                                          child: TextFormField(
-                                            controller:
-                                                controllers.unitController,
-                                            decoration: const InputDecoration(
-                                              border: InputBorder.none,
-                                              enabledBorder: InputBorder.none,
-                                              focusedBorder: InputBorder.none,
-                                              contentPadding:
-                                                  EdgeInsets.symmetric(
-                                                    horizontal: 8,
-                                                  ),
-                                              filled: false,
-                                            ),
-                                            onChanged: (v) => item.unit = v,
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 1,
-                                          child: TextFormField(
-                                            controller:
-                                                controllers.priceController,
-                                            keyboardType: TextInputType.number,
-                                            decoration: const InputDecoration(
-                                              border: InputBorder.none,
-                                              enabledBorder: InputBorder.none,
-                                              focusedBorder: InputBorder.none,
-                                              contentPadding:
-                                                  EdgeInsets.symmetric(
-                                                    horizontal: 8,
-                                                  ),
-                                              filled: false,
-                                            ),
-                                            onChanged: (v) {
-                                              setState(() {
-                                                item.price =
-                                                    double.tryParse(v) ?? 0;
-                                              });
-                                            },
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 1,
-                                          child: Text(
-                                            item.value.toStringAsFixed(2),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        ),
-                                        IconButton(
-                                          icon: Icon(
-                                            Icons.delete,
-                                            color: Theme.of(
-                                              context,
-                                            ).colorScheme.error,
-                                            size: 20,
-                                          ),
-                                          onPressed: () =>
-                                              _removeItem(sectionIndex, index),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
+                        const Text(
+                          'الإجمالي الكلي:',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
                           ),
                         ),
-                        const SizedBox(height: 10),
-                        TextButton.icon(
-                          onPressed: () => _addItem(sectionIndex),
-                          icon: const Icon(Icons.add),
-                          label: const Text('إضافة صنف'),
+                        Text(
+                          _totalValue.toStringAsFixed(2),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                );
-              }),
-              const SizedBox(height: 10),
-              Center(
-                child: ElevatedButton.icon(
-                  onPressed: () => setState(() => _addSection()),
-                  icon: const Icon(Icons.add_circle_outline),
-                  label: const Text('إضافة تصنيف جديد'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue[100],
-                    foregroundColor: Colors.blue[900],
+                  const SizedBox(height: 30),
+                  Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: _saveInvoice,
+                          icon: const Icon(Icons.save),
+                          label: const Text(
+                            'حفظ',
+                            style: TextStyle(fontSize: 18),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 30,
+                              vertical: 15,
+                            ),
+                            backgroundColor: Colors.green,
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        ElevatedButton.icon(
+                          onPressed: _generatePdf,
+                          icon: const Icon(Icons.picture_as_pdf),
+                          label: const Text(
+                            'إنشاء PDF',
+                            style: TextStyle(fontSize: 18),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 30,
+                              vertical: 15,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ),
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1565C0),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'الإجمالي الكلي:',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                      ),
-                    ),
-                    Text(
-                      _totalValue.toStringAsFixed(2),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 30),
-              Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: _saveInvoice,
-                      icon: const Icon(Icons.save),
-                      label: const Text('حفظ', style: TextStyle(fontSize: 18)),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 30,
-                          vertical: 15,
-                        ),
-                        backgroundColor: Colors.green,
-                      ),
-                    ),
-                    const SizedBox(width: 20),
-                    ElevatedButton.icon(
-                      onPressed: _generatePdf,
-                      icon: const Icon(Icons.picture_as_pdf),
-                      label: const Text(
-                        'إنشاء PDF',
-                        style: TextStyle(fontSize: 18),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 30,
-                          vertical: 15,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }
