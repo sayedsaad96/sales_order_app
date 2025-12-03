@@ -7,6 +7,7 @@ import '../../pdf/pdf_generator.dart';
 import 'package:printing/printing.dart';
 import '../../data/datasources/invoice_local_data_source.dart';
 import 'saved_invoices_page.dart';
+import 'price_list_page.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import '../../../user/data/datasources/user_local_data_source.dart';
@@ -32,7 +33,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
   final _notesController = TextEditingController();
   final List<OrderSection> _sections = [];
 
-  String? _selectedBranch;
+  String? _selectedBranch = "القاهرة";
   final Map<String, bool> _orderTypes = {
     'غزل': false,
     'مستلزمات': true,
@@ -48,7 +49,8 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
     super.initState();
     if (widget.existingOrder != null) {
       final order = widget.existingOrder!;
-      _snController.text = order.sn ?? '';
+      // _snController.text = order.sn ?? ''; // Don't copy SN, generate new one for "Clone" behavior
+      // Keep default initialized value: 'SO-${DateTime.now().microsecond}'
       _selectedBranch = order.branch;
       _customerNameController.text = order.customerName ?? '';
       _regionController.text = order.region ?? '';
@@ -216,7 +218,8 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
         return;
       }
 
-      final order = widget.existingOrder ?? SalesOrder(orderDate: _orderDate);
+      // Always create a NEW SalesOrder to ensure it's saved as a new entry (Clone)
+      final order = SalesOrder(orderDate: _orderDate);
 
       // Update fields
       order.sn = _snController.text;
@@ -342,7 +345,13 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
         }
         directory ??= await getApplicationDocumentsDirectory();
 
-        final fileName = 'SalesOrder_${order.sn}.pdf';
+        final safeCustomerName =
+            order.customerName?.replaceAll(
+              RegExp(r'[^\w\s\u0600-\u06FF]'),
+              '',
+            ) ??
+            'Client';
+        final fileName = '${safeCustomerName}_${order.sn}.pdf';
         final file = File('${directory.path}/$fileName');
         await file.writeAsBytes(bytes);
 
@@ -355,7 +364,8 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
               duration: const Duration(seconds: 8),
               action: SnackBarAction(
                 label: 'مشاركة',
-                textColor: Colors.white,
+                textColor: Colors.yellowAccent,
+                backgroundColor: Colors.black,
                 onPressed: () {
                   Printing.sharePdf(bytes: bytes, filename: fileName);
                 },
@@ -381,6 +391,16 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
       appBar: AppBar(
         title: const Text('طلب بيع'),
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.picture_as_pdf),
+          tooltip: 'قائمة الأسعار',
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const PriceListPage()),
+            );
+          },
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -1017,7 +1037,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                                         duration: const Duration(
                                           milliseconds: 300,
                                         ),
-                                        key: ValueKey(index),
+                                        key: ObjectKey(item),
                                         color: index % 2 == 0
                                             ? Theme.of(context)
                                                   .colorScheme
