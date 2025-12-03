@@ -392,7 +392,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
         title: const Text('طلب بيع'),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.picture_as_pdf),
+          icon: const Icon(Icons.receipt),
           tooltip: 'قائمة الأسعار',
           onPressed: () {
             Navigator.push(
