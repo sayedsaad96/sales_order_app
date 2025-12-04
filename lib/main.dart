@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -11,23 +12,41 @@ import 'features/user/data/models/user_model.dart';
 import 'features/splash/presentation/pages/splash_screen.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Hive.initFlutter();
-  Hive.registerAdapter(UserModelAdapter());
-  Hive.registerAdapter(SalesOrderAdapter());
-  Hive.registerAdapter(SalesOrderItemAdapter());
+  runZonedGuarded<Future<void>>(
+    () async {
+      WidgetsFlutterBinding.ensureInitialized();
 
-  final userDataSource = UserLocalDataSource();
-  await userDataSource.init();
-  await InvoiceLocalDataSource().init();
+      // Global Error Handling for Flutter Framework Errors
+      FlutterError.onError = (FlutterErrorDetails details) {
+        FlutterError.presentError(details);
+        debugPrint('Flutter Error: ${details.exception}');
+      };
 
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
-      ],
-      child: const SalesOrderApp(isRegistered: true),
-    ),
+      try {
+        await Hive.initFlutter();
+        Hive.registerAdapter(UserModelAdapter());
+        Hive.registerAdapter(SalesOrderAdapter());
+        Hive.registerAdapter(SalesOrderItemAdapter());
+
+        final userDataSource = UserLocalDataSource();
+        await userDataSource.init();
+        await InvoiceLocalDataSource().init();
+      } catch (e, stack) {
+        debugPrint('Initialization Error: $e\n$stack');
+        // Consider showing a fallback UI here if critical init fails
+      }
+
+      runApp(
+        MultiProvider(
+          providers: [ChangeNotifierProvider(create: (_) => ThemeProvider())],
+          child: const SalesOrderApp(isRegistered: true),
+        ),
+      );
+    },
+    (error, stack) {
+      // Global Error Handling for Async Errors
+      debugPrint('Async Error: $error\n$stack');
+    },
   );
 }
 
@@ -43,7 +62,9 @@ class SalesOrderApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
-          themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          themeMode: themeProvider.isDarkMode
+              ? ThemeMode.dark
+              : ThemeMode.light,
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,

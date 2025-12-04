@@ -8,10 +8,7 @@ class PriceListPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('قوائم الأسعار'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('قوائم الأسعار'), centerTitle: true),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
@@ -24,7 +21,7 @@ class PriceListPage extends StatelessWidget {
           const SizedBox(height: 16),
           _buildPriceListTile(
             context,
-            title: 'قائمة أسعار التجار',
+            title: 'قائمة أسعار التاجر',
             assetPath: 'assets/docs/Trader Price List.pdf',
             icon: Icons.store,
           ),
@@ -46,7 +43,9 @@ class PriceListPage extends StatelessWidget {
         contentPadding: const EdgeInsets.all(16),
         leading: CircleAvatar(
           radius: 25,
-          backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+          backgroundColor: Theme.of(
+            context,
+          ).primaryColor.withValues(alpha: 0.1),
           child: Icon(icon, color: Theme.of(context).primaryColor),
         ),
         title: Text(
@@ -58,9 +57,8 @@ class PriceListPage extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder:
-                  (context) =>
-                      PdfViewerPage(title: title, assetPath: assetPath),
+              builder: (context) =>
+                  PdfViewerPage(title: title, assetPath: assetPath),
             ),
           );
         },
@@ -82,10 +80,7 @@ class PdfViewerPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: Text(title), centerTitle: true),
       body: PdfPreview(
         build: (format) async {
           try {
