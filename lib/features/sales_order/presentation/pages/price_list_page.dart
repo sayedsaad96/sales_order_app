@@ -25,6 +25,14 @@ class PriceListPage extends StatelessWidget {
             assetPath: 'assets/docs/Trader Price List.pdf',
             icon: Icons.store,
           ),
+          const SizedBox(height: 25),
+          Center(
+            child: Image.asset(
+              'assets/images/logo.png',
+              width: 150,
+              height: 150,
+            ),
+          ),
         ],
       ),
     );

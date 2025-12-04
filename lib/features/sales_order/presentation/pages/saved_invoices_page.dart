@@ -62,7 +62,25 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('الفواتير المحفوظة')),
       body: _invoices.isEmpty
-          ? const Center(child: Text('لا توجد فواتير محفوظة'))
+          ? Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Center(
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    width: 150,
+                    height: 150,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Center(
+                  child: Text(
+                    'لا توجد فواتير محفوظة',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            )
           : Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 800),
@@ -103,9 +121,8 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
                             await Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => SalesOrderPage(
-                                  existingOrder: invoice,
-                                ),
+                                builder: (context) =>
+                                    SalesOrderPage(existingOrder: invoice),
                               ),
                             );
                             _loadInvoices();

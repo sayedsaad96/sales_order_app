@@ -410,7 +410,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('طلب بيع'),
+        title: const Text('Annex Group'),
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.receipt),
@@ -430,6 +430,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
           ),
           IconButton(
             icon: const Icon(Icons.list),
+            tooltip: 'الفواتير المحفوظة',
             onPressed: () {
               Navigator.push(
                 context,
@@ -478,7 +479,9 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                                         style: Theme.of(context)
                                             .textTheme
                                             .headlineMedium
-                                            ?.copyWith(fontWeight: FontWeight.bold),
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                       ),
                                     ),
                                     const SizedBox(height: 10),
@@ -488,7 +491,9 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                                         labelText: 'S/N',
                                       ),
                                       validator: (value) =>
-                                          value?.isEmpty ?? true ? 'مطلوب' : null,
+                                          value?.isEmpty ?? true
+                                          ? 'مطلوب'
+                                          : null,
                                     ),
                                   ],
                                 )
@@ -515,7 +520,9 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                                           labelText: 'S/N',
                                         ),
                                         validator: (value) =>
-                                            value?.isEmpty ?? true ? 'مطلوب' : null,
+                                            value?.isEmpty ?? true
+                                            ? 'مطلوب'
+                                            : null,
                                       ),
                                     ),
                                   ],
@@ -548,7 +555,8 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                                           .toList(),
                                       onChanged: (v) =>
                                           setState(() => _selectedBranch = v),
-                                      validator: (v) => v == null ? 'مطلوب' : null,
+                                      validator: (v) =>
+                                          v == null ? 'مطلوب' : null,
                                     ),
                                     const SizedBox(height: 10),
                                     const Text('النوع: '),
@@ -561,7 +569,8 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                                             Checkbox(
                                               value: _orderTypes[key],
                                               onChanged: (v) => setState(
-                                                () => _orderTypes[key] = v ?? false,
+                                                () => _orderTypes[key] =
+                                                    v ?? false,
                                               ),
                                             ),
                                             Text(key),
@@ -572,22 +581,28 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                                   ],
                                 )
                               : Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Expanded(
                                       child: Container(
                                         width: 150,
                                         decoration: BoxDecoration(
-                                          border: Border.all(color: Colors.grey),
-                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(
+                                            color: Colors.grey,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
                                         ),
                                         child: DropdownButtonFormField<String>(
                                           initialValue: _selectedBranch,
                                           decoration: const InputDecoration(
                                             labelText: 'الفرع',
-                                            contentPadding: EdgeInsets.symmetric(
-                                              horizontal: 10,
-                                            ),
+                                            contentPadding:
+                                                EdgeInsets.symmetric(
+                                                  horizontal: 10,
+                                                ),
                                             border: InputBorder.none,
                                           ),
                                           items: ['القاهرة', 'المحلة']
@@ -598,8 +613,9 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                                                 ),
                                               )
                                               .toList(),
-                                          onChanged: (v) =>
-                                              setState(() => _selectedBranch = v),
+                                          onChanged: (v) => setState(
+                                            () => _selectedBranch = v,
+                                          ),
                                           validator: (v) =>
                                               v == null ? 'مطلوب' : null,
                                         ),
@@ -615,7 +631,8 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                                           Checkbox(
                                             value: _orderTypes[key],
                                             onChanged: (v) => setState(
-                                              () => _orderTypes[key] = v ?? false,
+                                              () =>
+                                                  _orderTypes[key] = v ?? false,
                                             ),
                                           ),
                                           Text(key),
@@ -641,7 +658,8 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                         paymentMethod: _paymentMethod,
                         onDeliveryIncludedChanged: (v) =>
                             setState(() => _deliveryIncluded = v),
-                        onOrderDateChanged: (v) => setState(() => _orderDate = v),
+                        onOrderDateChanged: (v) =>
+                            setState(() => _orderDate = v),
                         onDeliveryDateChanged: (v) =>
                             setState(() => _deliveryDate = v),
                         onPaymentMethodChanged: (v) =>
@@ -903,35 +921,32 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
       SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         sliver: SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              final item = section.items[index];
-              final controllers = section.itemControllers[index];
-              return Container(
-                color: Theme.of(context).cardColor,
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Container(
-                  decoration: BoxDecoration(
-                    border: Border(
-                      left: BorderSide(color: Colors.grey.shade300),
-                      right: BorderSide(color: Colors.grey.shade300),
-                      bottom: BorderSide(color: Colors.grey.shade300),
-                    ),
-                  ),
-                  child: SalesOrderItemRow(
-                    key: ObjectKey(item),
-                    index: index,
-                    item: item,
-                    controllers: controllers,
-                    isMobile: isMobile,
-                    onDelete: () => _removeItem(sectionIndex, index),
-                    onStateChanged: _calculateTotal,
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final item = section.items[index];
+            final controllers = section.itemControllers[index];
+            return Container(
+              color: Theme.of(context).cardColor,
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border(
+                    left: BorderSide(color: Colors.grey.shade300),
+                    right: BorderSide(color: Colors.grey.shade300),
+                    bottom: BorderSide(color: Colors.grey.shade300),
                   ),
                 ),
-              );
-            },
-            childCount: section.items.length,
-          ),
+                child: SalesOrderItemRow(
+                  key: ObjectKey(item),
+                  index: index,
+                  item: item,
+                  controllers: controllers,
+                  isMobile: isMobile,
+                  onDelete: () => _removeItem(sectionIndex, index),
+                  onStateChanged: _calculateTotal,
+                ),
+              ),
+            );
+          }, childCount: section.items.length),
         ),
       ),
 
@@ -959,5 +974,3 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
     ];
   }
 }
-
-

@@ -1,4 +1,4 @@
-name: sales_order_app
+name: annex_sales_order
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -61,6 +61,10 @@ dev_dependencies:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
+  windows:
+    generate: true
+    image_path: "assets/images/logo.png"
+    icon_size: 48
   image_path: "assets/images/logo.png"
   min_sdk_android: 21
 
