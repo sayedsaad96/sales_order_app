@@ -1,6 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:printing/printing.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:printing/printing.dart'; // Still needed for PdfPreview
+import 'package:share_plus/share_plus.dart';
 
 class PriceListPage extends StatelessWidget {
   const PriceListPage({super.key});
@@ -38,6 +41,40 @@ class PriceListPage extends StatelessWidget {
     );
   }
 
+  Future<void> _shareFile(BuildContext context, String assetPath, String title) async {
+    try {
+      // 1. Load asset bytes
+      final byteData = await rootBundle.load(assetPath);
+      final bytes = byteData.buffer.asUint8List();
+
+      // 2. Get temporary directory
+      final tempDir = await getTemporaryDirectory();
+      final tempFile = File('${tempDir.path}/$title.pdf');
+
+      // 3. Write bytes to file
+      await tempFile.writeAsBytes(bytes, flush: true);
+
+      // 4. Share the file
+      // Check if the device can share
+      // ignore: deprecated_member_use
+      final result = await Share.shareXFiles(
+        [XFile(tempFile.path)],
+        text: 'مشاركة $title',
+      );
+
+      if (result.status == ShareResultStatus.dismissed) {
+         // Optional: handle dismissed
+      }
+
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('خطأ في المشاركة: $e')),
+        );
+      }
+    }
+  }
+
   Widget _buildPriceListTile(
     BuildContext context, {
     required String title,
@@ -60,7 +97,18 @@ class PriceListPage extends StatelessWidget {
           title,
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
-        trailing: const Icon(Icons.arrow_forward_ios),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.share, color: Colors.blue),
+              tooltip: 'مشاركة',
+              onPressed: () => _shareFile(context, assetPath, title),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.arrow_forward_ios, size: 20, color: Colors.grey),
+          ],
+        ),
         onTap: () {
           Navigator.push(
             context,
@@ -99,8 +147,8 @@ class PdfViewerPage extends StatelessWidget {
             throw Exception('Error loading PDF: $e');
           }
         },
-        useActions: false,
-        allowPrinting: true,
+        // We can disable internal sharing if we want to force the outer button,
+        // but keeping it is fine as a backup.
         allowSharing: true,
         canChangeOrientation: false,
         canChangePageFormat: false,

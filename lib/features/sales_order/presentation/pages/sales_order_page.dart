@@ -47,7 +47,10 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
   bool _deliveryIncluded = true;
   DateTime _orderDate = DateTime.now();
   DateTime? _deliveryDate;
+
   String? _paymentMethod;
+  bool _isEditing = false;
+  bool _saveAsNew = false;
 
   @override
   void initState() {
@@ -65,7 +68,9 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
       _paymentMethod = order.paymentMethod;
       _deliveryIncluded = order.deliveryIncluded;
       _orderDate = order.orderDate;
+
       _deliveryDate = order.deliveryDate;
+      _isEditing = true;
 
       // Reset order types
       _orderTypes.updateAll((key, value) => false);
@@ -116,11 +121,16 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
 
   Future<void> _loadCurrentUser() async {
     if (widget.existingOrder == null) {
-      final user = UserLocalDataSource().getUser();
-      if (user != null) {
-        setState(() {
-          _salesResponsibleController.text = user.fullName;
-        });
+      try {
+        final user = UserLocalDataSource().getUser();
+        if (user != null && mounted) {
+          setState(() {
+            _salesResponsibleController.text = user.fullName;
+          });
+        }
+      } catch (e) {
+        // Silently fail - not critical for app functionality
+        debugPrint('Failed to load user: $e');
       }
     }
   }
@@ -148,9 +158,14 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
       _sections.clear();
       _addSection();
 
+
+
       // Re-populate sales responsible
       _loadCurrentUser();
       _calculateTotal();
+
+      _isEditing = false;
+      _saveAsNew = false;
     });
   }
 
@@ -164,44 +179,48 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
   }
 
   void _removeSection(int index) {
-    setState(() {
-      if (_sections.length > 1) {
-        _sections[index].dispose();
-        _sections.removeAt(index);
+    if (_sections.length > 1) {
+      _sections[index].dispose();
+      _sections.removeAt(index);
+      if (mounted) {
+        setState(() {});
         _calculateTotal();
       }
-    });
+    }
   }
 
   void _addItem(int sectionIndex) {
-    setState(() {
-      final section = _sections[sectionIndex];
-      double? defaultPrice;
-      if (section.items.isNotEmpty && section.items.first.price > 0) {
-        defaultPrice = section.items.first.price;
-      }
-      section.items.add(SalesOrderItem(price: defaultPrice ?? 0));
-      section.itemControllers.add(
-        ItemControllers(
-          price: (defaultPrice != null && defaultPrice > 0)
-              ? defaultPrice.toString()
-              : '',
-        ),
-      );
-    });
-    // No need to calculate total here as new item has 0 price
+    final section = _sections[sectionIndex];
+    double? defaultPrice;
+    if (section.items.isNotEmpty && section.items.first.price > 0) {
+      defaultPrice = section.items.first.price;
+    }
+    section.items.add(SalesOrderItem(price: defaultPrice ?? 0));
+    section.itemControllers.add(
+      ItemControllers(
+        price: (defaultPrice != null && defaultPrice > 0)
+            ? defaultPrice.toString()
+            : '',
+      ),
+    );
+    // Trigger rebuild only after adding item
+    if (mounted) {
+      setState(() {});
+    }
+    // No need to calculate total here as new item has 0 quantity
   }
 
   void _removeItem(int sectionIndex, int itemIndex) {
-    setState(() {
-      final section = _sections[sectionIndex];
-      if (section.items.length > 1) {
-        section.items.removeAt(itemIndex);
-        section.itemControllers[itemIndex].dispose();
-        section.itemControllers.removeAt(itemIndex);
+    final section = _sections[sectionIndex];
+    if (section.items.length > 1) {
+      section.items.removeAt(itemIndex);
+      section.itemControllers[itemIndex].dispose();
+      section.itemControllers.removeAt(itemIndex);
+      if (mounted) {
+        setState(() {});
         _calculateTotal();
       }
-    });
+    }
   }
 
   List<SalesOrderItem> get _allValidItems {
@@ -228,34 +247,54 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
         return;
       }
 
-      // Always create a NEW SalesOrder to ensure it's saved as a new entry (Clone)
-      final order = SalesOrder(orderDate: _orderDate);
-
-      // Update fields
-      order.sn = _snController.text;
-      order.branch = _selectedBranch;
-      order.orderTypes = _orderTypes.entries
-          .where((e) => e.value)
-          .map((e) => e.key)
-          .toList();
-      order.customerName = _customerNameController.text;
-      order.region = _regionController.text;
-      order.deliveryIncluded = _deliveryIncluded;
-      order.deliveryDate = _deliveryDate;
-      order.orderDate = _orderDate;
-      order.salesResponsible = _salesResponsibleController.text;
-      order.paymentMethod = _paymentMethod;
-      order.deliveryPlace = _deliveryPlaceController.text;
-      order.notes = _notesController.text;
-      // order.category = _categoryController.text; // Deprecated
-      order.items = validItems;
+      // Update existing order if editing and NOT saving as new
+      SalesOrder order;
+      if (_isEditing && !_saveAsNew && widget.existingOrder != null) {
+        order = widget.existingOrder!;
+        // Update fields
+        order.sn = _snController.text;
+        order.branch = _selectedBranch;
+        order.orderTypes = _orderTypes.entries
+            .where((e) => e.value)
+            .map((e) => e.key)
+            .toList();
+        order.customerName = _customerNameController.text;
+        order.region = _regionController.text;
+        order.deliveryIncluded = _deliveryIncluded;
+        order.deliveryDate = _deliveryDate;
+        order.orderDate = _orderDate;
+        order.salesResponsible = _salesResponsibleController.text;
+        order.paymentMethod = _paymentMethod;
+        order.deliveryPlace = _deliveryPlaceController.text;
+        order.notes = _notesController.text;
+        order.items = validItems;
+      } else {
+        // Create NEW if not editing OR if "Save as New" is checked
+        order = SalesOrder(orderDate: _orderDate);
+        order.sn = _snController.text;
+        order.branch = _selectedBranch;
+        order.orderTypes = _orderTypes.entries
+            .where((e) => e.value)
+            .map((e) => e.key)
+            .toList();
+        order.customerName = _customerNameController.text;
+        order.region = _regionController.text;
+        order.deliveryIncluded = _deliveryIncluded;
+        order.deliveryDate = _deliveryDate;
+        order.orderDate = _orderDate;
+        order.salesResponsible = _salesResponsibleController.text;
+        order.paymentMethod = _paymentMethod;
+        order.deliveryPlace = _deliveryPlaceController.text;
+        order.notes = _notesController.text;
+        order.items = validItems;
+      }
 
       await InvoiceLocalDataSource().saveInvoice(order);
 
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('تم حفظ الفاتورة بنجاح')));
+        ).showSnackBar(SnackBar(content: Text(_isEditing && !_saveAsNew ? 'تم تحديث الفاتورة بنجاح' : 'تم حفظ الفاتورة بنجاح')));
       }
     }
   }
@@ -736,6 +775,15 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                         },
                       ),
                       const SizedBox(height: 30),
+                      if (_isEditing)
+                         Padding(
+                           padding: const EdgeInsets.only(bottom: 16.0),
+                           child: CheckboxListTile(
+                            title: const Text('حفظ كفاتورة جديدة (نسخة)'),
+                            value: _saveAsNew,
+                            onChanged: (val) => setState(() => _saveAsNew = val ?? false),
+                           ),
+                         ),
                       Center(
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -743,9 +791,9 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                             ElevatedButton.icon(
                               onPressed: _saveInvoice,
                               icon: const Icon(Icons.save),
-                              label: const Text(
-                                'حفظ',
-                                style: TextStyle(fontSize: 18),
+                              label: Text(
+                                _isEditing && !_saveAsNew ? 'تحديث' : 'حفظ',
+                                style: const TextStyle(fontSize: 18),
                               ),
                               style: ElevatedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(

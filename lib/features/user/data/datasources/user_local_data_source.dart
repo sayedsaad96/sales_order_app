@@ -12,17 +12,33 @@ class UserLocalDataSource {
   }
 
   Future<void> saveUser(UserModel user) async {
-    final box = Hive.box<UserModel>(_boxName);
-    await box.put(_userKey, user);
+    try {
+      final box = Hive.box<UserModel>(_boxName);
+      await box.put(_userKey, user);
+    } catch (e) {
+      throw Exception('Failed to save user: $e');
+    }
   }
 
   UserModel? getUser() {
-    final box = Hive.box<UserModel>(_boxName);
-    return box.get(_userKey);
+    try {
+      if (!Hive.isBoxOpen(_boxName)) return null;
+      final box = Hive.box<UserModel>(_boxName);
+      return box.get(_userKey);
+    } catch (e) {
+      // Return null on error to prevent crash
+      return null;
+    }
   }
 
   bool isUserRegistered() {
-    final box = Hive.box<UserModel>(_boxName);
-    return box.containsKey(_userKey);
+    try {
+      if (!Hive.isBoxOpen(_boxName)) return false;
+      final box = Hive.box<UserModel>(_boxName);
+      return box.containsKey(_userKey);
+    } catch (e) {
+      // Return false on error to prevent crash
+      return false;
+    }
   }
 }

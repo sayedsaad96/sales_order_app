@@ -18,18 +18,33 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
   Future<void> _register() async {
     if (_formKey.currentState!.validate()) {
-      final user = UserModel(
-        fullName: _nameController.text,
-        mobileNumber: _mobileController.text,
-      );
-      await _userDataSource.saveUser(user);
-
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const SalesOrderPage()),
+      try {
+        final user = UserModel(
+          fullName: _nameController.text,
+          mobileNumber: _mobileController.text,
         );
+        await _userDataSource.saveUser(user);
+
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const SalesOrderPage()),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('خطأ في التسجيل: $e')),
+          );
+        }
       }
     }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _mobileController.dispose();
+    super.dispose();
   }
 
   @override
