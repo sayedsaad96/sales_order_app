@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 
-import 'package:provider/provider.dart';
-import '../../../../core/providers/theme_provider.dart';
 import '../../data/models/sales_order.dart';
 import '../../pdf/pdf_generator.dart';
 import 'package:printing/printing.dart';
 import '../../data/datasources/invoice_local_data_source.dart';
 import 'saved_invoices_page.dart';
-import 'price_list_page.dart';
+
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import '../../../user/data/datasources/user_local_data_source.dart';
@@ -16,6 +14,7 @@ import '../widgets/customer_info_section.dart';
 // import '../widgets/order_section_widget.dart'; // Removed in favor of direct sliver building
 import '../widgets/sales_order_item_row.dart';
 import '../utils/sales_order_helpers.dart';
+import '../../../../core/widgets/app_drawer.dart';
 
 class SalesOrderPage extends StatefulWidget {
   final SalesOrder? existingOrder;
@@ -158,8 +157,6 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
       _sections.clear();
       _addSection();
 
-
-
       // Re-populate sales responsible
       _loadCurrentUser();
       _calculateTotal();
@@ -292,9 +289,15 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
       await InvoiceLocalDataSource().saveInvoice(order);
 
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(_isEditing && !_saveAsNew ? 'تم تحديث الفاتورة بنجاح' : 'تم حفظ الفاتورة بنجاح')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              _isEditing && !_saveAsNew
+                  ? 'تم تحديث الفاتورة بنجاح'
+                  : 'تم حفظ الفاتورة بنجاح',
+            ),
+          ),
+        );
       }
     }
   }
@@ -448,19 +451,10 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: const AppDrawer(),
       appBar: AppBar(
         title: const Text('Annex Group'),
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.receipt),
-          tooltip: 'قائمة الأسعار',
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const PriceListPage()),
-            );
-          },
-        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -468,7 +462,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
             onPressed: _resetForm,
           ),
           IconButton(
-            icon: const Icon(Icons.list),
+            icon: const Icon(Icons.shopping_cart),
             tooltip: 'الفواتير المحفوظة',
             onPressed: () {
               Navigator.push(
@@ -479,27 +473,18 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
               );
             },
           ),
-          Consumer<ThemeProvider>(
-            builder: (context, themeProvider, child) {
-              return IconButton(
-                icon: Icon(
-                  themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                ),
-                onPressed: () {
-                  themeProvider.toggleTheme();
-                },
-              );
-            },
-          ),
         ],
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
           final isMobile =
               constraints.maxWidth < ResponsiveConstants.kMobileBreakpoint;
-          return Form(
-            key: _formKey,
-            child: CustomScrollView(
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1000),
+              child: Form(
+                key: _formKey,
+                child: CustomScrollView(
               slivers: [
                 SliverPadding(
                   padding: const EdgeInsets.all(16.0),
@@ -776,14 +761,15 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                       ),
                       const SizedBox(height: 30),
                       if (_isEditing)
-                         Padding(
-                           padding: const EdgeInsets.only(bottom: 16.0),
-                           child: CheckboxListTile(
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16.0),
+                          child: CheckboxListTile(
                             title: const Text('حفظ كفاتورة جديدة (نسخة)'),
                             value: _saveAsNew,
-                            onChanged: (val) => setState(() => _saveAsNew = val ?? false),
-                           ),
-                         ),
+                            onChanged: (val) =>
+                                setState(() => _saveAsNew = val ?? false),
+                          ),
+                        ),
                       Center(
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -826,6 +812,8 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                 ),
               ],
             ),
+          ),
+            ),
           );
         },
       ),
@@ -863,7 +851,6 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                         )
                       : SizedBox(
                           width: 250,
-                          height: 50,
                           child: TextFormField(
                             controller: section.categoryController,
                             decoration: const InputDecoration(
