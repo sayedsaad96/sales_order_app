@@ -14,7 +14,8 @@ import 'features/user/data/models/user_model.dart';
 import 'features/splash/presentation/pages/splash_screen.dart';
 
 void main() async {
-  runZonedGuarded<Future<void>{
+  runZonedGuarded<Future<void>>(
+    () async {
       WidgetsFlutterBinding.ensureInitialized();
 
       // Global Error Handling for Flutter Framework Errors
