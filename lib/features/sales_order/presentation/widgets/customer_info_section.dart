@@ -70,7 +70,7 @@ class _CustomerInfoSectionState extends State<CustomerInfoSection> {
         const SizedBox(height: 10),
         TextFormField(
           controller: widget.salesResponsibleController,
-          decoration: const InputDecoration(labelText: 'مسؤول البيع'),
+          decoration: const InputDecoration(labelText: 'مسئول البيع'),
         ),
         const SizedBox(height: 10),
         _buildPaymentMethodDropdown(),
@@ -118,7 +118,7 @@ class _CustomerInfoSectionState extends State<CustomerInfoSection> {
               const SizedBox(height: 10),
               TextFormField(
                 controller: widget.salesResponsibleController,
-                decoration: const InputDecoration(labelText: 'مسؤول البيع'),
+                decoration: const InputDecoration(labelText: 'مسئول البيع'),
               ),
               const SizedBox(height: 10),
               _buildPaymentMethodDropdown(),
@@ -201,17 +201,14 @@ class _CustomerInfoSectionState extends State<CustomerInfoSection> {
     return DropdownButtonFormField<String>(
       initialValue: widget.paymentMethod,
       decoration: const InputDecoration(labelText: 'طريقة السداد'),
-      items:
-          [
-                'كاش',
-                'تحويل بنكي',
-                'اسبوعين',
-                ' شهر',
-                ' شهرين',
-                ' 3 شهور',
-              ]
-              .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-              .toList(),
+      items: [
+        'كاش',
+        'تحويل بنكي',
+        'اسبوعين',
+        ' شهر',
+        ' شهرين',
+        ' 3 شهور',
+      ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
       onChanged: widget.onPaymentMethodChanged,
     );
   }

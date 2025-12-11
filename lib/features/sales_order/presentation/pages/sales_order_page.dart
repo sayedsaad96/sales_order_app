@@ -485,149 +485,90 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
               child: Form(
                 key: _formKey,
                 child: CustomScrollView(
-              slivers: [
-                SliverPadding(
-                  padding: const EdgeInsets.all(16.0),
-                  sliver: SliverList(
-                    delegate: SliverChildListDelegate([
-                      // Header Section
-                      Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: isMobile
-                              ? Column(
-                                  children: [
-                                    Center(
-                                      child: Text(
-                                        'طلب بيع',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .headlineMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.bold,
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.all(16.0),
+                      sliver: SliverList(
+                        delegate: SliverChildListDelegate([
+                          // Header Section
+                          Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: isMobile
+                                  ? Column(
+                                      children: [
+                                        Center(
+                                          child: Text(
+                                            'طلب بيع',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .headlineMedium
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 10),
+                                        TextFormField(
+                                          controller: _snController,
+                                          decoration: const InputDecoration(
+                                            labelText: 'S/N',
+                                          ),
+                                          validator: (value) =>
+                                              value?.isEmpty ?? true
+                                              ? 'مطلوب'
+                                              : null,
+                                        ),
+                                      ],
+                                    )
+                                  : Row(
+                                      children: [
+                                        Expanded(
+                                          child: Center(
+                                            child: Text(
+                                              'Essential Sales Order',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .headlineMedium
+                                                  ?.copyWith(
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
                                             ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    TextFormField(
-                                      controller: _snController,
-                                      decoration: const InputDecoration(
-                                        labelText: 'S/N',
-                                      ),
-                                      validator: (value) =>
-                                          value?.isEmpty ?? true
-                                          ? 'مطلوب'
-                                          : null,
-                                    ),
-                                  ],
-                                )
-                              : Row(
-                                  children: [
-                                    Expanded(
-                                      child: Center(
-                                        child: Text(
-                                          'طلب بيع',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .headlineMedium
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.bold,
-                                              ),
+                                          ),
                                         ),
-                                      ),
-                                    ),
-                                    SizedBox(
-                                      width: 150,
-                                      child: TextFormField(
-                                        controller: _snController,
-                                        decoration: const InputDecoration(
-                                          labelText: 'S/N',
+                                        SizedBox(
+                                          width: 150,
+                                          child: TextFormField(
+                                            controller: _snController,
+                                            decoration: const InputDecoration(
+                                              labelText: 'S/N',
+                                            ),
+                                            validator: (value) =>
+                                                value?.isEmpty ?? true
+                                                ? 'مطلوب'
+                                                : null,
+                                          ),
                                         ),
-                                        validator: (value) =>
-                                            value?.isEmpty ?? true
-                                            ? 'مطلوب'
-                                            : null,
-                                      ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
 
-                      // Branch and Store
-                      Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: isMobile
-                              ? Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    DropdownButtonFormField<String>(
-                                      initialValue: _selectedBranch,
-                                      decoration: const InputDecoration(
-                                        labelText: 'الفرع',
-                                        border: OutlineInputBorder(),
-                                      ),
-                                      items: ['القاهرة', 'المحلة']
-                                          .map(
-                                            (e) => DropdownMenuItem(
-                                              value: e,
-                                              child: Text(e),
-                                            ),
-                                          )
-                                          .toList(),
-                                      onChanged: (v) =>
-                                          setState(() => _selectedBranch = v),
-                                      validator: (v) =>
-                                          v == null ? 'مطلوب' : null,
-                                    ),
-                                    const SizedBox(height: 10),
-                                    const Text('النوع: '),
-                                    Wrap(
-                                      spacing: 10,
-                                      children: _orderTypes.keys.map((key) {
-                                        return Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Checkbox(
-                                              value: _orderTypes[key],
-                                              onChanged: (v) => setState(
-                                                () => _orderTypes[key] =
-                                                    v ?? false,
-                                              ),
-                                            ),
-                                            Text(key),
-                                          ],
-                                        );
-                                      }).toList(),
-                                    ),
-                                  ],
-                                )
-                              : Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      child: Container(
-                                        width: 150,
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                            color: Colors.grey,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                        child: DropdownButtonFormField<String>(
+                          // Branch and Store
+                          Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: isMobile
+                                  ? Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        DropdownButtonFormField<String>(
                                           initialValue: _selectedBranch,
                                           decoration: const InputDecoration(
                                             labelText: 'الفرع',
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                  horizontal: 10,
-                                                ),
-                                            border: InputBorder.none,
+                                            border: OutlineInputBorder(),
                                           ),
                                           items: ['القاهرة', 'المحلة']
                                               .map(
@@ -643,176 +584,246 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                                           validator: (v) =>
                                               v == null ? 'مطلوب' : null,
                                         ),
+                                        const SizedBox(height: 10),
+                                        const Text('النوع: '),
+                                        Wrap(
+                                          spacing: 10,
+                                          children: _orderTypes.keys.map((key) {
+                                            return Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Checkbox(
+                                                  value: _orderTypes[key],
+                                                  onChanged: (v) => setState(
+                                                    () => _orderTypes[key] =
+                                                        v ?? false,
+                                                  ),
+                                                ),
+                                                Text(key),
+                                              ],
+                                            );
+                                          }).toList(),
+                                        ),
+                                      ],
+                                    )
+                                  : Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: Container(
+                                            width: 150,
+                                            decoration: BoxDecoration(
+                                              border: Border.all(
+                                                color: Colors.grey,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child:
+                                                DropdownButtonFormField<String>(
+                                                  initialValue: _selectedBranch,
+                                                  decoration:
+                                                      const InputDecoration(
+                                                        labelText: 'الفرع',
+                                                        contentPadding:
+                                                            EdgeInsets.symmetric(
+                                                              horizontal: 10,
+                                                            ),
+                                                        border:
+                                                            InputBorder.none,
+                                                      ),
+                                                  items: ['القاهرة', 'المحلة']
+                                                      .map(
+                                                        (e) => DropdownMenuItem(
+                                                          value: e,
+                                                          child: Text(e),
+                                                        ),
+                                                      )
+                                                      .toList(),
+                                                  onChanged: (v) => setState(
+                                                    () => _selectedBranch = v,
+                                                  ),
+                                                  validator: (v) => v == null
+                                                      ? 'مطلوب'
+                                                      : null,
+                                                ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        const SizedBox(width: 20),
+                                        const Text('النوع: '),
+                                        ..._orderTypes.keys.map((key) {
+                                          return Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Checkbox(
+                                                value: _orderTypes[key],
+                                                onChanged: (v) => setState(
+                                                  () => _orderTypes[key] =
+                                                      v ?? false,
+                                                ),
+                                              ),
+                                              Text(key),
+                                            ],
+                                          );
+                                        }),
+                                      ],
+                                    ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+
+                          // Info Grid
+                          CustomerInfoSection(
+                            isMobile: isMobile,
+                            customerNameController: _customerNameController,
+                            regionController: _regionController,
+                            salesResponsibleController:
+                                _salesResponsibleController,
+                            deliveryPlaceController: _deliveryPlaceController,
+                            deliveryIncluded: _deliveryIncluded,
+                            orderDate: _orderDate,
+                            deliveryDate: _deliveryDate,
+                            paymentMethod: _paymentMethod,
+                            onDeliveryIncludedChanged: (v) =>
+                                setState(() => _deliveryIncluded = v),
+                            onOrderDateChanged: (v) =>
+                                setState(() => _orderDate = v),
+                            onDeliveryDateChanged: (v) =>
+                                setState(() => _deliveryDate = v),
+                            onPaymentMethodChanged: (v) =>
+                                setState(() => _paymentMethod = v),
+                          ),
+                          const SizedBox(height: 20),
+                        ]),
+                      ),
+                    ),
+
+                    // Items Sections (Slivers)
+                    ..._sections.asMap().entries.expand((entry) {
+                      return _buildSectionSlivers(
+                        entry.key,
+                        entry.value,
+                        isMobile,
+                      );
+                    }),
+
+                    SliverPadding(
+                      padding: const EdgeInsets.all(16.0),
+                      sliver: SliverList(
+                        delegate: SliverChildListDelegate([
+                          const SizedBox(height: 10),
+                          Center(
+                            child: ElevatedButton.icon(
+                              onPressed: () => setState(() => _addSection()),
+                              icon: const Icon(Icons.add_circle_outline),
+                              label: const Text('إضافة تصنيف جديد'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue[100],
+                                foregroundColor: Colors.blue[900],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          TextFormField(
+                            controller: _notesController,
+                            decoration: const InputDecoration(
+                              labelText: 'ملاحظات',
+                              hintText: 'أضف ملاحظات أو تعليقات (اختياري)',
+                            ),
+                            maxLines: 3,
+                            minLines: 2,
+                          ),
+                          const SizedBox(height: 20),
+                          ValueListenableBuilder<double>(
+                            valueListenable: _totalValueNotifier,
+                            builder: (context, total, child) {
+                              return Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF1565C0),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text(
+                                      'الإجمالي الكلي:',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
                                       ),
                                     ),
-                                    const SizedBox(width: 10),
-                                    const SizedBox(width: 20),
-                                    const Text('النوع: '),
-                                    ..._orderTypes.keys.map((key) {
-                                      return Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Checkbox(
-                                            value: _orderTypes[key],
-                                            onChanged: (v) => setState(
-                                              () =>
-                                                  _orderTypes[key] = v ?? false,
-                                            ),
-                                          ),
-                                          Text(key),
-                                        ],
-                                      );
-                                    }),
+                                    Text(
+                                      total.toStringAsFixed(2),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
+                                      ),
+                                    ),
                                   ],
                                 ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Info Grid
-                      CustomerInfoSection(
-                        isMobile: isMobile,
-                        customerNameController: _customerNameController,
-                        regionController: _regionController,
-                        salesResponsibleController: _salesResponsibleController,
-                        deliveryPlaceController: _deliveryPlaceController,
-                        deliveryIncluded: _deliveryIncluded,
-                        orderDate: _orderDate,
-                        deliveryDate: _deliveryDate,
-                        paymentMethod: _paymentMethod,
-                        onDeliveryIncludedChanged: (v) =>
-                            setState(() => _deliveryIncluded = v),
-                        onOrderDateChanged: (v) =>
-                            setState(() => _orderDate = v),
-                        onDeliveryDateChanged: (v) =>
-                            setState(() => _deliveryDate = v),
-                        onPaymentMethodChanged: (v) =>
-                            setState(() => _paymentMethod = v),
-                      ),
-                      const SizedBox(height: 20),
-                    ]),
-                  ),
-                ),
-
-                // Items Sections (Slivers)
-                ..._sections.asMap().entries.expand((entry) {
-                  return _buildSectionSlivers(entry.key, entry.value, isMobile);
-                }),
-
-                SliverPadding(
-                  padding: const EdgeInsets.all(16.0),
-                  sliver: SliverList(
-                    delegate: SliverChildListDelegate([
-                      const SizedBox(height: 10),
-                      Center(
-                        child: ElevatedButton.icon(
-                          onPressed: () => setState(() => _addSection()),
-                          icon: const Icon(Icons.add_circle_outline),
-                          label: const Text('إضافة تصنيف جديد'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue[100],
-                            foregroundColor: Colors.blue[900],
+                              );
+                            },
                           ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      TextFormField(
-                        controller: _notesController,
-                        decoration: const InputDecoration(
-                          labelText: 'ملاحظات',
-                          hintText: 'أضف ملاحظات أو تعليقات (اختياري)',
-                        ),
-                        maxLines: 3,
-                        minLines: 2,
-                      ),
-                      const SizedBox(height: 20),
-                      ValueListenableBuilder<double>(
-                        valueListenable: _totalValueNotifier,
-                        builder: (context, total, child) {
-                          return Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF1565C0),
-                              borderRadius: BorderRadius.circular(8),
+                          const SizedBox(height: 30),
+                          if (_isEditing)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 16.0),
+                              child: CheckboxListTile(
+                                title: const Text('حفظ كفاتورة جديدة (نسخة)'),
+                                value: _saveAsNew,
+                                onChanged: (val) =>
+                                    setState(() => _saveAsNew = val ?? false),
+                              ),
                             ),
+                          Center(
                             child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Text(
-                                  'الإجمالي الكلي:',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 18,
+                                ElevatedButton.icon(
+                                  onPressed: _saveInvoice,
+                                  icon: const Icon(Icons.save),
+                                  label: Text(
+                                    _isEditing && !_saveAsNew ? 'تحديث' : 'حفظ',
+                                    style: const TextStyle(fontSize: 18),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 30,
+                                      vertical: 15,
+                                    ),
+                                    backgroundColor: Colors.green,
                                   ),
                                 ),
-                                Text(
-                                  total.toStringAsFixed(2),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 18,
+                                const SizedBox(width: 20),
+                                ElevatedButton.icon(
+                                  onPressed: _generatePdf,
+                                  icon: const Icon(Icons.picture_as_pdf),
+                                  label: const Text(
+                                    'إنشاء PDF',
+                                    style: TextStyle(fontSize: 18),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 30,
+                                      vertical: 15,
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 30),
-                      if (_isEditing)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 16.0),
-                          child: CheckboxListTile(
-                            title: const Text('حفظ كفاتورة جديدة (نسخة)'),
-                            value: _saveAsNew,
-                            onChanged: (val) =>
-                                setState(() => _saveAsNew = val ?? false),
                           ),
-                        ),
-                      Center(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            ElevatedButton.icon(
-                              onPressed: _saveInvoice,
-                              icon: const Icon(Icons.save),
-                              label: Text(
-                                _isEditing && !_saveAsNew ? 'تحديث' : 'حفظ',
-                                style: const TextStyle(fontSize: 18),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 30,
-                                  vertical: 15,
-                                ),
-                                backgroundColor: Colors.green,
-                              ),
-                            ),
-                            const SizedBox(width: 20),
-                            ElevatedButton.icon(
-                              onPressed: _generatePdf,
-                              icon: const Icon(Icons.picture_as_pdf),
-                              label: const Text(
-                                'إنشاء PDF',
-                                style: TextStyle(fontSize: 18),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 30,
-                                  vertical: 15,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                        ]),
                       ),
-                    ]),
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
+              ),
             ),
           );
         },

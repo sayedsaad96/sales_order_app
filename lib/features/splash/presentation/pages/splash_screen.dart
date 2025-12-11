@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../user/data/datasources/user_local_data_source.dart';
-import '../../../sales_order/presentation/pages/sales_order_page.dart';
+import '../../../sales_order/presentation/pages/sales_order_container_page.dart';
 import '../../../user/presentation/pages/registration_page.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -54,7 +54,7 @@ class _SplashScreenState extends State<SplashScreen>
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            isRegistered ? const SalesOrderPage() : const RegistrationPage(),
+            isRegistered ? const SalesOrderContainerPage() : const RegistrationPage(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },

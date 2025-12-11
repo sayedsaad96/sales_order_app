@@ -6,14 +6,15 @@ import 'package:provider/provider.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'features/sales_order/data/datasources/invoice_local_data_source.dart';
+import 'features/sales_order/data/datasources/yarn_invoice_local_data_source.dart';
 import 'features/sales_order/data/models/sales_order.dart';
+import 'features/sales_order/data/models/yarn_sales_order.dart';
 import 'features/user/data/datasources/user_local_data_source.dart';
 import 'features/user/data/models/user_model.dart';
 import 'features/splash/presentation/pages/splash_screen.dart';
 
 void main() async {
-  runZonedGuarded<Future<void>>(
-    () async {
+  runZonedGuarded<Future<void>{
       WidgetsFlutterBinding.ensureInitialized();
 
       // Global Error Handling for Flutter Framework Errors
@@ -27,10 +28,16 @@ void main() async {
         Hive.registerAdapter(UserModelAdapter());
         Hive.registerAdapter(SalesOrderAdapter());
         Hive.registerAdapter(SalesOrderItemAdapter());
+        Hive.registerAdapter(YarnSalesOrderAdapter());
+        Hive.registerAdapter(YarnSalesOrderItemAdapter());
+        Hive.registerAdapter(YarnInstallmentAdapter());
 
         final userDataSource = UserLocalDataSource();
         await userDataSource.init();
         await InvoiceLocalDataSource().init();
+        
+        // Initialize Yarn invoice data source
+        await YarnInvoiceLocalDataSource().init();
       } catch (e, stack) {
         debugPrint('Initialization Error: $e\n$stack');
         // Consider showing a fallback UI here if critical init fails

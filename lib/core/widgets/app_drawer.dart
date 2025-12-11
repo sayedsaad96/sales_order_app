@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 import '../../features/sales_order/presentation/pages/price_list_page.dart';
+import '../../features/sales_order/presentation/pages/sales_order_container_page.dart';
 
 import '../../features/user/presentation/pages/edit_profile_page.dart';
 import '../../features/about/presentation/pages/about_page.dart';
@@ -20,38 +21,29 @@ class AppDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Drawer(
       child: Column(
         children: [
+          // Modern Gradient Header
+          _buildModernHeader(context, isDark),
+
           Expanded(
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                DrawerHeader(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor,
-                  ),
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Image.asset(
-                          'assets/images/logo.png',
-                          height: 60,
-                          width: 60,
-                          color: Colors.white,
-                        ),
-                        const SizedBox(height: 10),
-                      ],
-                    ),
-                  ),
-                ),
+                const SizedBox(height: 8),
 
-                ListTile(
-                  leading: const Icon(Icons.receipt_long),
-                  title: const Text(' Price Lists'),
+                // Main Menu Section
+                _buildSectionHeader('Main Menu'),
+                _buildModernMenuItem(
+                  context,
+                  icon: FontAwesomeIcons.moneyBill,
+                  title: 'Price Lists',
+                  subtitle: 'View pricing information',
                   onTap: () {
-                    Navigator.pop(context); // Close drawer
+                    Navigator.pop(context);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -60,12 +52,50 @@ class AppDrawer extends StatelessWidget {
                     );
                   },
                 ),
-                const Divider(),
-                ListTile(
-                  leading: const Icon(Icons.info_outline),
-                  title: const Text('About Us'),
+                _buildModernMenuItem(
+                  context,
+                  icon: FontAwesomeIcons.linktree,
+                  title: 'Essential Sales Order',
+                  subtitle: 'Create essential orders',
                   onTap: () {
-                    Navigator.pop(context); // Close drawer
+                    Navigator.pop(context);
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const SalesOrderContainerPage(initialIndex: 0),
+                      ),
+                    );
+                  },
+                ),
+                _buildModernMenuItem(
+                  context,
+                  icon: FontAwesomeIcons.yarn,
+                  title: 'Yarn Sales Order',
+                  subtitle: 'Create yarn orders',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const SalesOrderContainerPage(initialIndex: 1),
+                      ),
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 16),
+
+                // Information Section
+                _buildSectionHeader('Information'),
+                _buildModernMenuItem(
+                  context,
+                  icon: Icons.info_outline,
+                  title: 'About Us',
+                  subtitle: 'Company information',
+                  onTap: () {
+                    Navigator.pop(context);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -74,89 +104,189 @@ class AppDrawer extends StatelessWidget {
                     );
                   },
                 ),
-                const Divider(),
-                ExpansionTile(
-                  leading: const Icon(Icons.settings),
-                  title: const Text('Settings'),
-                  children: [
-                    ListTile(
-                      leading: const Icon(Icons.person_outline),
-                      title: const Text('Edit Profile'),
-                      onTap: () {
-                        Navigator.pop(context); // Close drawer
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const EditProfilePage(),
-                          ),
-                        );
-                      },
-                    ),
-                    Consumer<ThemeProvider>(
-                      builder: (context, themeProvider, child) {
-                        return SwitchListTile(
-                          secondary: Icon(
-                            themeProvider.isDarkMode
-                                ? Icons.dark_mode
-                                : Icons.light_mode,
-                          ),
-                          title: themeProvider.isDarkMode
-                              ? const Text(' Dark Mode')
-                              : const Text(' Light Mode'),
-                          value: themeProvider.isDarkMode,
-                          onChanged: (value) {
-                            themeProvider.toggleTheme();
-                          },
-                        );
-                      },
-                    ),
-                  ],
+
+                const SizedBox(height: 16),
+
+                // Settings Section
+                _buildSectionHeader('Settings'),
+                _buildModernMenuItem(
+                  context,
+                  icon: Icons.person_outline,
+                  title: 'Edit Profile',
+                  subtitle: 'Update your information',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const EditProfilePage(),
+                      ),
+                    );
+                  },
                 ),
+
+                // Dark Mode Toggle
+                Consumer<ThemeProvider>(
+                  builder: (context, themeProvider, child) {
+                    return _buildModernThemeToggle(context, themeProvider);
+                  },
+                ),
+
+                const SizedBox(height: 8),
               ],
             ),
           ),
-          // Social Media Footer
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            decoration: BoxDecoration(
-              color: Theme.of(context).cardColor,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withValues(alpha: 0.1),
-                  blurRadius: 5,
-                  offset: const Offset(0, -3),
-                ),
-              ],
+
+          // Modern Social Media Footer
+          _buildModernSocialFooter(context, isDark),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModernHeader(BuildContext context, bool isDark) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isDark
+              ? [Colors.grey[900]!, Colors.grey[800]!]
+              : [Colors.blueAccent, Colors.lightBlueAccent],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      padding: const EdgeInsets.fromLTRB(28, 60, 28, 20),
+      child: Center(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Image.asset(
+              'assets/images/logo.png',
+              width: 80,
+              height: 80,
+              fit: BoxFit.contain,
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _SocialIcon(
-                  icon: FontAwesomeIcons.facebook,
-                  onTap: () =>
-                      _launchSocialMedia('https://www.facebook.com/annexeg/'),
-                  color: Colors.blue,
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+      child: Text(
+        title.toUpperCase(),
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: Colors.grey[600],
+          letterSpacing: 1.2,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModernMenuItem(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: ListTile(
+        shape: const StadiumBorder(),
+        onTap: onTap,
+        leading: Icon(icon, color: theme.colorScheme.onSurfaceVariant),
+        title: Text(
+          title,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        subtitle: subtitle.isNotEmpty
+            ? Text(
+                subtitle,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
-                _SocialIcon(
-                  icon: FontAwesomeIcons.instagram,
-                  onTap: () =>
-                      _launchSocialMedia('https://www.instagram.com/annexeg/'),
-                  color: Colors.purple,
-                ),
-                _SocialIcon(
-                  icon: FontAwesomeIcons.linkedin,
-                  onTap: () => _launchSocialMedia(
-                    'https://www.linkedin.com/company/annexeg/',
-                  ),
-                  color: Colors.blueAccent,
-                ),
-                _SocialIcon(
-                  icon: FontAwesomeIcons.globe,
-                  onTap: () => _launchSocialMedia('https://www.annexeg.com/'),
-                  color: Colors.blueAccent,
-                ),
-              ],
-            ),
+              )
+            : null,
+      ),
+    );
+  }
+
+  Widget _buildModernThemeToggle(
+    BuildContext context,
+    ThemeProvider themeProvider,
+  ) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: ListTile(
+        shape: const StadiumBorder(),
+        onTap: () => themeProvider.toggleTheme(),
+        leading: Icon(
+          themeProvider.isDarkMode
+              ? Icons.dark_mode_outlined
+              : Icons.light_mode_outlined,
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+        title: Text(
+          themeProvider.isDarkMode ? 'Dark Mode' : 'Light Mode',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        subtitle: Text(
+          'Toggle theme',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        trailing: Switch(
+          value: themeProvider.isDarkMode,
+          onChanged: (value) => themeProvider.toggleTheme(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModernSocialFooter(BuildContext context, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _ModernSocialIcon(
+            icon: FontAwesomeIcons.facebook,
+            onTap: () =>
+                _launchSocialMedia('https://www.facebook.com/annexeg/'),
+            color: const Color(0xFF1877F2),
+          ),
+          const SizedBox(width: 16),
+          _ModernSocialIcon(
+            icon: FontAwesomeIcons.instagram,
+            onTap: () =>
+                _launchSocialMedia('https://www.instagram.com/annexeg/'),
+            color: const Color(0xFFE4405F),
+          ),
+          const SizedBox(width: 16),
+          _ModernSocialIcon(
+            icon: FontAwesomeIcons.linkedin,
+            onTap: () =>
+                _launchSocialMedia('https://www.linkedin.com/company/annexeg/'),
+            color: const Color(0xFF0A66C2),
+          ),
+          const SizedBox(width: 16),
+          _ModernSocialIcon(
+            icon: FontAwesomeIcons.globe,
+            onTap: () => _launchSocialMedia('https://www.annexeg.com/'),
+            color: const Color(0xFF00A8E8),
           ),
         ],
       ),
@@ -164,25 +294,52 @@ class AppDrawer extends StatelessWidget {
   }
 }
 
-class _SocialIcon extends StatelessWidget {
+class _ModernSocialIcon extends StatefulWidget {
   final IconData icon;
   final VoidCallback onTap;
   final Color color;
 
-  const _SocialIcon({
+  const _ModernSocialIcon({
     required this.icon,
     required this.onTap,
     required this.color,
   });
 
   @override
+  State<_ModernSocialIcon> createState() => _ModernSocialIconState();
+}
+
+class _ModernSocialIconState extends State<_ModernSocialIcon> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Icon(icon, size: 28, color: color),
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: _isHovered
+                ? widget.color.withValues(alpha: 0.1)
+                : Colors.transparent,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: _isHovered
+                  ? widget.color
+                  : Colors.grey.withValues(alpha: 0.3),
+              width: 2,
+            ),
+          ),
+          child: Icon(
+            widget.icon,
+            size: 24,
+            color: _isHovered ? widget.color : Colors.grey[600],
+          ),
+        ),
       ),
     );
   }

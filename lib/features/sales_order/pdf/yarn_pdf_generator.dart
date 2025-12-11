@@ -2,10 +2,10 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:intl/intl.dart' as intl;
-import '../data/models/sales_order.dart';
+import '../data/models/yarn_sales_order.dart';
 
-class PdfSalesOrderGenerator {
-  static Future<pw.Document> generate(SalesOrder order) async {
+class YarnPdfGenerator {
+  static Future<pw.Document> generate(YarnSalesOrder order) async {
     final pdf = pw.Document();
 
     // Load Font
@@ -14,7 +14,6 @@ class PdfSalesOrderGenerator {
       final fontData = await rootBundle.load("assets/fonts/Cairo-Regular.ttf");
       arabicFont = pw.Font.ttf(fontData);
     } catch (e) {
-      // Fallback
       arabicFont = pw.Font.courier();
     }
 
@@ -28,8 +27,9 @@ class PdfSalesOrderGenerator {
     }
 
     // Define Colors
-    const primaryColor = PdfColor.fromInt(0xFF1565C0);
-    const accentColor = PdfColor.fromInt(0xFFE3F2FD); // Light Blue
+    // Define Colors
+    const primaryColor = PdfColor.fromInt(0xFF009688); // Colors.teal
+    const accentColor = PdfColor.fromInt(0xFFE0F2F1); // Colors.teal[50]
     const lightGrey = PdfColor.fromInt(0xFFEEEEEE);
 
     final theme = pw.ThemeData.withFont(base: arabicFont, bold: arabicFont);
@@ -47,7 +47,7 @@ class PdfSalesOrderGenerator {
           return [
             pw.SizedBox(height: 20),
 
-            // --- Info Blocks Section (First page only naturally) ---
+            // --- Info Blocks Section ---
             pw.Row(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
@@ -67,11 +67,15 @@ class PdfSalesOrderGenerator {
                         pw.SizedBox(height: 8),
                         _buildInfoRow('الاسم:', order.customerName),
                         _buildInfoRow('المنطقة:', order.region),
-                        _buildInfoRow(
-                          'شامل التوصيل:',
-                          order.deliveryIncluded ? 'نعم' : 'لا',
-                        ),
                         _buildInfoRow('مكان التسليم:', order.deliveryPlace),
+                        _buildInfoRow(
+                          'تاريخ التسليم:',
+                          order.deliveryDate != null
+                              ? intl.DateFormat(
+                                  'dd/MM/yyyy',
+                                ).format(order.deliveryDate!)
+                              : '-',
+                        ),
                       ],
                     ),
                   ),
@@ -93,18 +97,13 @@ class PdfSalesOrderGenerator {
                         pw.SizedBox(height: 8),
                         _buildInfoRow('مسئول البيع:', order.salesResponsible),
                         _buildInfoRow('طريقة السداد:', order.paymentMethod),
-                        // Use helper for Date to match style
                         _buildInfoRow(
                           'تاريخ الطلب:',
                           intl.DateFormat('dd/MM/yyyy').format(order.orderDate),
                         ),
                         _buildInfoRow(
-                          'تاريخ التوصيل:',
-                          order.deliveryDate != null
-                              ? intl.DateFormat(
-                                  'dd/MM/yyyy',
-                                ).format(order.deliveryDate!)
-                              : '-',
+                          'تعديل الكمية:',
+                          order.editQuantity ?? 'الكمية المحددة',
                         ),
                       ],
                     ),
@@ -114,94 +113,62 @@ class PdfSalesOrderGenerator {
             ),
             pw.SizedBox(height: 20),
 
-            // --- Valid Items Logic with Orphan Protection ---
-            ...(() {
-              final groupedItems = <String, List<SalesOrderItem>>{};
-              // Default category if none
-              for (var item in order.items) {
-                // Ensure we group logically. Use "عام" if both are null.
-                final cat = item.category ?? order.category ?? 'عام';
-                groupedItems.putIfAbsent(cat, () => []).add(item);
-              }
-
-              return groupedItems.entries.expand((entry) {
-                final category = entry.key;
-                final items = entry.value;
-
-                return [
-                  if (groupedItems.length > 1 ||
-                      (category != 'عام' && category.isNotEmpty))
-                    pw.Container(
-                      padding: const pw.EdgeInsets.only(top: 15, bottom: 5),
-                      child: pw.Center(
-                        child: pw.Text(
-                          'تصنيف: $category',
-                          style: pw.TextStyle(
-                            fontSize: 14,
-                            fontWeight: pw.FontWeight.bold,
-                            color: primaryColor,
-                          ),
-                        ),
-                      ),
-                    ),
-                  // Table
-                  pw.Table(
-                    border: pw.TableBorder(
-                      horizontalInside: pw.BorderSide(
-                        color: PdfColors.grey200,
-                        width: 0.5,
-                      ),
-                      bottom: pw.BorderSide(color: PdfColors.grey300, width: 1),
-                    ),
-                    columnWidths: const {
-                      0: pw.FlexColumnWidth(1), // Total
-                      1: pw.FlexColumnWidth(1), // Price
-                      2: pw.FlexColumnWidth(1), // Unit
-                      3: pw.FlexColumnWidth(1), // Qty
-                      4: pw.FlexColumnWidth(3), // Item Name
-                    },
+            // --- Items Table ---
+            if (order.items.isNotEmpty) ...[
+              pw.Table(
+                border: pw.TableBorder(
+                  horizontalInside: pw.BorderSide(
+                    color: PdfColors.grey200,
+                    width: 0.5,
+                  ),
+                  bottom: pw.BorderSide(color: PdfColors.grey300, width: 1),
+                ),
+                columnWidths: const {
+                  0: pw.FlexColumnWidth(1), // Total
+                  1: pw.FlexColumnWidth(1), // Price
+                  2: pw.FlexColumnWidth(1), // Unit
+                  3: pw.FlexColumnWidth(1), // Qty
+                  4: pw.FlexColumnWidth(3), // Description
+                },
+                children: [
+                  // Header
+                  pw.TableRow(
+                    decoration: pw.BoxDecoration(color: primaryColor),
                     children: [
-                      // Header
-                      pw.TableRow(
-                        decoration: pw.BoxDecoration(color: primaryColor),
-                        children: [
-                          _buildTableHeader('القيمة'),
-                          _buildTableHeader('السعر'),
-                          _buildTableHeader('الوحدة'),
-                          _buildTableHeader('الكمية'),
-                          _buildTableHeader('الصنف', align: pw.TextAlign.right),
-                        ],
-                      ),
-                      // Rows
-                      ...items.asMap().entries.map((e) {
-                        final index = e.key;
-                        final item = e.value;
-                        final isEven = index % 2 == 0;
-                        return pw.TableRow(
-                          decoration: pw.BoxDecoration(
-                            color: isEven ? PdfColors.white : accentColor,
-                          ),
-                          children: [
-                            _buildTableCell(item.value.toStringAsFixed(2)),
-                            _buildTableCell(item.price.toString()),
-                            _buildTableCell(item.unit),
-                            _buildTableCell(item.quantity.toString()),
-                            _buildTableCell(
-                              item.itemName,
-                              align: pw.TextAlign.right,
-                            ),
-                          ],
-                        );
-                      }),
+                      _buildTableHeader('القيمة'),
+                      _buildTableHeader('السعر'),
+                      _buildTableHeader('الوحدة'),
+                      _buildTableHeader('الكمية'),
+                      _buildTableHeader('الصنف', align: pw.TextAlign.right),
                     ],
                   ),
-                ];
-              });
-            })(),
+                  // Rows
+                  ...order.items.asMap().entries.map((e) {
+                    final index = e.key;
+                    final item = e.value;
+                    final isEven = index % 2 == 0;
+                    return pw.TableRow(
+                      decoration: pw.BoxDecoration(
+                        color: isEven ? PdfColors.white : accentColor,
+                      ),
+                      children: [
+                        _buildTableCell(item.value.toStringAsFixed(2)),
+                        _buildTableCell(item.price.toStringAsFixed(2)),
+                        _buildTableCell(item.unit),
+                        _buildTableCell(item.quantity.toStringAsFixed(2)),
+                        _buildTableCell(
+                          item.description,
+                          align: pw.TextAlign.right,
+                        ),
+                      ],
+                    );
+                  }),
+                ],
+              ),
+              pw.SizedBox(height: 20),
+            ],
 
-            pw.SizedBox(height: 20),
-
-            // --- Footer / Totals (Flows after table) ---
+            // --- Footer / Totals ---
             pw.Row(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
@@ -286,6 +253,89 @@ class PdfSalesOrderGenerator {
                 ),
               ],
             ),
+
+            // --- Payment Schedule Section ---
+            // Show installments only if there are any with data
+            ...(() {
+              if (order.installments.isEmpty) return [];
+
+              final validInstallments = order.installments
+                  .where(
+                    (inst) => inst.duration.isNotEmpty || inst.value.isNotEmpty,
+                  )
+                  .toList();
+
+              if (validInstallments.isEmpty) return [];
+
+              return [
+                pw.SizedBox(height: 30),
+                _buildSectionHeader(
+                  'طريقة السداد في حالة تعدد الدفعات',
+                  primaryColor,
+                ),
+                pw.SizedBox(height: 10),
+
+                // Split into two columns if more than 8 installments
+                if (validInstallments.length <= 8)
+                  // Single column for 8 or fewer installments
+                  pw.Column(
+                    children: validInstallments.asMap().entries.map((entry) {
+                      return _buildInstallmentRow(
+                        entry.key + 1,
+                        entry.value.duration,
+                        entry.value.value,
+                      );
+                    }).toList(),
+                  )
+                else
+                  // Two columns for more than 8 installments
+                  pw.Row(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      // Left column (first half)
+                      pw.Expanded(
+                        child: pw.Column(
+                          children: validInstallments
+                              .take((validInstallments.length / 2).ceil())
+                              .toList()
+                              .asMap()
+                              .entries
+                              .map((entry) {
+                                return _buildInstallmentRow(
+                                  entry.key + 1,
+                                  entry.value.duration,
+                                  entry.value.value,
+                                );
+                              })
+                              .toList(),
+                        ),
+                      ),
+                      pw.SizedBox(width: 20),
+                      // Right column (second half)
+                      pw.Expanded(
+                        child: pw.Column(
+                          children: validInstallments
+                              .skip((validInstallments.length / 2).ceil())
+                              .toList()
+                              .asMap()
+                              .entries
+                              .map((entry) {
+                                final actualIndex =
+                                    entry.key +
+                                    (validInstallments.length / 2).ceil();
+                                return _buildInstallmentRow(
+                                  actualIndex + 1,
+                                  entry.value.duration,
+                                  entry.value.value,
+                                );
+                              })
+                              .toList(),
+                        ),
+                      ),
+                    ],
+                  ),
+              ];
+            })(),
           ];
         },
       ),
@@ -296,7 +346,7 @@ class PdfSalesOrderGenerator {
 
   // --- Header Builder ---
   static pw.Widget _buildHeaderRow(
-    SalesOrder order,
+    YarnSalesOrder order,
     pw.MemoryImage? logoImage,
     PdfColor primaryColor,
     PdfColor accentColor,
@@ -304,7 +354,7 @@ class PdfSalesOrderGenerator {
     return pw.Column(
       children: [
         pw.Row(
-          crossAxisAlignment: pw.CrossAxisAlignment.center, // Center vertically
+          crossAxisAlignment: pw.CrossAxisAlignment.center,
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
             // --- Right Side (Visual Right) ---
@@ -358,8 +408,40 @@ class PdfSalesOrderGenerator {
                       ),
                     ),
                   pw.SizedBox(height: 2),
+                  // Delivery Responsibility below branch
+                  pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.center,
+                    children: [
+                      pw.Text(
+                        'مسئولية التوصيل: ',
+                        style: const pw.TextStyle(
+                          fontSize: 10,
+                          color: PdfColors.grey700,
+                        ),
+                      ),
+                      pw.Container(
+                        padding: const pw.EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: pw.BoxDecoration(
+                          border: pw.Border.all(color: PdfColors.grey400),
+                          borderRadius: pw.BorderRadius.circular(3),
+                        ),
+                        child: pw.Text(
+                          order.deliveryResponsibility,
+                          style: pw.TextStyle(
+                            fontSize: 10,
+                            fontWeight: pw.FontWeight.bold,
+                            color: PdfColors.black,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  pw.SizedBox(height: 2),
                   pw.Text(
-                    '(${order.orderTypes.join(', ')})',
+                    'Yarn Sales Order',
                     style: const pw.TextStyle(
                       fontSize: 10,
                       color: PdfColors.grey700,
@@ -384,7 +466,6 @@ class PdfSalesOrderGenerator {
             ),
           ],
         ),
-        // Add a line divider or spacing if needed
         pw.SizedBox(height: 10),
       ],
     );
@@ -440,7 +521,7 @@ class PdfSalesOrderGenerator {
         mainAxisSize: pw.MainAxisSize.min,
         children: [
           pw.SizedBox(
-            width: 70,
+            width: 80,
             child: pw.Text(
               label,
               style: pw.TextStyle(
@@ -490,6 +571,46 @@ class PdfSalesOrderGenerator {
         text,
         textAlign: align,
         style: const pw.TextStyle(fontSize: 10),
+      ),
+    );
+  }
+
+  static pw.Widget _buildInstallmentRow(
+    int number,
+    String duration,
+    String value,
+  ) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 4),
+      child: pw.Row(
+        children: [
+          pw.SizedBox(
+            width: 50,
+            child: pw.Text(
+              'القيمة $number',
+              style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+            ),
+          ),
+          pw.Expanded(
+            child: pw.Container(
+              padding: const pw.EdgeInsets.all(4),
+              decoration: pw.BoxDecoration(
+                border: pw.Border.all(color: PdfColors.grey300),
+              ),
+              child: pw.Text(duration, style: const pw.TextStyle(fontSize: 8)),
+            ),
+          ),
+          pw.SizedBox(width: 5),
+          pw.Expanded(
+            child: pw.Container(
+              padding: const pw.EdgeInsets.all(4),
+              decoration: pw.BoxDecoration(
+                border: pw.Border.all(color: PdfColors.grey300),
+              ),
+              child: pw.Text(value, style: const pw.TextStyle(fontSize: 8)),
+            ),
+          ),
+        ],
       ),
     );
   }
