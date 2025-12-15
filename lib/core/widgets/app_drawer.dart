@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 import '../../features/sales_order/presentation/pages/price_list_page.dart';
 import '../../features/sales_order/presentation/pages/sales_order_container_page.dart';
+import '../../features/return_order/presentation/pages/return_order_page.dart';
 
 import '../../features/user/presentation/pages/edit_profile_page.dart';
 import '../../features/about/presentation/pages/about_page.dart';
@@ -39,7 +40,7 @@ class AppDrawer extends StatelessWidget {
                 _buildSectionHeader('Main Menu'),
                 _buildModernMenuItem(
                   context,
-                  icon: FontAwesomeIcons.moneyBill,
+                  icon: FontAwesomeIcons.receipt,
                   title: 'Price Lists',
                   subtitle: 'View pricing information',
                   onTap: () {
@@ -84,6 +85,21 @@ class AppDrawer extends StatelessWidget {
                     );
                   },
                 ),
+                _buildModernMenuItem(
+                  context,
+                  icon: FontAwesomeIcons.rotateLeft,
+                  title: 'Return Order',
+                  subtitle: 'Create return orders',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ReturnOrderPage(),
+                      ),
+                    );
+                  },
+                ),
 
                 const SizedBox(height: 16),
 
@@ -91,7 +107,7 @@ class AppDrawer extends StatelessWidget {
                 _buildSectionHeader('Information'),
                 _buildModernMenuItem(
                   context,
-                  icon: Icons.info_outline,
+                  icon: Icons.info,
                   title: 'About Us',
                   subtitle: 'Company information',
                   onTap: () {
@@ -111,7 +127,7 @@ class AppDrawer extends StatelessWidget {
                 _buildSectionHeader('Settings'),
                 _buildModernMenuItem(
                   context,
-                  icon: Icons.person_outline,
+                  icon: Icons.person,
                   title: 'Edit Profile',
                   subtitle: 'Update your information',
                   onTap: () {
@@ -231,9 +247,7 @@ class AppDrawer extends StatelessWidget {
         shape: const StadiumBorder(),
         onTap: () => themeProvider.toggleTheme(),
         leading: Icon(
-          themeProvider.isDarkMode
-              ? Icons.dark_mode_outlined
-              : Icons.light_mode_outlined,
+          themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
           color: theme.colorScheme.onSurfaceVariant,
         ),
         title: Text(

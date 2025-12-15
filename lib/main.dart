@@ -12,6 +12,8 @@ import 'features/sales_order/data/models/yarn_sales_order.dart';
 import 'features/user/data/datasources/user_local_data_source.dart';
 import 'features/user/data/models/user_model.dart';
 import 'features/splash/presentation/pages/splash_screen.dart';
+import 'features/return_order/data/models/return_order.dart';
+import 'features/return_order/data/datasources/return_order_local_data_source.dart';
 
 void main() async {
   runZonedGuarded<Future<void>>(
@@ -32,6 +34,8 @@ void main() async {
         Hive.registerAdapter(YarnSalesOrderAdapter());
         Hive.registerAdapter(YarnSalesOrderItemAdapter());
         Hive.registerAdapter(YarnInstallmentAdapter());
+        Hive.registerAdapter(ReturnOrderAdapter());
+        Hive.registerAdapter(ReturnOrderItemAdapter());
 
         final userDataSource = UserLocalDataSource();
         await userDataSource.init();
@@ -39,6 +43,8 @@ void main() async {
         
         // Initialize Yarn invoice data source
         await YarnInvoiceLocalDataSource().init();
+        // Initialize Return Order data source
+        await ReturnOrderLocalDataSource().init();
       } catch (e, stack) {
         debugPrint('Initialization Error: $e\n$stack');
         // Consider showing a fallback UI here if critical init fails

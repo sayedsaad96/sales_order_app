@@ -462,7 +462,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
             onPressed: _resetForm,
           ),
           IconButton(
-            icon: const Icon(Icons.shopping_cart),
+            icon: const Icon(Icons.folder),
             tooltip: 'الفواتير المحفوظة',
             onPressed: () {
               Navigator.push(

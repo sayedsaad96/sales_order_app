@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:printing/printing.dart';
+import 'package:intl/intl.dart';
 
 import '../../data/models/yarn_sales_order.dart';
 import '../../data/datasources/yarn_invoice_local_data_source.dart';
@@ -37,7 +38,7 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
   final List<TextEditingController> _descriptionControllers = [];
   final List<TextEditingController> _priceControllers = [];
   final List<TextEditingController> _quantityControllers = [];
-  final List<String> _units = [];
+  final List<TextEditingController> _unitControllers = [];
 
   // Dynamic installment rows (starts with 1)
   final List<TextEditingController> _installmentDurationControllers = [];
@@ -101,7 +102,7 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
         _quantityControllers[0].text = order.items[0].quantity > 0
             ? order.items[0].quantity.toString()
             : '';
-        _units[0] = order.items[0].unit;
+        _unitControllers[0].text = order.items[0].unit;
       } else {
         // Add additional items
         _addItem();
@@ -112,7 +113,7 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
         _quantityControllers[i].text = order.items[i].quantity > 0
             ? order.items[i].quantity.toString()
             : '';
-        _units[i] = order.items[i].unit;
+        _unitControllers[i].text = order.items[i].unit;
       }
     }
 
@@ -175,7 +176,7 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
             description: description,
             price: price,
             quantity: quantity,
-            unit: _units[i],
+            unit: _unitControllers[i].text,
           ),
         );
       }
@@ -204,7 +205,7 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
     _descriptionControllers.add(descController);
     _priceControllers.add(priceController);
     _quantityControllers.add(quantityController);
-    _units.add('KG');
+    _unitControllers.add(TextEditingController(text: 'KG'));
 
     // Add listeners to calculate total
     priceController.addListener(_calculateTotal);
@@ -220,11 +221,12 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
       _descriptionControllers[index].dispose();
       _priceControllers[index].dispose();
       _quantityControllers[index].dispose();
+      _unitControllers[index].dispose();
 
       _descriptionControllers.removeAt(index);
       _priceControllers.removeAt(index);
       _quantityControllers.removeAt(index);
-      _units.removeAt(index);
+      _unitControllers.removeAt(index);
 
       if (mounted) {
         setState(() {});
@@ -243,11 +245,14 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
     for (var controller in _quantityControllers) {
       controller.dispose();
     }
+    for (var controller in _unitControllers) {
+      controller.dispose();
+    }
 
     _descriptionControllers.clear();
     _priceControllers.clear();
     _quantityControllers.clear();
-    _units.clear();
+    _unitControllers.clear();
 
     // Add one empty item
     _addItem();
@@ -473,6 +478,9 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
     for (var controller in _quantityControllers) {
       controller.dispose();
     }
+    for (var controller in _unitControllers) {
+      controller.dispose();
+    }
     for (var controller in _installmentDurationControllers) {
       controller.dispose();
     }
@@ -531,7 +539,7 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
               onPressed: _resetForm,
             ),
             IconButton(
-              icon: const Icon(Icons.shopping_cart),
+              icon: const Icon(Icons.folder),
               tooltip: 'الفواتير المحفوظة',
               onPressed: () {
                 Navigator.push(
@@ -545,7 +553,7 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
           ],
         ),
         body: LayoutBuilder(
-          builder: (context, constraints) {
+          builder: (builderContext, constraints) {
             final isMobile =
                 constraints.maxWidth < ResponsiveConstants.kMobileBreakpoint;
             return Center(
@@ -704,7 +712,7 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                                     ),
                                     child: Text(
                                       _deliveryDate != null
-                                          ? '${_deliveryDate!.year}-${_deliveryDate!.month}-${_deliveryDate!.day}'
+                                          ? DateFormat('dd-MMM-yyyy').format(_deliveryDate!)
                                           : 'اختر التاريخ',
                                     ),
                                   ),
@@ -1070,31 +1078,14 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                                               Row(
                                                 children: [
                                                   Expanded(
-                                                    child: DropdownButtonFormField<String>(
-                                                      initialValue:
-                                                          _units[index],
+                                                    child: TextFormField(
+                                                      controller:
+                                                          _unitControllers[index],
                                                       decoration:
                                                           const InputDecoration(
                                                             labelText: 'الوحدة',
                                                             border:
                                                                 OutlineInputBorder(),
-                                                          ),
-                                                      items: ['KG']
-                                                          .map(
-                                                            (e) =>
-                                                                DropdownMenuItem(
-                                                                  value: e,
-                                                                  child: Text(
-                                                                    e,
-                                                                  ),
-                                                                ),
-                                                          )
-                                                          .toList(),
-                                                      onChanged: (v) =>
-                                                          setState(
-                                                            () =>
-                                                                _units[index] =
-                                                                    v ?? 'KG',
                                                           ),
                                                     ),
                                                   ),
@@ -1299,9 +1290,9 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                                                     const SizedBox(width: 8),
                                                     Expanded(
                                                       flex: 2,
-                                                      child: DropdownButtonFormField<String>(
-                                                        initialValue:
-                                                            _units[index],
+                                                      child: TextFormField(
+                                                        controller:
+                                                            _unitControllers[index],
                                                         decoration: const InputDecoration(
                                                           border:
                                                               OutlineInputBorder(),
@@ -1312,23 +1303,6 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                                                               ),
                                                           isDense: true,
                                                         ),
-                                                        items: ['KG', 'TON', 'PCS']
-                                                            .map(
-                                                              (e) =>
-                                                                  DropdownMenuItem(
-                                                                    value: e,
-                                                                    child: Text(
-                                                                      e,
-                                                                    ),
-                                                                  ),
-                                                            )
-                                                            .toList(),
-                                                        onChanged: (v) =>
-                                                            setState(
-                                                              () =>
-                                                                  _units[index] =
-                                                                      v ?? 'KG',
-                                                            ),
                                                       ),
                                                     ),
                                                     if (_descriptionControllers
