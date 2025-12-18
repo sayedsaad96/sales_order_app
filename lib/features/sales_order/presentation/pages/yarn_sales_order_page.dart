@@ -14,6 +14,7 @@ import '../../../../core/utils/responsive_constants.dart';
 import '../widgets/yarn_installment_widget.dart';
 import '../widgets/carton_calculator_dialog.dart';
 import 'saved_yarn_invoices_page.dart';
+import '../../../../core/widgets/app_drawer.dart';
 
 class YarnSalesOrderPage extends StatefulWidget {
   final YarnSalesOrder? existingOrder;
@@ -564,11 +565,13 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
       data: tealTheme,
       child: Scaffold(
         appBar: AppBar(
-          leading: IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: widget.onMenuPressed,
-            tooltip: 'Menu',
-          ),
+          leading: widget.onMenuPressed != null
+              ? IconButton(
+                  icon: const Icon(Icons.menu),
+                  onPressed: widget.onMenuPressed,
+                  tooltip: 'Menu',
+                )
+              : null,
           title: const Text('Annex Group'),
           centerTitle: true,
           actions: [
@@ -591,6 +594,7 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
             ),
           ],
         ),
+        drawer: const AppDrawer(),
         body: LayoutBuilder(
           builder: (builderContext, constraints) {
             final isMobile =

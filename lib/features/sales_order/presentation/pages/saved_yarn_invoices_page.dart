@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../data/datasources/yarn_invoice_local_data_source.dart';
 import '../../data/models/yarn_sales_order.dart';
 import 'yarn_sales_order_page.dart';
+import '../../../../core/widgets/app_drawer.dart';
 
 import '../../../../core/utils/performance_utils.dart';
 
@@ -553,8 +554,9 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
                       });
                     },
                   )
-                : null,
+              : null,
           ),
+          drawer: const AppDrawer(),
           body: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _selectedCustomer == null

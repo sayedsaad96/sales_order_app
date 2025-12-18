@@ -14,6 +14,7 @@ import '../widgets/customer_info_section.dart';
 // import '../widgets/order_section_widget.dart'; // Removed in favor of direct sliver building
 import '../widgets/sales_order_item_row.dart';
 import '../utils/sales_order_helpers.dart';
+import '../../../../core/widgets/app_drawer.dart';
 
 
 class SalesOrderPage extends StatefulWidget {
@@ -449,11 +450,13 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: widget.onMenuPressed,
-          tooltip: 'Menu',
-        ),
+        leading: widget.onMenuPressed != null
+            ? IconButton(
+                icon: const Icon(Icons.menu),
+                onPressed: widget.onMenuPressed,
+                tooltip: 'Menu',
+              )
+            : null,
         title: const Text('Annex Group'),
         centerTitle: true,
         actions: [
@@ -476,6 +479,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
           ),
         ],
       ),
+      drawer: const AppDrawer(),
       body: LayoutBuilder(
         builder: (context, constraints) {
           final isMobile =

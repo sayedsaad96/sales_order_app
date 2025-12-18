@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../data/datasources/invoice_local_data_source.dart';
 import '../../data/models/sales_order.dart';
 import 'sales_order_page.dart';
+import '../../../../core/widgets/app_drawer.dart';
 
 import '../../../../core/utils/performance_utils.dart';
 
@@ -500,6 +501,7 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
                 )
               : null,
         ),
+        drawer: const AppDrawer(),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : _selectedCustomer == null

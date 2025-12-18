@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/pdf_viewer_page.dart';
+import '../../../../core/widgets/app_drawer.dart';
 import 'bank_accounts_page.dart';
 
 class AboutPage extends StatelessWidget {
@@ -10,6 +11,7 @@ class AboutPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('About Us'), centerTitle: true),
+      drawer: const AppDrawer(),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 800),

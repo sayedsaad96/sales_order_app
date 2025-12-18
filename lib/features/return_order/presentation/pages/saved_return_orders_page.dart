@@ -3,6 +3,7 @@ import 'package:intl/intl.dart' as intl;
 import '../../data/datasources/return_order_local_data_source.dart';
 import '../../data/models/return_order.dart';
 import 'return_order_page.dart';
+import '../../../../core/widgets/app_drawer.dart';
  
 // Assuming core/utils exists as seen in SavedInvoicesPage path: ../../../../core/utils/performance_utils.dart
 
@@ -432,6 +433,7 @@ class _SavedReturnOrdersPageState extends State<SavedReturnOrdersPage> {
                 )
               : null,
         ),
+        drawer: const AppDrawer(),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : _selectedCustomer == null

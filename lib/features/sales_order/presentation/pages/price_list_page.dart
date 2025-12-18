@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 
 import 'package:share_plus/share_plus.dart';
 import '../../../../core/widgets/pdf_viewer_page.dart';
+import '../../../../core/widgets/app_drawer.dart';
 
 class PriceListPage extends StatelessWidget {
   const PriceListPage({super.key});
@@ -13,6 +14,7 @@ class PriceListPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('قوائم الأسعار'), centerTitle: true),
+      drawer: const AppDrawer(),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1200),

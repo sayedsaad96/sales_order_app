@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../data/datasources/user_local_data_source.dart';
 import '../../data/models/user_model.dart';
+import '../../../../core/widgets/app_drawer.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -65,6 +66,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('تعديل الملف الشخصي')),
+      drawer: const AppDrawer(),
       body: Center(
         child: SingleChildScrollView(
           child: ConstrainedBox(

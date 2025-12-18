@@ -7,6 +7,7 @@ import '../../features/return_order/presentation/pages/return_order_page.dart';
 
 import '../../features/user/presentation/pages/edit_profile_page.dart';
 import '../../features/about/presentation/pages/about_page.dart';
+import '../../features/analysis/presentation/pages/sales_analysis_page.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -104,6 +105,21 @@ class AppDrawer extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (context) => const ReturnOrderPage(),
+                      ),
+                    );
+                  },
+                ),
+                _buildModernMenuItem(
+                  context,
+                  icon: FontAwesomeIcons.chartLine,
+                  title: 'Sales Analysis',
+                  subtitle: 'Insights and performance',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SalesAnalysisPage(),
                       ),
                     );
                   },
