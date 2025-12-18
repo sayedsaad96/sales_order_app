@@ -24,7 +24,15 @@ class AppDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    final width = MediaQuery.of(context).size.width;
+    // Adaptive width: 75% of screen for standard phones, capped at 280px for larger screens.
+    // For very small devices (< 350px), use 85% to ensure content fits.
+    final drawerWidth = width < 350
+        ? width * 0.85
+        : (width * 0.75).clamp(0.0, 280.0);
+
     return Drawer(
+      width: drawerWidth,
       child: Column(
         children: [
           // Modern Gradient Header
@@ -273,8 +281,10 @@ class AppDrawer extends StatelessWidget {
   Widget _buildModernSocialFooter(BuildContext context, bool isDark) {
     return Padding(
       padding: const EdgeInsets.all(24.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        spacing: 12,
+        runSpacing: 12,
         children: [
           _ModernSocialIcon(
             icon: FontAwesomeIcons.facebook,
@@ -282,21 +292,18 @@ class AppDrawer extends StatelessWidget {
                 _launchSocialMedia('https://www.facebook.com/annexeg/'),
             color: const Color(0xFF1877F2),
           ),
-          const SizedBox(width: 16),
           _ModernSocialIcon(
             icon: FontAwesomeIcons.instagram,
             onTap: () =>
                 _launchSocialMedia('https://www.instagram.com/annexeg/'),
             color: const Color(0xFFE4405F),
           ),
-          const SizedBox(width: 16),
           _ModernSocialIcon(
             icon: FontAwesomeIcons.linkedin,
             onTap: () =>
                 _launchSocialMedia('https://www.linkedin.com/company/annexeg/'),
             color: const Color(0xFF0A66C2),
           ),
-          const SizedBox(width: 16),
           _ModernSocialIcon(
             icon: FontAwesomeIcons.globe,
             onTap: () => _launchSocialMedia('https://www.annexeg.com/'),

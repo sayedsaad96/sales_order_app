@@ -3,25 +3,42 @@ import '../models/yarn_sales_order.dart';
 
 class YarnInvoiceLocalDataSource {
   static const String _boxName = 'yarn_invoices';
-  Box<YarnSalesOrder>? _box;
 
   Future<void> init() async {
-    _box = await Hive.openBox<YarnSalesOrder>(_boxName);
+    if (!Hive.isBoxOpen(_boxName)) {
+      await Hive.openBox<YarnSalesOrder>(_boxName);
+    }
+  }
+
+  Box<YarnSalesOrder> _getBox() {
+    if (!Hive.isBoxOpen(_boxName)) {
+      throw Exception('Yarn invoices box is not open');
+    }
+    return Hive.box<YarnSalesOrder>(_boxName);
   }
 
   Future<void> saveInvoice(YarnSalesOrder order) async {
-    if (_box == null) await init();
+    final box = _getBox();
     
-    // Group invoices by customer name
-    final customerName = order.customerName ?? 'Unknown';
-    final key = '${customerName}_${order.sn}_${DateTime.now().millisecondsSinceEpoch}';
-    
-    await _box!.put(key, order);
+    if (order.isInBox) {
+      await order.save();
+    } else {
+      // Group invoices by customer name
+      final customerName = order.customerName ?? 'Unknown';
+      final key = '${customerName}_${order.sn}_${DateTime.now().millisecondsSinceEpoch}';
+      
+      await box.put(key, order);
+    }
   }
 
   List<YarnSalesOrder> getAllInvoices() {
-    if (_box == null) return [];
-    return _box!.values.toList();
+    try {
+      if (!Hive.isBoxOpen(_boxName)) return [];
+      final box = Hive.box<YarnSalesOrder>(_boxName);
+      return box.values.toList();
+    } catch (e) {
+      return [];
+    }
   }
 
   Map<String, List<YarnSalesOrder>> getInvoicesByCustomer() {
@@ -42,12 +59,14 @@ class YarnInvoiceLocalDataSource {
   }
 
   Future<void> deleteInvoice(YarnSalesOrder order) async {
-    if (_box == null) await init();
-    await order.delete();
+    if (order.isInBox) {
+      await order.delete();
+    }
   }
 
   Future<void> updateInvoice(YarnSalesOrder order) async {
-    if (_box == null) await init();
-    await order.save();
+    if (order.isInBox) {
+      await order.save();
+    }
   }
 }

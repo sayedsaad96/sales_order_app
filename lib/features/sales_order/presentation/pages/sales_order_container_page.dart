@@ -16,6 +16,7 @@ class SalesOrderContainerPage extends StatefulWidget {
 
 class _SalesOrderContainerPageState extends State<SalesOrderContainerPage> {
   late int _currentIndex;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -26,50 +27,61 @@ class _SalesOrderContainerPageState extends State<SalesOrderContainerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       drawer: const AppDrawer(),
       body: IndexedStack(
         index: _currentIndex,
-        children: const [SalesOrderPage(), YarnSalesOrderPage()],
+        children: [
+          SalesOrderPage(
+            onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+          ),
+          YarnSalesOrderPage(
+            onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+          ),
+        ],
       ),
       bottomNavigationBar: _buildFloatingNavBar(context),
     );
   }
 
   Widget _buildFloatingNavBar(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 20,
-            spreadRadius: 2,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(
-            index: 0,
-            icon: FontAwesomeIcons.linktree,
-            label: 'Essential',
-            activeColor: Colors.blue.shade600,
-            activeBg: Colors.blue.shade50,
-          ),
-          _buildNavItem(
-            index: 1,
-            icon: FontAwesomeIcons.yarn,
-            label: 'Yarn',
-            activeColor: Colors.teal.shade600,
-            activeBg: Colors.teal.shade50,
-          ),
-        ],
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 1200),
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 20,
+              spreadRadius: 2,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildNavItem(
+              index: 0,
+              icon: FontAwesomeIcons.linktree,
+              label: 'Essential',
+              activeColor: Colors.blue.shade600,
+              activeBg: Colors.blue.shade50,
+            ),
+            _buildNavItem(
+              index: 1,
+              icon: FontAwesomeIcons.yarn,
+              label: 'Yarn',
+              activeColor: Colors.teal.shade600,
+              activeBg: Colors.teal.shade50,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -83,21 +95,26 @@ class _SalesOrderContainerPageState extends State<SalesOrderContainerPage> {
   }) {
     final isSelected = _currentIndex == index;
     return GestureDetector(
-      onTap: () => setState(() => _currentIndex = index),
+      onTap: () {
+        if (_scaffoldKey.currentState?.isDrawerOpen ?? false) {
+          _scaffoldKey.currentState?.closeDrawer();
+        }
+        setState(() => _currentIndex = index);
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOutQuart,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
           color: isSelected ? activeBg : Colors.transparent,
-          borderRadius: BorderRadius.circular(25),
+          borderRadius: BorderRadius.circular(15),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               icon,
-              color: isSelected ? activeColor : Colors.grey.shade600,
+              color: isSelected ? activeColor : Colors.grey.shade700,
               size: 20,
             ),
             if (isSelected) ...[

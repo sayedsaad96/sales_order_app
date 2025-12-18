@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as intl;
-import 'dart:math';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:printing/printing.dart';
@@ -10,6 +9,7 @@ import '../../data/datasources/return_order_local_data_source.dart';
 import '../../pdf/return_order_pdf_generator.dart';
 import '../../../user/data/datasources/user_local_data_source.dart';
 import 'saved_return_orders_page.dart';
+import '../../../../core/utils/responsive_constants.dart';
 import '../widgets/return_order_item_row.dart';
 
 class ReturnOrderPage extends StatefulWidget {
@@ -141,6 +141,7 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
       lastDate: DateTime(2030),
     );
     if (picked != null) {
+      if (!mounted) return;
       setState(() {
         if (isDelivery) {
           _deliveryDate = picked;
@@ -275,31 +276,26 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
   }
 
   ReturnOrder _buildReturnOrderFromForm() {
-    final id =
-        DateTime.now().millisecondsSinceEpoch.toString() +
-        Random().nextInt(1000).toString();
-    // Maintain existing SN if editing, or create new?
-    // For now assuming new SN generation logic is fine as per previous code,
-    // but if we are editing an existing order we might want to keep its SN.
-    // The previous code always generated a NEW SN. I will stick to that to be safe,
-    // or checks unrelated to this task.
-    final sn = id.substring(id.length - 8);
-
-    return ReturnOrder(
-      sn: sn,
-      category: _selectedCategory,
-      branch: _selectedBranch,
-      customerName: _customerNameController.text,
+    final order = widget.existingOrder ?? ReturnOrder(
+      sn: (DateTime.now().millisecondsSinceEpoch % 100000000).toString().padLeft(8, '0'),
       returnDate: _returnDate,
-      region: _regionController.text,
-      returnResponsible: _returnResponsibleController.text,
-      deliveryCostPayer: _deliveryCostPayer,
-      routeFrom: _routeFromController.text,
-      routeTo: _routeToController.text,
-      returnReason: _returnReasonController.text,
-      deliveryDate: _deliveryDate,
-      items: _items,
     );
+
+    order
+      ..category = _selectedCategory
+      ..branch = _selectedBranch
+      ..customerName = _customerNameController.text
+      ..returnDate = _returnDate
+      ..region = _regionController.text
+      ..returnResponsible = _returnResponsibleController.text
+      ..deliveryCostPayer = _deliveryCostPayer
+      ..routeFrom = _routeFromController.text
+      ..routeTo = _routeToController.text
+      ..returnReason = _returnReasonController.text
+      ..deliveryDate = _deliveryDate
+      ..items = List.from(_items);
+
+    return order;
   }
 
   @override
@@ -337,10 +333,12 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
       drawer: const AppDrawer(),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final isMobile = constraints.maxWidth < 600;
-          return Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1000),
+          final isMobile =
+              constraints.maxWidth < ResponsiveConstants.kMobileBreakpoint;
+          return Align(
+            alignment: Alignment.topCenter,
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 1200),
               child: Form(
                 key: _formKey,
                 child: CustomScrollView(
@@ -357,13 +355,14 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
                       ),
                     ),
 
-                    // Items Header
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: _buildItemsHeader(isMobile),
+                    // Items Header (Desktop only)
+                    if (!isMobile)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: _buildItemsHeader(isMobile),
+                        ),
                       ),
-                    ),
 
                     // Items List
                     SliverList(
@@ -669,7 +668,7 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
         labelText: label,
         border: const OutlineInputBorder(),
         filled: readOnly,
-        fillColor: readOnly ? Colors.grey[100] : null,
+        fillColor: readOnly ? Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3) : null,
       ),
       validator: (v) {
         if (isRequired && !readOnly && (v == null || v.isEmpty)) return 'مطلوب';

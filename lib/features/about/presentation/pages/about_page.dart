@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../../core/widgets/pdf_viewer_page.dart';
 import 'bank_accounts_page.dart';
 
-
-
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
 
@@ -100,9 +98,7 @@ class AboutPage extends StatelessWidget {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => const BankAccountsPage(),
-            ),
+            MaterialPageRoute(builder: (context) => const BankAccountsPage()),
           );
         },
       ),

@@ -66,16 +66,10 @@ class YarnPdfGenerator {
                         _buildSectionHeader('بيانات العميل', primaryColor),
                         pw.SizedBox(height: 8),
                         _buildInfoRow('الاسم:', order.customerName),
+                        _buildInfoRow('اسم للتواصل:', order.contactName),
+                        _buildInfoRow('رقم للتواصل:', order.mobileNumber),
                         _buildInfoRow('المنطقة:', order.region),
                         _buildInfoRow('مكان التسليم:', order.deliveryPlace),
-                        _buildInfoRow(
-                          'تاريخ التسليم:',
-                          order.deliveryDate != null
-                              ? intl.DateFormat(
-                                  'dd/MM/yyyy',
-                                ).format(order.deliveryDate!)
-                              : '-',
-                        ),
                       ],
                     ),
                   ),
@@ -100,6 +94,14 @@ class YarnPdfGenerator {
                         _buildInfoRow(
                           'تاريخ الطلب:',
                           intl.DateFormat('dd/MM/yyyy').format(order.orderDate),
+                        ),
+                        _buildInfoRow(
+                          'تاريخ التسليم:',
+                          order.deliveryDate != null
+                              ? intl.DateFormat(
+                                  'dd/MM/yyyy',
+                                ).format(order.deliveryDate!)
+                              : '-',
                         ),
                         _buildInfoRow(
                           'تعديل الكمية:',

@@ -10,13 +10,15 @@ import '../../data/datasources/yarn_invoice_local_data_source.dart';
 import '../../pdf/yarn_pdf_generator.dart';
 import '../../../user/data/datasources/user_local_data_source.dart';
 import '../../../../core/utils/responsive_constants.dart';
-import '../../../../core/widgets/app_drawer.dart';
+
 import '../widgets/yarn_installment_widget.dart';
+import '../widgets/carton_calculator_dialog.dart';
 import 'saved_yarn_invoices_page.dart';
 
 class YarnSalesOrderPage extends StatefulWidget {
   final YarnSalesOrder? existingOrder;
-  const YarnSalesOrderPage({super.key, this.existingOrder});
+  final VoidCallback? onMenuPressed;
+  const YarnSalesOrderPage({super.key, this.existingOrder, this.onMenuPressed});
 
   @override
   State<YarnSalesOrderPage> createState() => _YarnSalesOrderPageState();
@@ -28,6 +30,8 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
     text: 'YSO-${DateTime.now().microsecond}',
   );
   final _customerNameController = TextEditingController();
+  final _contactNameController = TextEditingController();
+  final _mobileNumberController = TextEditingController();
   final _regionController = TextEditingController();
   final _salesResponsibleController = TextEditingController();
   final _deliveryPlaceController = TextEditingController();
@@ -48,9 +52,11 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
   String _deliveryResponsibility = "العميل"; // العميل or الشركة
   String _editQuantity =
       "الكمية المحددة"; // الكمية المحددة, يفضل الزيادة, يفضل التخفيض
-  bool _discountIncluded = false;
+
   bool _specifiedQuantity = false;
   DateTime _orderDate = DateTime.now();
+
+  final Map<String, bool> _orderTypes = {'غزل': true, 'قماش': false};
   DateTime? _deliveryDate;
 
   final ValueNotifier<double> _totalValueNotifier = ValueNotifier(0.0);
@@ -74,21 +80,29 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
 
   void _loadExistingOrder() {
     final order = widget.existingOrder!;
-    _snController.text =
-        'YSO-${DateTime.now().microsecond}'; // New SN for clone
+    _snController.text = order.sn ?? '';
     _selectedBranch = order.branch;
     _deliveryResponsibility = order.deliveryResponsibility;
     _customerNameController.text = order.customerName ?? '';
+    _contactNameController.text = order.contactName ?? '';
+    _mobileNumberController.text = order.mobileNumber ?? '';
     _regionController.text = order.region ?? '';
     _deliveryDate = order.deliveryDate;
     _deliveryPlaceController.text = order.deliveryPlace ?? '';
     _editQuantity = order.editQuantity ?? 'الكمية المحددة';
-    _discountIncluded = order.discountIncluded;
+
     _specifiedQuantity = order.specifiedQuantity;
     _paymentMethodController.text = order.paymentMethod ?? '';
     _salesResponsibleController.text = order.salesResponsible ?? '';
     _notesController.text = order.notes ?? '';
     _orderDate = order.orderDate;
+
+    _orderTypes.updateAll((key, value) => false);
+    for (var type in order.orderTypes) {
+      if (_orderTypes.containsKey(type)) {
+        _orderTypes[type] = true;
+      }
+    }
 
     // Clear existing items and load from order
     _clearAllItems();
@@ -301,24 +315,32 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
 
   Future<void> _saveInvoice() async {
     if (_formKey.currentState!.validate()) {
-      final order = YarnSalesOrder(
-        sn: _snController.text,
-        branch: _selectedBranch,
-        deliveryResponsibility: _deliveryResponsibility,
-        customerName: _customerNameController.text,
-        region: _regionController.text,
-        deliveryDate: _deliveryDate,
+      final order = widget.existingOrder ?? YarnSalesOrder(
         orderDate: _orderDate,
-        deliveryPlace: _deliveryPlaceController.text,
-        editQuantity: _editQuantity,
-        discountIncluded: _discountIncluded,
-        specifiedQuantity: _specifiedQuantity,
-        paymentMethod: _paymentMethodController.text,
-        salesResponsible: _salesResponsibleController.text,
-        items: _getValidItems(),
-        installments: _getInstallments(),
-        notes: _notesController.text,
       );
+
+      order
+        ..sn = _snController.text
+        ..branch = _selectedBranch
+        ..deliveryResponsibility = _deliveryResponsibility
+        ..customerName = _customerNameController.text
+        ..region = _regionController.text
+        ..deliveryDate = _deliveryDate
+        ..orderDate = _orderDate
+        ..deliveryPlace = _deliveryPlaceController.text
+        ..editQuantity = _editQuantity
+        ..contactName = _contactNameController.text
+        ..mobileNumber = _mobileNumberController.text
+        ..specifiedQuantity = _specifiedQuantity
+        ..paymentMethod = _paymentMethodController.text
+        ..salesResponsible = _salesResponsibleController.text
+        ..items = _getValidItems()
+        ..installments = _getInstallments()
+        ..notes = _notesController.text
+        ..orderTypes = _orderTypes.entries
+            .where((e) => e.value)
+            .map((e) => e.key)
+            .toList();
 
       await YarnInvoiceLocalDataSource().saveInvoice(order);
 
@@ -378,13 +400,17 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
           orderDate: _orderDate,
           deliveryPlace: _deliveryPlaceController.text,
           editQuantity: _editQuantity,
-          discountIncluded: _discountIncluded,
-          specifiedQuantity: _specifiedQuantity,
+          contactName: _contactNameController.text,
+          mobileNumber: _mobileNumberController.text,
           paymentMethod: _paymentMethodController.text,
           salesResponsible: _salesResponsibleController.text,
           items: _getValidItems(),
           installments: _getInstallments(),
           notes: _notesController.text,
+          orderTypes: _orderTypes.entries
+              .where((e) => e.value)
+              .map((e) => e.key)
+              .toList(),
         );
 
         final pdf = await YarnPdfGenerator.generate(order);
@@ -438,6 +464,8 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
     setState(() {
       _snController.text = 'YSO-${DateTime.now().microsecond}';
       _customerNameController.clear();
+      _contactNameController.clear();
+      _mobileNumberController.clear();
       _regionController.clear();
       _deliveryPlaceController.clear();
       _paymentMethodController.clear();
@@ -445,10 +473,15 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
       _selectedBranch = "القاهرة";
       _deliveryResponsibility = "العميل";
       _editQuantity = "الكمية المحددة";
-      _discountIncluded = false;
+
       _specifiedQuantity = false;
       _orderDate = DateTime.now();
       _deliveryDate = null;
+
+      // Default: Check 'Yarn' (غزل) if new order
+      _orderTypes.updateAll((key, value) => false);
+      _orderTypes['غزل'] = true;
+      _orderTypes['قماش'] = false;
 
       _clearAllItems();
 
@@ -463,6 +496,8 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
   void dispose() {
     _snController.dispose();
     _customerNameController.dispose();
+    _contactNameController.dispose();
+    _mobileNumberController.dispose();
     _regionController.dispose();
     _salesResponsibleController.dispose();
     _deliveryPlaceController.dispose();
@@ -528,8 +563,12 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
     return Theme(
       data: tealTheme,
       child: Scaffold(
-        drawer: const AppDrawer(),
         appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: widget.onMenuPressed,
+            tooltip: 'Menu',
+          ),
           title: const Text('Annex Group'),
           centerTitle: true,
           actions: [
@@ -593,6 +632,32 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                                           ? 'مطلوب'
                                           : null,
                                     ),
+                                    const SizedBox(height: 10),
+                                    InkWell(
+                                      onTap: () async {
+                                        final date = await showDatePicker(
+                                          context: context,
+                                          initialDate: _orderDate,
+                                          firstDate: DateTime(2000),
+                                          lastDate: DateTime(2100),
+                                        );
+                                        if (!mounted) return;
+                                        if (date != null) {
+                                          setState(() => _orderDate = date);
+                                        }
+                                      },
+                                      child: InputDecorator(
+                                        decoration: const InputDecoration(
+                                          labelText: 'التاريخ',
+                                          border: OutlineInputBorder(),
+                                        ),
+                                        child: Text(
+                                          DateFormat(
+                                            'dd-MMM-yyyy',
+                                          ).format(_orderDate),
+                                        ),
+                                      ),
+                                    ),
                                   ],
                                 )
                               : Row(
@@ -612,6 +677,34 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                                     ),
                                     SizedBox(
                                       width: 150,
+                                      child: InkWell(
+                                        onTap: () async {
+                                          final date = await showDatePicker(
+                                            context: context,
+                                            initialDate: _orderDate,
+                                            firstDate: DateTime(2000),
+                                            lastDate: DateTime(2100),
+                                          );
+                                          if (!mounted) return;
+                                          if (date != null) {
+                                            setState(() => _orderDate = date);
+                                          }
+                                        },
+                                        child: InputDecorator(
+                                          decoration: const InputDecoration(
+                                            labelText: 'التاريخ',
+                                          ),
+                                          child: Text(
+                                            DateFormat(
+                                              'dd-MMM-yyyy',
+                                            ).format(_orderDate),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    SizedBox(
+                                      width: 150,
                                       child: TextFormField(
                                         controller: _snController,
                                         decoration: const InputDecoration(
@@ -629,31 +722,118 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                       ),
                       const SizedBox(height: 20),
 
-                      // Branch
+                      // Branch and Type
                       Card(
                         child: Padding(
                           padding: const EdgeInsets.all(16.0),
-                          child: SizedBox(
-                            width: isMobile ? double.infinity : 200,
-                            child: DropdownButtonFormField<String>(
-                              initialValue: _selectedBranch,
-                              decoration: const InputDecoration(
-                                labelText: 'الفرع',
-                                border: OutlineInputBorder(),
-                              ),
-                              items: ['القاهرة', 'المحلة']
-                                  .map(
-                                    (e) => DropdownMenuItem(
-                                      value: e,
-                                      child: Text(e),
+                          child: isMobile
+                              ? Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    DropdownButtonFormField<String>(
+                                      initialValue: _selectedBranch,
+                                      decoration: const InputDecoration(
+                                        labelText: 'الفرع',
+                                        border: OutlineInputBorder(),
+                                      ),
+                                      items: ['القاهرة', 'المحلة']
+                                          .map(
+                                            (e) => DropdownMenuItem(
+                                              value: e,
+                                              child: Text(e),
+                                            ),
+                                          )
+                                          .toList(),
+                                      onChanged: (v) =>
+                                          setState(() => _selectedBranch = v),
+                                      validator: (v) =>
+                                          v == null ? 'مطلوب' : null,
                                     ),
-                                  )
-                                  .toList(),
-                              onChanged: (v) =>
-                                  setState(() => _selectedBranch = v),
-                              validator: (v) => v == null ? 'مطلوب' : null,
-                            ),
-                          ),
+                                    const SizedBox(height: 10),
+                                    const Text('النوع: '),
+                                    Wrap(
+                                      spacing: 10,
+                                      children: _orderTypes.keys.map((key) {
+                                        return Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Checkbox(
+                                              value: _orderTypes[key],
+                                              onChanged: (v) => setState(
+                                                () => _orderTypes[key] =
+                                                    v ?? false,
+                                              ),
+                                              activeColor: Colors.teal,
+                                            ),
+                                            Text(key),
+                                          ],
+                                        );
+                                      }).toList(),
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      child: Container(
+                                        width: 150,
+                                        decoration: BoxDecoration(
+                                          border: Border.all(
+                                            color: Colors.grey,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        child: DropdownButtonFormField<String>(
+                                          initialValue: _selectedBranch,
+                                          decoration: const InputDecoration(
+                                            labelText: 'الفرع',
+                                            contentPadding:
+                                                EdgeInsets.symmetric(
+                                                  horizontal: 10,
+                                                ),
+                                            border: InputBorder.none,
+                                          ),
+                                          items: ['القاهرة', 'المحلة']
+                                              .map(
+                                                (e) => DropdownMenuItem(
+                                                  value: e,
+                                                  child: Text(e),
+                                                ),
+                                              )
+                                              .toList(),
+                                          onChanged: (v) => setState(
+                                            () => _selectedBranch = v,
+                                          ),
+                                          validator: (v) =>
+                                              v == null ? 'مطلوب' : null,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    const SizedBox(width: 20),
+                                    const Text('النوع: '),
+                                    ..._orderTypes.keys.map((key) {
+                                      return Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Checkbox(
+                                            value: _orderTypes[key],
+                                            onChanged: (v) => setState(
+                                              () =>
+                                                  _orderTypes[key] = v ?? false,
+                                            ),
+                                            activeColor: Colors.teal,
+                                          ),
+                                          Text(key),
+                                        ],
+                                      );
+                                    }),
+                                  ],
+                                ),
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -674,6 +854,22 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                                   ),
                                   validator: (v) =>
                                       v?.isEmpty ?? true ? 'مطلوب' : null,
+                                ),
+                                const SizedBox(height: 12),
+                                TextFormField(
+                                  controller: _contactNameController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'اسم للتواصل',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                TextFormField(
+                                  controller: _mobileNumberController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'رقم للتواصل',
+                                    border: OutlineInputBorder(),
+                                  ),
                                 ),
                                 const SizedBox(height: 12),
                                 TextFormField(
@@ -701,6 +897,7 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                                       firstDate: DateTime(2020),
                                       lastDate: DateTime(2030),
                                     );
+                                    if (!mounted) return;
                                     if (date != null) {
                                       setState(() => _deliveryDate = date);
                                     }
@@ -712,7 +909,9 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                                     ),
                                     child: Text(
                                       _deliveryDate != null
-                                          ? DateFormat('dd-MMM-yyyy').format(_deliveryDate!)
+                                          ? DateFormat(
+                                              'dd-MMM-yyyy',
+                                            ).format(_deliveryDate!)
                                           : 'اختر التاريخ',
                                     ),
                                   ),
@@ -824,6 +1023,7 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                                     ),
                                   ],
                                 ),
+                                const SizedBox(height: 16),
                               ] else ...[
                                 // Desktop Layout
                                 Row(
@@ -856,6 +1056,30 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                                   children: [
                                     Expanded(
                                       child: TextFormField(
+                                        controller: _contactNameController,
+                                        decoration: const InputDecoration(
+                                          labelText: 'اسم للتواصل',
+                                          border: OutlineInputBorder(),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: TextFormField(
+                                        controller: _mobileNumberController,
+                                        decoration: const InputDecoration(
+                                          labelText: 'رقم للتواصل',
+                                          border: OutlineInputBorder(),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: TextFormField(
                                         controller: _deliveryPlaceController,
                                         decoration: const InputDecoration(
                                           labelText: 'مكان التسليم',
@@ -874,6 +1098,7 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                                             firstDate: DateTime(2020),
                                             lastDate: DateTime(2030),
                                           );
+                                          if (!mounted) return;
                                           if (date != null) {
                                             setState(
                                               () => _deliveryDate = date,
@@ -882,13 +1107,13 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                                         },
                                         child: InputDecorator(
                                           decoration: const InputDecoration(
-                                            labelText: 'تاريخ التسليم',
+                                            labelText: 'تاريخ التوصيل',
                                             border: OutlineInputBorder(),
                                           ),
                                           child: Text(
                                             _deliveryDate != null
                                                 ? '${_deliveryDate!.year}-${_deliveryDate!.month}-${_deliveryDate!.day}'
-                                                : 'اختر التاريخ',
+                                                : ' ',
                                           ),
                                         ),
                                       ),
@@ -920,7 +1145,10 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                                   ],
                                 ),
                                 const SizedBox(height: 12),
-                                Row(
+                                Wrap(
+                                  spacing: 12,
+                                  runSpacing: 8,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
                                   children: [
                                     const Text(
                                       'تعديل الكمية',
@@ -928,8 +1156,8 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    const SizedBox(width: 12),
                                     Row(
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Radio<String>(
                                           value: 'الكمية المحددة',
@@ -943,6 +1171,7 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                                       ],
                                     ),
                                     Row(
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Radio<String>(
                                           value: 'يفضل الزيادة',
@@ -956,6 +1185,7 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                                       ],
                                     ),
                                     Row(
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Radio<String>(
                                           value: 'يفضل التخفيض',
@@ -975,8 +1205,8 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    const SizedBox(width: 12),
                                     Row(
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Radio<String>(
                                           value: 'العميل',
@@ -990,6 +1220,7 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                                       ],
                                     ),
                                     Row(
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Radio<String>(
                                           value: 'الشركة',
@@ -1047,17 +1278,74 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                                                     child: TextFormField(
                                                       controller:
                                                           _quantityControllers[index],
-                                                      decoration:
-                                                          const InputDecoration(
-                                                            labelText: 'الكمية',
-                                                            border:
-                                                                OutlineInputBorder(),
+                                                      decoration: InputDecoration(
+                                                        labelText: 'الكمية',
+                                                        border:
+                                                            OutlineInputBorder(),
+                                                        suffixIcon: IconButton(
+                                                          icon: const Icon(
+                                                            Icons.calculate,
+                                                            color: Colors.teal,
                                                           ),
+                                                          onPressed: () async {
+                                                            final currentQty =
+                                                                double.tryParse(
+                                                                  _quantityControllers[index]
+                                                                      .text,
+                                                                );
+                                                            final result =
+                                                                await showDialog<
+                                                                  double
+                                                                >(
+                                                                  context:
+                                                                      context,
+                                                                  builder:
+                                                                      (
+                                                                        context,
+                                                                      ) => CartonCalculatorDialog(
+                                                                        initialQuantity:
+                                                                            currentQty,
+                                                                      ),
+                                                                );
+                                                            if (!mounted) {
+                                                              return;
+                                                            }
+                                                            if (result !=
+                                                                null) {
+                                                              setState(() {
+                                                                _quantityControllers[index]
+                                                                    .text = result
+                                                                    .toStringAsFixed(
+                                                                      2,
+                                                                    );
+                                                              });
+                                                            }
+                                                          },
+                                                        ),
+                                                      ),
                                                       keyboardType:
                                                           TextInputType.number,
                                                     ),
                                                   ),
                                                   const SizedBox(width: 8),
+                                                  Expanded(
+                                                    child: TextFormField(
+                                                      controller:
+                                                          _unitControllers[index],
+                                                      decoration:
+                                                          const InputDecoration(
+                                                            labelText: 'الوحدة',
+                                                            border:
+                                                                OutlineInputBorder(),
+                                                          ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 12),
+
+                                              Row(
+                                                children: [
                                                   Expanded(
                                                     child: TextFormField(
                                                       controller:
@@ -1072,38 +1360,80 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                                                           TextInputType.number,
                                                     ),
                                                   ),
+                                                  const SizedBox(width: 8),
+                                                  Expanded(
+                                                    child: ListenableBuilder(
+                                                      listenable: Listenable.merge([
+                                                        _priceControllers[index],
+                                                        _quantityControllers[index],
+                                                      ]),
+                                                      builder: (context, _) {
+                                                        final price =
+                                                            double.tryParse(
+                                                              _priceControllers[index]
+                                                                  .text,
+                                                            ) ??
+                                                            0;
+                                                        final quantity =
+                                                            double.tryParse(
+                                                              _quantityControllers[index]
+                                                                  .text,
+                                                            ) ??
+                                                            0;
+                                                        return InputDecorator(
+                                                          decoration: InputDecoration(
+                                                            labelText: 'القيمة',
+                                                            border:
+                                                                OutlineInputBorder(),
+                                                            filled: true,
+                                                            fillColor:
+                                                                Theme.of(
+                                                                      context,
+                                                                    )
+                                                                    .colorScheme
+                                                                    .surfaceContainerHighest
+                                                                    .withValues(
+                                                                      alpha:
+                                                                          0.3,
+                                                                    ),
+                                                          ),
+                                                          child: Text(
+                                                            (price * quantity)
+                                                                .toStringAsFixed(
+                                                                  2,
+                                                                ),
+                                                            style:
+                                                                const TextStyle(
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  fontSize: 16,
+                                                                ),
+                                                          ),
+                                                        );
+                                                      },
+                                                    ),
+                                                  ),
                                                 ],
                                               ),
                                               const SizedBox(height: 12),
-                                              Row(
-                                                children: [
-                                                  Expanded(
-                                                    child: TextFormField(
-                                                      controller:
-                                                          _unitControllers[index],
-                                                      decoration:
-                                                          const InputDecoration(
-                                                            labelText: 'الوحدة',
-                                                            border:
-                                                                OutlineInputBorder(),
-                                                          ),
+                                              if (_descriptionControllers
+                                                      .length >
+                                                  1) ...[
+                                                const SizedBox(height: 8),
+                                                Align(
+                                                  alignment:
+                                                      Alignment.centerLeft,
+                                                  child: IconButton(
+                                                    icon: const Icon(
+                                                      Icons.delete,
+                                                      color: Colors.red,
                                                     ),
+                                                    onPressed: () =>
+                                                        _removeItem(index),
                                                   ),
-                                                  if (_descriptionControllers
-                                                          .length >
-                                                      1) ...[
-                                                    const SizedBox(width: 8),
-                                                    IconButton(
-                                                      icon: const Icon(
-                                                        Icons.delete,
-                                                        color: Colors.red,
-                                                      ),
-                                                      onPressed: () =>
-                                                          _removeItem(index),
-                                                    ),
-                                                  ],
-                                                ],
-                                              ),
+                                                ),
+                                              ],
                                             ],
                                           ),
                                         ),
@@ -1190,14 +1520,14 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                                                   Expanded(
                                                     flex: 3,
                                                     child: Text(
-                                                      'التصنيف',
+                                                      'الصنف',
                                                       style: _headerStyle(),
                                                     ),
                                                   ),
                                                   Expanded(
                                                     flex: 2,
                                                     child: Text(
-                                                      'السعر',
+                                                      'الوحدة',
                                                       style: _headerStyle(),
                                                     ),
                                                   ),
@@ -1211,7 +1541,14 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                                                   Expanded(
                                                     flex: 2,
                                                     child: Text(
-                                                      'الوحدة',
+                                                      'السعر',
+                                                      style: _headerStyle(),
+                                                    ),
+                                                  ),
+                                                  Expanded(
+                                                    flex: 2,
+                                                    child: Text(
+                                                      'القيمة',
                                                       style: _headerStyle(),
                                                     ),
                                                   ),
@@ -1250,6 +1587,88 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                                                       flex: 2,
                                                       child: TextFormField(
                                                         controller:
+                                                            _unitControllers[index],
+                                                        decoration: const InputDecoration(
+                                                          border:
+                                                              OutlineInputBorder(),
+                                                          contentPadding:
+                                                              EdgeInsets.symmetric(
+                                                                horizontal: 8,
+                                                                vertical: 8,
+                                                              ),
+                                                          isDense: true,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                    Expanded(
+                                                      flex: 2,
+                                                      child: TextFormField(
+                                                        controller:
+                                                            _quantityControllers[index],
+                                                        decoration: InputDecoration(
+                                                          border:
+                                                              OutlineInputBorder(),
+                                                          contentPadding:
+                                                              EdgeInsets.symmetric(
+                                                                horizontal: 8,
+                                                                vertical: 8,
+                                                              ),
+                                                          isDense: true,
+                                                          suffixIcon: IconButton(
+                                                            icon: const Icon(
+                                                              Icons.calculate,
+                                                              color:
+                                                                  Colors.teal,
+                                                              size: 20,
+                                                            ),
+                                                            padding:
+                                                                EdgeInsets.zero,
+                                                            constraints:
+                                                                BoxConstraints(),
+                                                            onPressed: () async {
+                                                              final currentQty =
+                                                                  double.tryParse(
+                                                                    _quantityControllers[index]
+                                                                        .text,
+                                                                  );
+                                                              final result =
+                                                                  await showDialog<
+                                                                    double
+                                                                  >(
+                                                                    context:
+                                                                        context,
+                                                                    builder:
+                                                                        (
+                                                                          context,
+                                                                        ) => CartonCalculatorDialog(
+                                                                          initialQuantity:
+                                                                              currentQty,
+                                                                        ),
+                                                                  );
+                                                              if (result !=
+                                                                  null) {
+                                                                setState(() {
+                                                                  _quantityControllers[index]
+                                                                      .text = result
+                                                                      .toStringAsFixed(
+                                                                        2,
+                                                                      );
+                                                                });
+                                                              }
+                                                            },
+                                                          ),
+                                                        ),
+                                                        keyboardType:
+                                                            TextInputType
+                                                                .number,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                    Expanded(
+                                                      flex: 2,
+                                                      child: TextFormField(
+                                                        controller:
                                                             _priceControllers[index],
                                                         decoration: const InputDecoration(
                                                           border:
@@ -1269,40 +1688,55 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                                                     const SizedBox(width: 8),
                                                     Expanded(
                                                       flex: 2,
-                                                      child: TextFormField(
-                                                        controller:
-                                                            _quantityControllers[index],
-                                                        decoration: const InputDecoration(
-                                                          border:
-                                                              OutlineInputBorder(),
-                                                          contentPadding:
-                                                              EdgeInsets.symmetric(
-                                                                horizontal: 8,
-                                                                vertical: 8,
+                                                      child: ListenableBuilder(
+                                                        listenable: Listenable.merge([
+                                                          _priceControllers[index],
+                                                          _quantityControllers[index],
+                                                        ]),
+                                                        builder: (context, _) {
+                                                          final price =
+                                                              double.tryParse(
+                                                                _priceControllers[index]
+                                                                    .text,
+                                                              ) ??
+                                                              0;
+                                                          final quantity =
+                                                              double.tryParse(
+                                                                _quantityControllers[index]
+                                                                    .text,
+                                                              ) ??
+                                                              0;
+                                                          return Container(
+                                                            padding:
+                                                                const EdgeInsets.symmetric(
+                                                                  horizontal: 8,
+                                                                  vertical: 8,
+                                                                ),
+                                                            decoration: BoxDecoration(
+                                                              border: Border.all(
+                                                                color:
+                                                                    Colors.grey,
                                                               ),
-                                                          isDense: true,
-                                                        ),
-                                                        keyboardType:
-                                                            TextInputType
-                                                                .number,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(width: 8),
-                                                    Expanded(
-                                                      flex: 2,
-                                                      child: TextFormField(
-                                                        controller:
-                                                            _unitControllers[index],
-                                                        decoration: const InputDecoration(
-                                                          border:
-                                                              OutlineInputBorder(),
-                                                          contentPadding:
-                                                              EdgeInsets.symmetric(
-                                                                horizontal: 8,
-                                                                vertical: 8,
-                                                              ),
-                                                          isDense: true,
-                                                        ),
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    4,
+                                                                  ),
+                                                            ),
+                                                            alignment: Alignment
+                                                                .centerLeft,
+                                                            child: Text(
+                                                              (price * quantity)
+                                                                  .toStringAsFixed(
+                                                                    2,
+                                                                  ),
+                                                              style:
+                                                                  const TextStyle(
+                                                                    fontSize:
+                                                                        16,
+                                                                  ),
+                                                            ),
+                                                          );
+                                                        },
                                                       ),
                                                     ),
                                                     if (_descriptionControllers

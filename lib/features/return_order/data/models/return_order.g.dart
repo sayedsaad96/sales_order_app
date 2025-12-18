@@ -21,15 +21,15 @@ class ReturnOrderAdapter extends TypeAdapter<ReturnOrder> {
       category: fields[1] as String?,
       branch: fields[2] as String?,
       customerName: fields[3] as String?,
-      returnDate: fields[4] as DateTime? ?? DateTime.now(),
+      returnDate: fields[4] as DateTime,
       region: fields[5] as String?,
       returnResponsible: fields[6] as String?,
-      deliveryCostPayer: fields[7] as String? ?? 'الشركة',
+      deliveryCostPayer: fields[7] as String,
       routeFrom: fields[8] as String?,
       routeTo: fields[9] as String?,
       returnReason: fields[10] as String?,
       deliveryDate: fields[11] as DateTime?,
-      items: (fields[12] as List?)?.cast<ReturnOrderItem>().toList() ?? <ReturnOrderItem>[],
+      items: (fields[12] as List).cast<ReturnOrderItem>(),
     );
   }
 
@@ -87,9 +87,9 @@ class ReturnOrderItemAdapter extends TypeAdapter<ReturnOrderItem> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return ReturnOrderItem(
-      item: fields[0] as String? ?? '',
-      quantity: fields[1] as double? ?? 0.0,
-      unit: fields[2] as String? ?? '',
+      item: fields[0] as String,
+      quantity: fields[1] as double,
+      unit: fields[2] as String,
     );
   }
 

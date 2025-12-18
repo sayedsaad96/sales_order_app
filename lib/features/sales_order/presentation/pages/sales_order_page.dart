@@ -14,11 +14,12 @@ import '../widgets/customer_info_section.dart';
 // import '../widgets/order_section_widget.dart'; // Removed in favor of direct sliver building
 import '../widgets/sales_order_item_row.dart';
 import '../utils/sales_order_helpers.dart';
-import '../../../../core/widgets/app_drawer.dart';
+
 
 class SalesOrderPage extends StatefulWidget {
   final SalesOrder? existingOrder;
-  const SalesOrderPage({super.key, this.existingOrder});
+  final VoidCallback? onMenuPressed;
+  const SalesOrderPage({super.key, this.existingOrder, this.onMenuPressed});
 
   @override
   State<SalesOrderPage> createState() => _SalesOrderPageState();
@@ -38,11 +39,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
   final ValueNotifier<double> _totalValueNotifier = ValueNotifier(0.0);
 
   String? _selectedBranch = "القاهرة";
-  final Map<String, bool> _orderTypes = {
-    'غزل': false,
-    'مستلزمات': true,
-    'قماش': false,
-  };
+  final Map<String, bool> _orderTypes = {'مستلزمات': true, 'جوما': false};
   bool _deliveryIncluded = true;
   DateTime _orderDate = DateTime.now();
   DateTime? _deliveryDate;
@@ -451,8 +448,12 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: const AppDrawer(),
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: widget.onMenuPressed,
+          tooltip: 'Menu',
+        ),
         title: const Text('Annex Group'),
         centerTitle: true,
         actions: [
@@ -481,7 +482,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
               constraints.maxWidth < ResponsiveConstants.kMobileBreakpoint;
           return Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1000),
+              constraints: const BoxConstraints(maxWidth: 1200),
               child: Form(
                 key: _formKey,
                 child: CustomScrollView(

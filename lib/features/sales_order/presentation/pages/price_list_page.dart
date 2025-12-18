@@ -15,39 +15,45 @@ class PriceListPage extends StatelessWidget {
       appBar: AppBar(title: const Text('قوائم الأسعار'), centerTitle: true),
       body: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 800),
-          child: ListView(
-            padding: const EdgeInsets.all(16.0),
-            children: [
-              _buildPriceListTile(
-                context,
-                title: 'قائمة أسعار المصنع',
-                assetPath: 'assets/docs/Factory Price List.pdf',
-                icon: Icons.factory,
-              ),
-              const SizedBox(height: 16),
-              _buildPriceListTile(
-                context,
-                title: 'قائمة أسعار التاجر',
-                assetPath: 'assets/docs/Trader Price List.pdf',
-                icon: Icons.store,
-              ),
-              const SizedBox(height: 25),
-              Center(
-                child: Image.asset(
-                  'assets/images/logo.png',
-                  width: 150,
-                  height: 150,
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(22.0),
+            child: Column(
+              children: [
+                _buildPriceListTile(
+                  context,
+                  title: 'قائمة أسعار المصنع',
+                  assetPath: 'assets/docs/Factory Price List.pdf',
+                  icon: Icons.factory,
                 ),
-              ),
-            ],
+                const SizedBox(height: 16),
+                _buildPriceListTile(
+                  context,
+                  title: 'قائمة أسعار التاجر',
+                  assetPath: 'assets/docs/Trader Price List.pdf',
+                  icon: Icons.store,
+                ),
+                const SizedBox(height: 25),
+                Center(
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    width: 150,
+                    height: 150,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Future<void> _shareFile(BuildContext context, String assetPath, String title) async {
+  Future<void> _shareFile(
+    BuildContext context,
+    String assetPath,
+    String title,
+  ) async {
     try {
       // 1. Load asset bytes
       final byteData = await rootBundle.load(assetPath);
@@ -63,20 +69,18 @@ class PriceListPage extends StatelessWidget {
       // 4. Share the file
       // Check if the device can share
       // ignore: deprecated_member_use
-      final result = await Share.shareXFiles(
-        [XFile(tempFile.path)],
-        text: 'مشاركة $title',
-      );
+      final result = await Share.shareXFiles([
+        XFile(tempFile.path),
+      ], text: 'مشاركة $title');
 
       if (result.status == ShareResultStatus.dismissed) {
-         // Optional: handle dismissed
+        // Optional: handle dismissed
       }
-
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('خطأ في المشاركة: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('خطأ في المشاركة: $e')));
       }
     }
   }
@@ -128,5 +132,3 @@ class PriceListPage extends StatelessWidget {
     );
   }
 }
-
-

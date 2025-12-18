@@ -170,20 +170,27 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
   }
 
   Widget _buildEmptyState() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Center(
-          child: Image.asset('assets/images/logo.png', width: 150, height: 150),
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 40),
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Center(
+              child: Image.asset('assets/images/logo.png', width: 150, height: 150),
+            ),
+            const SizedBox(height: 20),
+            const Center(
+              child: Text(
+                'لا توجد فواتير محفوظة',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 20),
-        const Center(
-          child: Text(
-            'لا توجد فواتير محفوظة',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -224,163 +231,167 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
             .where((name) => name.toLowerCase().contains(_searchQuery.toLowerCase()))
             .toList();
 
-    return Column(
-      children: [
-        // Search bar
-        Padding(
-          padding: const EdgeInsets.all(10),
-          child: TextField(
-            controller: _searchController,
-            decoration: InputDecoration(
-              hintText: 'بحث عن عميل...',
-              prefixIcon: const Icon(Icons.search),
-              suffixIcon: _searchQuery.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () {
-                        _searchController.clear();
-                      },
-                    )
-                  : null,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(15),
+    return CustomScrollView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      slivers: [
+        SliverToBoxAdapter(
+          child: Column(
+            children: [
+              // Search bar
+              Padding(
+                padding: const EdgeInsets.all(10),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'بحث عن عميل...',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              _searchController.clear();
+                            },
+                          )
+                        : null,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    filled: true,
+                    fillColor: Theme.of(context).cardColor,
+                  ),
+                ),
               ),
-              filled: true,
-              fillColor: Theme.of(context).cardColor,
-            ),
+              // Results count
+              if (_searchQuery.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Text(
+                    'النتائج: ${filteredCustomers.length} من ${sortedCustomers.length}',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                ),
+            ],
           ),
         ),
-        // Results count
-        if (_searchQuery.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Text(
-              'النتائج: ${filteredCustomers.length} من ${sortedCustomers.length}',
-              style: TextStyle(color: Colors.grey[600]),
+        
+        if (filteredCustomers.isEmpty)
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
+                  const SizedBox(height: 16),
+                  Text(
+                    'لا توجد نتائج للبحث',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        // Grid view
-        Expanded(
-          child: filteredCustomers.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+          )
+        else
+          SliverPadding(
+            padding: const EdgeInsets.all(10),
+            sliver: SliverGrid(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: MediaQuery.of(context).size.width > 900 
+                    ? 5 
+                    : (MediaQuery.of(context).size.width > 600 ? 3 : 2),
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+                childAspectRatio: 1.1,
+              ),
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final customerName = filteredCustomers[index];
+                  final count = customerCounts[customerName] ?? 0;
+                  return Stack(
                     children: [
-                      Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
-                      const SizedBox(height: 16),
-                      Text(
-                        'لا توجد نتائج للبحث',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.grey[600],
+                      Card(
+                        elevation: 4,
+                        margin: EdgeInsets.zero,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: InkWell(
+                          onTap: () {
+                            setState(() {
+                              _selectedCustomer = customerName;
+                              _searchController.clear();
+                            });
+                          },
+                          borderRadius: BorderRadius.circular(15),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.folder,
+                                    size: 44,
+                                    color: Colors.blue,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    customerName,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '$count فواتير',
+                                    style: const TextStyle(
+                                        color: Colors.grey, fontSize: 12),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Delete Button (Top Left)
+                      Positioned(
+                        top: 4,
+                        left: 4,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(20),
+                            onTap: () =>
+                                _confirmDeleteFolder(context, customerName),
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: Colors.red.withAlpha(30),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.delete_outline,
+                                color: Colors.red,
+                                size: 18,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ],
-                  ),
-                )
-              : LayoutBuilder(
-                  builder: (context, constraints) {
-                    int crossAxisCount = 2;
-                    if (constraints.maxWidth > 900) {
-                      crossAxisCount = 5;
-                    } else if (constraints.maxWidth > 600) {
-                      crossAxisCount = 3;
-                    }
-
-                    return GridView.builder(
-                      padding: const EdgeInsets.all(10),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: crossAxisCount,
-                        crossAxisSpacing: 10,
-                        mainAxisSpacing: 10,
-                        childAspectRatio: 1.0,
-                      ),
-                      itemCount: filteredCustomers.length,
-                      itemBuilder: (context, index) {
-                        final customerName = filteredCustomers[index];
-                        final count = customerCounts[customerName] ?? 0;
-                        return Stack(
-                          children: [
-                            Card(
-                              elevation: 4,
-                              margin: EdgeInsets.zero,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                              child: InkWell(
-                                onTap: () {
-                                  setState(() {
-                                    _selectedCustomer = customerName;
-                                    _searchController.clear();
-                                  });
-                                },
-                                borderRadius: BorderRadius.circular(15),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Center(
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        const Icon(
-                                          Icons.folder,
-                                          size: 50,
-                                          color: Colors.blue,
-                                        ),
-                                        const SizedBox(height: 10),
-                                        Text(
-                                          customerName,
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        const SizedBox(height: 5),
-                                        Text(
-                                          '$count فواتير',
-                                          style: const TextStyle(
-                                              color: Colors.grey),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            // Delete Button (Top Left)
-                            Positioned(
-                              top: 4,
-                              left: 4,
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(20),
-                                  onTap: () =>
-                                      _confirmDeleteFolder(context, customerName),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(6),
-                                    decoration: BoxDecoration(
-                                      color: Colors.red.withAlpha(30),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.delete_outline,
-                                      color: Colors.red,
-                                      size: 20,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                ),
-        ),
+                  );
+                },
+                childCount: filteredCustomers.length,
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -390,56 +401,76 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
         .where((i) => (i.customerName ?? "بدون اسم") == _selectedCustomer)
         .toList();
 
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 800),
-        child: ListView.builder(
-          itemCount: filteredInvoices.length,
-          itemBuilder: (context, index) {
-            final invoice = filteredInvoices[index];
-            return Dismissible(
-              key: Key(invoice.key.toString()),
-              background: Container(
-                color: Colors.red,
-                alignment: Alignment.centerRight,
-                padding: const EdgeInsets.only(right: 20),
-                child: const Icon(Icons.delete, color: Colors.white),
+    return CustomScrollView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          sliver: SliverToBoxAdapter(
+            child: Center(
+              child: Text(
+                'عدد الفواتير: ${filteredInvoices.length}',
+                style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold),
               ),
-              direction: DismissDirection.startToEnd,
-              onDismissed: (direction) {
-                _deleteInvoice(invoice);
-              },
-              child: Card(
-                margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                child: ListTile(
-                  title: Text(
-                    '${invoice.customerName ?? "بدون اسم"} - ${invoice.sn}',
-                  ),
-                  subtitle: Text(
-                    'التاريخ: ${DateFormat('dd-MMM-yyyy').format(invoice.orderDate)}\nالقيمة: ${invoice.totalValue.toStringAsFixed(2)}',
-                  ),
-                  isThreeLine: true,
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () => _confirmDelete(context, invoice),
-                  ),
-                  onTap: () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => SalesOrderPage(existingOrder: invoice),
-                      ),
-                    );
-                    _loadInvoices();
-                  },
-                ),
-              ),
-            );
-          },
+            ),
+          ),
         ),
-      ),
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              final invoice = filteredInvoices[index];
+              return Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 800),
+                  child: Dismissible(
+                    key: Key(invoice.key.toString()),
+                    background: Container(
+                      color: Colors.red,
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.only(right: 20),
+                      child: const Icon(Icons.delete, color: Colors.white),
+                    ),
+                    direction: DismissDirection.startToEnd,
+                    onDismissed: (direction) {
+                      _deleteInvoice(invoice);
+                    },
+                    child: Card(
+                      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      child: ListTile(
+                        title: Text(
+                          '${invoice.customerName ?? "بدون اسم"} - ${invoice.sn}',
+                        ),
+                        subtitle: Text(
+                          'التاريخ: ${DateFormat('dd-MMM-yyyy').format(invoice.orderDate)}\nالقيمة: ${invoice.totalValue.toStringAsFixed(2)}',
+                        ),
+                        isThreeLine: true,
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () => _confirmDelete(context, invoice),
+                        ),
+                        onTap: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SalesOrderPage(existingOrder: invoice),
+                            ),
+                          );
+                          _loadInvoices();
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+            childCount: filteredInvoices.length,
+          ),
+        ),
+        const SliverPadding(padding: EdgeInsets.only(bottom: 20)),
+      ],
     );
   }
+
 
   @override
   Widget build(BuildContext context) {

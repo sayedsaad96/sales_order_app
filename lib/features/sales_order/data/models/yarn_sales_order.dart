@@ -23,7 +23,7 @@ class YarnSalesOrder extends HiveObject {
   @HiveField(8)
   String? editQuantity;
   @HiveField(9)
-  bool discountIncluded;
+  String? contactName;
   @HiveField(10)
   bool specifiedQuantity;
   @HiveField(11)
@@ -36,24 +36,30 @@ class YarnSalesOrder extends HiveObject {
   List<YarnInstallment> installments;
   @HiveField(15)
   String? notes;
+  @HiveField(16)
+  List<String> orderTypes;
+  @HiveField(17)
+  String? mobileNumber;
 
   YarnSalesOrder({
     this.sn,
     this.branch,
     this.deliveryResponsibility = 'العميل',
     this.customerName,
+    this.contactName,
     this.region,
     this.deliveryDate,
     required this.orderDate,
     this.deliveryPlace,
     this.editQuantity,
-    this.discountIncluded = false,
+    this.mobileNumber,
     this.specifiedQuantity = false,
     this.paymentMethod,
     this.salesResponsible,
     this.items = const [],
     this.installments = const [],
     this.notes,
+    this.orderTypes = const [],
   });
 
   double get totalValue => items.fold(0, (sum, item) => sum + item.value);

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -24,6 +25,12 @@ void main() async {
       FlutterError.onError = (FlutterErrorDetails details) {
         FlutterError.presentError(details);
         debugPrint('Flutter Error: ${details.exception}');
+      };
+
+      // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to me
+      PlatformDispatcher.instance.onError = (error, stack) {
+        debugPrint('PlatformDispatcher Error: $error\n$stack');
+        return true;
       };
 
       try {

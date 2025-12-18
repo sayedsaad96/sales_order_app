@@ -21,25 +21,27 @@ class YarnSalesOrderAdapter extends TypeAdapter<YarnSalesOrder> {
       branch: fields[1] as String?,
       deliveryResponsibility: fields[2] as String,
       customerName: fields[3] as String?,
+      contactName: fields[9] is String ? fields[9] as String? : null,
       region: fields[4] as String?,
       deliveryDate: fields[5] as DateTime?,
       orderDate: fields[6] as DateTime,
       deliveryPlace: fields[7] as String?,
-      editQuantity: fields[8] as String?,
-      discountIncluded: fields[9] as bool,
-      specifiedQuantity: fields[10] as bool,
+      editQuantity: fields[8] is String ? fields[8] as String? : null,
+      mobileNumber: fields[17] as String?,
+      specifiedQuantity: fields[10] is bool ? fields[10] as bool : false,
       paymentMethod: fields[11] as String?,
       salesResponsible: fields[12] as String?,
-      items: (fields[13] as List).cast<YarnSalesOrderItem>(),
-      installments: (fields[14] as List).cast<YarnInstallment>(),
+      items: (fields[13] as List? ?? []).cast<YarnSalesOrderItem>(),
+      installments: (fields[14] as List? ?? []).cast<YarnInstallment>(),
       notes: fields[15] as String?,
+      orderTypes: (fields[16] as List? ?? []).cast<String>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, YarnSalesOrder obj) {
     writer
-      ..writeByte(16)
+      ..writeByte(18)
       ..writeByte(0)
       ..write(obj.sn)
       ..writeByte(1)
@@ -59,7 +61,7 @@ class YarnSalesOrderAdapter extends TypeAdapter<YarnSalesOrder> {
       ..writeByte(8)
       ..write(obj.editQuantity)
       ..writeByte(9)
-      ..write(obj.discountIncluded)
+      ..write(obj.contactName)
       ..writeByte(10)
       ..write(obj.specifiedQuantity)
       ..writeByte(11)
@@ -71,7 +73,11 @@ class YarnSalesOrderAdapter extends TypeAdapter<YarnSalesOrder> {
       ..writeByte(14)
       ..write(obj.installments)
       ..writeByte(15)
-      ..write(obj.notes);
+      ..write(obj.notes)
+      ..writeByte(16)
+      ..write(obj.orderTypes)
+      ..writeByte(17)
+      ..write(obj.mobileNumber);
   }
 
   @override
