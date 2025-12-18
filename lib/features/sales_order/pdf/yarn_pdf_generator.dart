@@ -130,7 +130,8 @@ class YarnPdfGenerator {
                   1: pw.FlexColumnWidth(1), // Price
                   2: pw.FlexColumnWidth(1), // Unit
                   3: pw.FlexColumnWidth(1), // Qty
-                  4: pw.FlexColumnWidth(3), // Description
+                  4: pw.FlexColumnWidth(2.5), // Description
+                  5: pw.FlexColumnWidth(1.5), // Notes
                 },
                 children: [
                   // Header
@@ -142,6 +143,7 @@ class YarnPdfGenerator {
                       _buildTableHeader('الوحدة'),
                       _buildTableHeader('الكمية'),
                       _buildTableHeader('الصنف', align: pw.TextAlign.right),
+                      _buildTableHeader('ملاحظات'),
                     ],
                   ),
                   // Rows
@@ -161,6 +163,19 @@ class YarnPdfGenerator {
                         _buildTableCell(
                           item.description,
                           align: pw.TextAlign.right,
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.symmetric(
+                            vertical: 6,
+                            horizontal: 4,
+                          ),
+                          child: pw.TextField(
+                            name: 'yarn_note_$index',
+                            textStyle: pw.TextStyle(
+                              font: arabicFont,
+                              fontSize: 16,
+                            ),
+                          ),
                         ),
                       ],
                     );

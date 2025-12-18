@@ -8,7 +8,8 @@ class SalesOrderItemRow extends StatefulWidget {
   final ItemControllers controllers;
   final bool isMobile;
   final VoidCallback onDelete;
-  final VoidCallback onStateChanged; // To notify parent to rebuild (e.g. total value)
+  final VoidCallback
+  onStateChanged; // To notify parent to rebuild (e.g. total value)
 
   const SalesOrderItemRow({
     super.key,
@@ -30,7 +31,9 @@ class _SalesOrderItemRowState extends State<SalesOrderItemRow> {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       color: widget.index % 2 == 0
-          ? Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3)
+          ? Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3)
           : Theme.of(context).colorScheme.surface,
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: widget.isMobile ? _buildMobileLayout() : _buildDesktopLayout(),
@@ -146,6 +149,7 @@ class _SalesOrderItemRowState extends State<SalesOrderItemRow> {
               enabledBorder: InputBorder.none,
               focusedBorder: InputBorder.none,
               contentPadding: EdgeInsets.symmetric(horizontal: 8),
+              filled: false,
             ),
             onChanged: (v) => widget.item.itemName = v,
           ),

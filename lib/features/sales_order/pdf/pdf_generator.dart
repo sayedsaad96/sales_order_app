@@ -158,7 +158,8 @@ class PdfSalesOrderGenerator {
                       1: pw.FlexColumnWidth(1), // Price
                       2: pw.FlexColumnWidth(1), // Unit
                       3: pw.FlexColumnWidth(1), // Qty
-                      4: pw.FlexColumnWidth(3), // Item Name
+                      4: pw.FlexColumnWidth(2.5), // Item Name
+                      5: pw.FlexColumnWidth(1.5), // Notes
                     },
                     children: [
                       // Header
@@ -170,6 +171,7 @@ class PdfSalesOrderGenerator {
                           _buildTableHeader('الوحدة'),
                           _buildTableHeader('الكمية'),
                           _buildTableHeader('الصنف', align: pw.TextAlign.right),
+                          _buildTableHeader('ملاحظات'),
                         ],
                       ),
                       // Rows
@@ -189,6 +191,19 @@ class PdfSalesOrderGenerator {
                             _buildTableCell(
                               item.itemName,
                               align: pw.TextAlign.right,
+                            ),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.symmetric(
+                                vertical: 6,
+                                horizontal: 4,
+                              ),
+                              child: pw.TextField(
+                                name: 'note_${category}_$index',
+                                textStyle: pw.TextStyle(
+                                  font: arabicFont,
+                                  fontSize: 16,
+                                ),
+                              ),
                             ),
                           ],
                         );

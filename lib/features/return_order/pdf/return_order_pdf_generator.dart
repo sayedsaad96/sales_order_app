@@ -31,7 +31,6 @@ class ReturnOrderPdfGenerator {
     const primaryColor = PdfColor.fromInt(0xFFC62828); // Red
     const accentColor = PdfColor.fromInt(0xFFFFEBEE); // Light Red
 
-
     final theme = pw.ThemeData.withFont(base: arabicFont, bold: arabicFont);
 
     pdf.addPage(
@@ -45,7 +44,7 @@ class ReturnOrderPdfGenerator {
         footer: (context) => _buildPageFooter(context),
         build: (pw.Context context) {
           return [
-             pw.SizedBox(height: 20),
+            pw.SizedBox(height: 20),
 
             // --- Info Blocks Section ---
             pw.Row(
@@ -68,9 +67,14 @@ class ReturnOrderPdfGenerator {
                         _buildInfoRow('الاسم:', order.customerName),
                         _buildInfoRow('المنطقة:', order.region),
                         // Route combo
-                        if ((order.routeFrom != null && order.routeFrom!.isNotEmpty) || 
-                            (order.routeTo != null && order.routeTo!.isNotEmpty))
-                        _buildInfoRow('خط السير:', 'من ${order.routeFrom ?? "-"} إلى ${order.routeTo ?? "-"}'),
+                        if ((order.routeFrom != null &&
+                                order.routeFrom!.isNotEmpty) ||
+                            (order.routeTo != null &&
+                                order.routeTo!.isNotEmpty))
+                          _buildInfoRow(
+                            'خط السير:',
+                            'من ${order.routeFrom ?? "-"} إلى ${order.routeTo ?? "-"}',
+                          ),
                       ],
                     ),
                   ),
@@ -90,18 +94,28 @@ class ReturnOrderPdfGenerator {
                       children: [
                         _buildSectionHeader('تفاصيل المرتجع', primaryColor),
                         pw.SizedBox(height: 8),
-                        _buildInfoRow('مسئول المرتجع:', order.returnResponsible),
+                        _buildInfoRow(
+                          'مسئول المرتجع:',
+                          order.returnResponsible,
+                        ),
                         _buildInfoRow(
                           'تاريخ المرتجع:',
-                          intl.DateFormat('dd/MM/yyyy').format(order.returnDate),
+                          intl.DateFormat(
+                            'dd/MM/yyyy',
+                          ).format(order.returnDate),
                         ),
                         if (order.deliveryDate != null)
                           _buildInfoRow(
                             'تاريخ التوصيل:',
-                            intl.DateFormat('dd/MM/yyyy').format(order.deliveryDate!),
+                            intl.DateFormat(
+                              'dd/MM/yyyy',
+                            ).format(order.deliveryDate!),
                           ),
-                         _buildInfoRow('تكلفة التوصيل:', order.deliveryCostPayer),
-                         _buildInfoRow('سبب المرتجع:', order.returnReason),
+                        _buildInfoRow(
+                          'تكلفة التوصيل:',
+                          order.deliveryCostPayer,
+                        ),
+                        _buildInfoRow('سبب المرتجع:', order.returnReason),
                       ],
                     ),
                   ),
@@ -122,7 +136,8 @@ class ReturnOrderPdfGenerator {
               columnWidths: const {
                 0: pw.FlexColumnWidth(1), // Unit
                 1: pw.FlexColumnWidth(1), // Qty
-                2: pw.FlexColumnWidth(3), // Item Name
+                2: pw.FlexColumnWidth(2.5), // Item Name
+                3: pw.FlexColumnWidth(1.5), // Notes
               },
               children: [
                 // Header
@@ -132,6 +147,7 @@ class ReturnOrderPdfGenerator {
                     _buildTableHeader('الوحدة'),
                     _buildTableHeader('الكمية'),
                     _buildTableHeader('الصنف', align: pw.TextAlign.right),
+                    _buildTableHeader('ملاحظات'),
                   ],
                 ),
                 // Rows
@@ -146,9 +162,19 @@ class ReturnOrderPdfGenerator {
                     children: [
                       _buildTableCell(item.unit),
                       _buildTableCell(item.quantity.toString()),
-                      _buildTableCell(
-                        item.item,
-                        align: pw.TextAlign.right,
+                      _buildTableCell(item.item, align: pw.TextAlign.right),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.symmetric(
+                          vertical: 6,
+                          horizontal: 4,
+                        ),
+                        child: pw.TextField(
+                          name: 'return_note_$index',
+                          textStyle: pw.TextStyle(
+                            font: arabicFont,
+                            fontSize: 16,
+                          ),
+                        ),
                       ),
                     ],
                   );
