@@ -138,6 +138,7 @@ class _ReturnOrderItemRowState extends State<ReturnOrderItemRow> {
               enabledBorder: InputBorder.none,
               focusedBorder: InputBorder.none,
               contentPadding: EdgeInsets.symmetric(horizontal: 8),
+              filled: false,
             ),
           ),
         ),

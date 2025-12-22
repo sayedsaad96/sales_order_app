@@ -54,8 +54,8 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
     super.initState();
     if (widget.existingOrder != null) {
       final order = widget.existingOrder!;
-      // _snController.text = order.sn ?? ''; // Don't copy SN, generate new one for "Clone" behavior
-      // Keep default initialized value: 'SO-${DateTime.now().microsecond}'
+      _snController.text = order.sn ?? 'SO-${DateTime.now().microsecond}'; // Preserve SN during edit
+
       _selectedBranch = order.branch;
       _customerNameController.text = order.customerName ?? '';
       _regionController.text = order.region ?? '';
