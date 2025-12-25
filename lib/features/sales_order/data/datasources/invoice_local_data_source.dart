@@ -1,5 +1,5 @@
 import 'package:hive_flutter/hive_flutter.dart';
-import '../models/sales_order.dart';
+import 'package:annex_sales_order/features/sales_order/data/models/sales_order.dart';
 
 class InvoiceLocalDataSource {
   static const String _boxName = 'invoicesBox';

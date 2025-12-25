@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
@@ -67,7 +68,14 @@ class BankAccountsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('الحسابات البنكية'), centerTitle: true),
+      appBar: AppBar(
+        title: const Text('الحسابات البنكية'),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(CupertinoIcons.back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 800),
@@ -104,7 +112,7 @@ class BankAccountsPage extends StatelessWidget {
                 Row(
                   children: [
                     const Icon(
-                      Icons.account_balance,
+                      CupertinoIcons.money_dollar_circle,
                       color: Colors.red,
                       size: 28,
                     ),
@@ -119,7 +127,7 @@ class BankAccountsPage extends StatelessWidget {
                   ],
                 ),
                 IconButton(
-                  icon: const Icon(Icons.share, color: Colors.blue),
+                  icon: const Icon(CupertinoIcons.share, color: Colors.blue),
                   onPressed: () => _shareAccount(account),
                   tooltip: 'مشاركة الحساب',
                 ),
@@ -128,22 +136,22 @@ class BankAccountsPage extends StatelessWidget {
             const Divider(height: 24),
 
             // Bank details
-            _buildDetailRow(Icons.account_balance, 'البنك', account.bankName),
+            _buildDetailRow(CupertinoIcons.money_dollar_circle, 'البنك', account.bankName),
             const SizedBox(height: 12),
-            _buildDetailRow(Icons.location_on, 'الفرع', account.branch),
+            _buildDetailRow(CupertinoIcons.location_solid, 'الفرع', account.branch),
             const SizedBox(height: 12),
-            _buildDetailRow(Icons.person, 'اسم الحساب', account.accountName),
+            _buildDetailRow(CupertinoIcons.person, 'اسم الحساب', account.accountName),
             const SizedBox(height: 12),
             _buildCopyableDetailRow(
               context,
-              Icons.numbers,
+              CupertinoIcons.number,
               'رقم الحساب',
               account.accountNumber,
             ),
             const SizedBox(height: 12),
             _buildCopyableDetailRow(
               context,
-              Icons.credit_card,
+              CupertinoIcons.creditcard,
               'رقم الايبان',
               account.iban,
             ),
@@ -222,7 +230,7 @@ class BankAccountsPage extends StatelessWidget {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.copy, size: 18),
+                    icon: const Icon(CupertinoIcons.doc_on_doc, size: 18),
                     onPressed: () => _copyToClipboard(context, value, label),
                     tooltip: 'نسخ',
                     padding: EdgeInsets.zero,

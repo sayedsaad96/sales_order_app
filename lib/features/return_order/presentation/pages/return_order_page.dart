@@ -1,16 +1,17 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as intl;
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:printing/printing.dart';
-import '../../../../core/widgets/app_drawer.dart';
-import '../../data/models/return_order.dart';
-import '../../data/datasources/return_order_local_data_source.dart';
-import '../../pdf/return_order_pdf_generator.dart';
-import '../../../user/data/datasources/user_local_data_source.dart';
-import 'saved_return_orders_page.dart';
-import '../../../../core/utils/responsive_constants.dart';
-import '../widgets/return_order_item_row.dart';
+import 'package:annex_sales_order/core/widgets/app_drawer.dart';
+import 'package:annex_sales_order/features/return_order/data/models/return_order.dart';
+import 'package:annex_sales_order/features/return_order/data/datasources/return_order_local_data_source.dart';
+import 'package:annex_sales_order/features/return_order/pdf/return_order_pdf_generator.dart';
+import 'package:annex_sales_order/features/user/data/datasources/user_local_data_source.dart';
+import 'package:annex_sales_order/features/return_order/presentation/pages/saved_return_orders_page.dart';
+import 'package:annex_sales_order/core/utils/responsive_constants.dart';
+import 'package:annex_sales_order/features/return_order/presentation/widgets/return_order_item_row.dart';
 
 class ReturnOrderPage extends StatefulWidget {
   final ReturnOrder? existingOrder;
@@ -302,12 +303,18 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(CupertinoIcons.list_dash),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+            tooltip: 'Menu',
+          ),
+        ),
         centerTitle: true,
-        backgroundColor: const Color(0xFFD32F2F),
         title: const Text('طلب مرتجع'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add),
+            icon: const Icon(CupertinoIcons.add),
             onPressed: () {
               Navigator.pushReplacement(
                 context,
@@ -317,7 +324,7 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
             tooltip: 'جديد',
           ),
           IconButton(
-            icon: const Icon(Icons.folder),
+            icon: const Icon(CupertinoIcons.folder),
             onPressed: () {
               Navigator.push(
                 context,
@@ -393,7 +400,7 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
                           Center(
                             child: ElevatedButton.icon(
                               onPressed: _addNewItem,
-                              icon: const Icon(Icons.add_circle_outline),
+                              icon: const Icon(CupertinoIcons.add_circled),
                               label: const Text('إضافة صنف'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.blue[50],
@@ -448,7 +455,7 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
                                     children: [
                                       ElevatedButton.icon(
                                         onPressed: _saveOrder,
-                                        icon: const Icon(Icons.save),
+                                        icon: const Icon(CupertinoIcons.floppy_disk),
                                         label: const Text(
                                           'حفظ',
                                           style: TextStyle(fontSize: 18),
@@ -465,7 +472,7 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
                                       const SizedBox(width: 20),
                                       ElevatedButton.icon(
                                         onPressed: _generatePdf,
-                                        icon: const Icon(Icons.picture_as_pdf),
+                                        icon: const Icon(CupertinoIcons.doc_text_fill),
                                         label: const Text(
                                           'PDF',
                                           style: TextStyle(fontSize: 18),

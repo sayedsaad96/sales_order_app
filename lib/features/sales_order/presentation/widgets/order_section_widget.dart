@@ -1,6 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import '../utils/sales_order_helpers.dart'; // For OrderSection
-import 'sales_order_item_row.dart';
+import 'package:annex_sales_order/features/sales_order/presentation/utils/sales_order_helpers.dart'; // For OrderSection
+import 'package:annex_sales_order/features/sales_order/presentation/widgets/sales_order_item_row.dart';
 
 class OrderSectionWidget extends StatelessWidget {
   final int sectionIndex;
@@ -56,7 +57,7 @@ class OrderSectionWidget extends StatelessWidget {
                       ),
                 if (showDeleteButton)
                   IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
+                    icon: const Icon(CupertinoIcons.delete, color: Colors.red),
                     onPressed: onRemoveSection,
                   ),
               ],
@@ -166,7 +167,7 @@ class OrderSectionWidget extends StatelessWidget {
             const SizedBox(height: 10),
             TextButton.icon(
               onPressed: onAddItem,
-              icon: const Icon(Icons.add),
+              icon: const Icon(CupertinoIcons.add),
               label: const Text('إضافة صنف'),
             ),
           ],

@@ -1,21 +1,20 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import '../../data/models/sales_order.dart';
-import '../../pdf/pdf_generator.dart';
+import 'package:annex_sales_order/features/sales_order/data/models/sales_order.dart';
+import 'package:annex_sales_order/features/sales_order/pdf/pdf_generator.dart';
 import 'package:printing/printing.dart';
-import '../../data/datasources/invoice_local_data_source.dart';
-import 'saved_invoices_page.dart';
+import 'package:annex_sales_order/features/sales_order/data/datasources/invoice_local_data_source.dart';
+import 'package:annex_sales_order/features/sales_order/presentation/pages/saved_invoices_page.dart';
 
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import '../../../user/data/datasources/user_local_data_source.dart';
-import '../../../../core/utils/responsive_constants.dart';
-import '../widgets/customer_info_section.dart';
-// import '../widgets/order_section_widget.dart'; // Removed in favor of direct sliver building
-import '../widgets/sales_order_item_row.dart';
-import '../utils/sales_order_helpers.dart';
-import '../../../../core/widgets/app_drawer.dart';
-
+import 'package:annex_sales_order/features/user/data/datasources/user_local_data_source.dart';
+import 'package:annex_sales_order/core/utils/responsive_constants.dart';
+import 'package:annex_sales_order/features/sales_order/presentation/widgets/customer_info_section.dart';
+import 'package:annex_sales_order/features/sales_order/presentation/widgets/sales_order_item_row.dart';
+import 'package:annex_sales_order/features/sales_order/presentation/utils/sales_order_helpers.dart';
+import 'package:annex_sales_order/core/widgets/app_drawer.dart';
 
 class SalesOrderPage extends StatefulWidget {
   final SalesOrder? existingOrder;
@@ -54,7 +53,9 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
     super.initState();
     if (widget.existingOrder != null) {
       final order = widget.existingOrder!;
-      _snController.text = order.sn ?? 'SO-${DateTime.now().microsecond}'; // Preserve SN during edit
+      _snController.text =
+          order.sn ??
+          'SO-${DateTime.now().microsecond}'; // Preserve SN during edit
 
       _selectedBranch = order.branch;
       _customerNameController.text = order.customerName ?? '';
@@ -62,7 +63,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
       _salesResponsibleController.text = order.salesResponsible ?? '';
       _deliveryPlaceController.text = order.deliveryPlace ?? '';
       _notesController.text = order.notes ?? '';
-      _paymentMethod = order.paymentMethod;
+      _paymentMethod = _mapPaymentMethod(order.paymentMethod);
       _deliveryIncluded = order.deliveryIncluded;
       _orderDate = order.orderDate;
 
@@ -114,6 +115,18 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
     }
     _calculateTotal();
     _loadCurrentUser();
+  }
+
+  String? _mapPaymentMethod(String? method) {
+    if (method == null) return null;
+    final mapping = {
+      'Cash': 'كاش',
+      'Bank transfer': 'تحويل بنكي',
+      'Credit': 'اجل شهر',
+      'Cheque': 'تحويل بنكي',
+      'Other': 'كاش',
+    };
+    return mapping[method] ?? method;
   }
 
   Future<void> _loadCurrentUser() async {
@@ -377,25 +390,55 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
       );
 
       try {
-        final order = SalesOrder(
-          sn: _snController.text,
-          branch: _selectedBranch,
-          orderTypes: _orderTypes.entries
+        SalesOrder order;
+
+        // Auto-save logic
+        if (_isEditing && !_saveAsNew && widget.existingOrder != null) {
+          order = widget.existingOrder!;
+          // Update fields
+          order.sn = _snController.text;
+          order.branch = _selectedBranch;
+          order.orderTypes = _orderTypes.entries
               .where((e) => e.value)
               .map((e) => e.key)
-              .toList(),
-          customerName: _customerNameController.text,
-          region: _regionController.text,
-          deliveryIncluded: _deliveryIncluded,
-          deliveryDate: _deliveryDate,
-          orderDate: _orderDate,
-          salesResponsible: _salesResponsibleController.text,
-          paymentMethod: _paymentMethod,
-          deliveryPlace: _deliveryPlaceController.text,
-          notes: _notesController.text,
-          // category: _categoryController.text,
-          items: validItems,
-        );
+              .toList();
+          order.customerName = _customerNameController.text;
+          order.region = _regionController.text;
+          order.deliveryIncluded = _deliveryIncluded;
+          order.deliveryDate = _deliveryDate;
+          order.orderDate = _orderDate;
+          order.salesResponsible = _salesResponsibleController.text;
+          order.paymentMethod = _paymentMethod;
+          order.deliveryPlace = _deliveryPlaceController.text;
+          order.notes = _notesController.text;
+          order.items = validItems;
+
+          await InvoiceLocalDataSource().saveInvoice(order);
+        } else {
+          // Create NEW if not editing OR if "Save as New" is checked
+          order = SalesOrder(
+            sn: _snController.text,
+            branch: _selectedBranch,
+            orderTypes: _orderTypes.entries
+                .where((e) => e.value)
+                .map((e) => e.key)
+                .toList(),
+            customerName: _customerNameController.text,
+            region: _regionController.text,
+            deliveryIncluded: _deliveryIncluded,
+            deliveryDate: _deliveryDate,
+            orderDate: _orderDate,
+            salesResponsible: _salesResponsibleController.text,
+            paymentMethod: _paymentMethod,
+            deliveryPlace: _deliveryPlaceController.text,
+            notes: _notesController.text,
+            items: validItems,
+            // Assuming the constructor handles date initialization if not provided,
+            // but we pass all fields here.
+          );
+
+          await InvoiceLocalDataSource().saveInvoice(order);
+        }
 
         final pdf = await PdfSalesOrderGenerator.generate(order);
         final bytes = await pdf.save();
@@ -412,7 +455,9 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
               '',
             ) ??
             'Client';
-        final fileName = '${safeCustomerName}_${order.sn}.pdf';
+        // Add timestamp to ensure unique filename
+        final fileName =
+            '${safeCustomerName}_${order.sn}_${DateTime.now().millisecondsSinceEpoch}.pdf';
         final file = File('${directory.path}/$fileName');
         await file.writeAsBytes(bytes);
 
@@ -452,7 +497,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
       appBar: AppBar(
         leading: widget.onMenuPressed != null
             ? IconButton(
-                icon: const Icon(Icons.menu),
+                icon: Icon(CupertinoIcons.list_dash),
                 onPressed: widget.onMenuPressed,
                 tooltip: 'Menu',
               )
@@ -461,12 +506,12 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.add),
+            icon: const Icon(CupertinoIcons.add),
             tooltip: 'طلب جديد',
             onPressed: _resetForm,
           ),
           IconButton(
-            icon: const Icon(Icons.folder),
+            icon: const Icon(CupertinoIcons.folder),
             tooltip: 'الفواتير المحفوظة',
             onPressed: () {
               Navigator.push(
@@ -504,12 +549,13 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                                       children: [
                                         Center(
                                           child: Text(
-                                            'طلب بيع',
+                                            'Essential Sales Order ',
                                             style: Theme.of(context)
                                                 .textTheme
                                                 .headlineMedium
                                                 ?.copyWith(
                                                   fontWeight: FontWeight.bold,
+                                                  fontSize: 22,
                                                 ),
                                           ),
                                         ),
@@ -722,23 +768,13 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                           Center(
                             child: ElevatedButton.icon(
                               onPressed: () => setState(() => _addSection()),
-                              icon: const Icon(Icons.add_circle_outline),
+                              icon: const Icon(CupertinoIcons.add_circled),
                               label: const Text('إضافة تصنيف جديد'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.blue[100],
                                 foregroundColor: Colors.blue[900],
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 20),
-                          TextFormField(
-                            controller: _notesController,
-                            decoration: const InputDecoration(
-                              labelText: 'ملاحظات',
-                              hintText: 'أضف ملاحظات أو تعليقات (اختياري)',
-                            ),
-                            maxLines: 3,
-                            minLines: 2,
                           ),
                           const SizedBox(height: 20),
                           ValueListenableBuilder<double>(
@@ -775,6 +811,22 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                               );
                             },
                           ),
+                          const SizedBox(height: 20),
+                          Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: TextFormField(
+                                controller: _notesController,
+                                decoration: const InputDecoration(
+                                  labelText: 'ملاحظات',
+                                  hintText: 'أضف ملاحظات أو تعليقات (اختياري)',
+                                  border: OutlineInputBorder(),
+                                ),
+                                maxLines: 3,
+                                minLines: 2,
+                              ),
+                            ),
+                          ),
                           const SizedBox(height: 30),
                           if (_isEditing)
                             Padding(
@@ -787,12 +839,14 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                               ),
                             ),
                           Center(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                            child: Wrap(
+                              spacing: 20,
+                              runSpacing: 10,
+                              alignment: WrapAlignment.center,
                               children: [
                                 ElevatedButton.icon(
                                   onPressed: _saveInvoice,
-                                  icon: const Icon(Icons.save),
+                                  icon: const Icon(CupertinoIcons.floppy_disk, size: 24),
                                   label: Text(
                                     _isEditing && !_saveAsNew ? 'تحديث' : 'حفظ',
                                     style: const TextStyle(fontSize: 18),
@@ -803,20 +857,33 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                                       vertical: 15,
                                     ),
                                     backgroundColor: Colors.green,
+                                    foregroundColor: Colors.white,
+                                    minimumSize: const Size(150, 50),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(30),
+                                    ),
                                   ),
                                 ),
-                                const SizedBox(width: 20),
                                 ElevatedButton.icon(
                                   onPressed: _generatePdf,
-                                  icon: const Icon(Icons.picture_as_pdf),
+                                  icon: const Icon(
+                                    CupertinoIcons.doc_text_fill,
+                                    size: 24,
+                                  ),
                                   label: const Text(
-                                    'إنشاء PDF',
+                                    'PDF',
                                     style: TextStyle(fontSize: 18),
                                   ),
                                   style: ElevatedButton.styleFrom(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 30,
                                       vertical: 15,
+                                    ),
+                                    backgroundColor: Colors.red,
+                                    foregroundColor: Colors.white,
+                                    minimumSize: const Size(150, 50),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(30),
                                     ),
                                   ),
                                 ),
@@ -876,7 +943,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                         ),
                   if (_sections.length > 1)
                     IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
+                      icon: const Icon(CupertinoIcons.delete, color: Colors.red),
                       onPressed: () => _removeSection(sectionIndex),
                     ),
                 ],
@@ -1016,7 +1083,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
             margin: const EdgeInsets.only(bottom: 20),
             child: TextButton.icon(
               onPressed: () => _addItem(sectionIndex),
-              icon: const Icon(Icons.add),
+              icon: const Icon(CupertinoIcons.add),
               label: const Text('إضافة صنف'),
             ),
           ),

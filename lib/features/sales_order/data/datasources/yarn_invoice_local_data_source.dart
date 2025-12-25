@@ -1,5 +1,5 @@
 import 'package:hive_flutter/hive_flutter.dart';
-import '../models/yarn_sales_order.dart';
+import 'package:annex_sales_order/features/sales_order/data/models/yarn_sales_order.dart';
 
 class YarnInvoiceLocalDataSource {
   static const String _boxName = 'yarn_invoices';

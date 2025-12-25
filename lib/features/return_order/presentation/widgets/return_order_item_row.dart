@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../data/models/return_order.dart';
 
@@ -115,7 +116,7 @@ class _ReturnOrderItemRowState extends State<ReturnOrderItemRow> {
           Align(
             alignment: Alignment.centerLeft,
             child: IconButton(
-              icon: const Icon(Icons.delete, color: Colors.red),
+              icon: const Icon(CupertinoIcons.trash, color: Colors.red),
               onPressed: widget.onRemove,
             ),
           ),
@@ -172,7 +173,7 @@ class _ReturnOrderItemRowState extends State<ReturnOrderItemRow> {
         ),
         IconButton(
           icon: Icon(
-            Icons.delete,
+            CupertinoIcons.trash,
             color: Theme.of(context).colorScheme.error,
             size: 20,
           ),

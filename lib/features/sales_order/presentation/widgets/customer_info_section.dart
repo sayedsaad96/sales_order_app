@@ -199,15 +199,24 @@ class _CustomerInfoSectionState extends State<CustomerInfoSection> {
 
   Widget _buildPaymentMethodDropdown() {
     return DropdownButtonFormField<String>(
-      initialValue: widget.paymentMethod,
+      initialValue: [
+        'كاش',
+        'تحويل بنكي',
+        'اجل اسبوعين ',
+        'اجل 3 اسابيع ',
+        'اجل شهر',
+        'اجل شهرين',
+        'اجل 3 شهور',
+      ].contains(widget.paymentMethod) ? widget.paymentMethod : null,
       decoration: const InputDecoration(labelText: 'طريقة السداد'),
       items: [
         'كاش',
         'تحويل بنكي',
-        'اسبوعين',
-        ' شهر',
-        ' شهرين',
-        ' 3 شهور',
+        'اجل اسبوعين ',
+        'اجل 3 اسابيع ',
+        'اجل شهر',
+        'اجل شهرين',
+        'اجل 3 شهور',
       ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
       onChanged: widget.onPaymentMethodChanged,
     );

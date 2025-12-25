@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -133,7 +134,7 @@ class _CartonCalculatorDialogState extends State<CartonCalculatorDialog> {
                   ),
                   IconButton(
                     onPressed: _clearAll,
-                    icon: const Icon(Icons.refresh, color: Colors.grey),
+                    icon: const Icon(CupertinoIcons.refresh, color: Colors.grey),
                     tooltip: 'إعادة تعيين',
                   ),
                 ],
@@ -146,7 +147,7 @@ class _CartonCalculatorDialogState extends State<CartonCalculatorDialog> {
               _buildInputField(
                 controller: _cartonWeightController,
                 label: 'وزن الكرتونة (كجم)',
-                icon: Icons.monitor_weight_outlined,
+                icon: CupertinoIcons.gauge,
                 autoFocus: true,
               ),
 
@@ -169,7 +170,7 @@ class _CartonCalculatorDialogState extends State<CartonCalculatorDialog> {
                     _buildInputField(
                       controller: _targetQuantityController,
                       label: 'الكمية المطلوبة (تقريباً)',
-                      icon: Icons.confirmation_number_outlined,
+                      icon: CupertinoIcons.number,
                       onChanged: (val) {
                         if (val.isNotEmpty &&
                             _numCartonsController.text.isNotEmpty) {
@@ -215,7 +216,7 @@ class _CartonCalculatorDialogState extends State<CartonCalculatorDialog> {
                     _buildInputField(
                       controller: _numCartonsController,
                       label: 'عدد الكراتين المباشر',
-                      icon: Icons.layers_outlined,
+                      icon: CupertinoIcons.square_stack_3d_up,
                       onChanged: (val) {
                         if (val.isNotEmpty &&
                             _targetQuantityController.text.isNotEmpty) {

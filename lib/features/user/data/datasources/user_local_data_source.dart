@@ -1,5 +1,5 @@
 import 'package:hive_flutter/hive_flutter.dart';
-import '../models/user_model.dart';
+import 'package:annex_sales_order/features/user/data/models/user_model.dart';
 
 class UserLocalDataSource {
   static const String _boxName = 'userBox';

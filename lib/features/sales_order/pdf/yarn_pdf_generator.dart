@@ -10,11 +10,15 @@ class YarnPdfGenerator {
 
     // Load Font
     pw.Font arabicFont;
+    pw.Font arabicFontBold;
     try {
       final fontData = await rootBundle.load("assets/fonts/Cairo-Regular.ttf");
       arabicFont = pw.Font.ttf(fontData);
+      final fontDataBold = await rootBundle.load("assets/fonts/Cairo-Bold.ttf");
+      arabicFontBold = pw.Font.ttf(fontDataBold);
     } catch (e) {
       arabicFont = pw.Font.courier();
+      arabicFontBold = pw.Font.courierBold();
     }
 
     // Load Logo
@@ -32,7 +36,7 @@ class YarnPdfGenerator {
     const accentColor = PdfColor.fromInt(0xFFE0F2F1); // Colors.teal[50]
     const lightGrey = PdfColor.fromInt(0xFFEEEEEE);
 
-    final theme = pw.ThemeData.withFont(base: arabicFont, bold: arabicFont);
+    final theme = pw.ThemeData.withFont(base: arabicFont, bold: arabicFontBold);
 
     pdf.addPage(
       pw.MultiPage(
@@ -376,12 +380,13 @@ class YarnPdfGenerator {
           children: [
             // --- Right Side (Visual Right) ---
             pw.Expanded(
+              flex: 1,
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
                   pw.Container(
                     padding: const pw.EdgeInsets.symmetric(
-                      horizontal: 10,
+                      horizontal: 8,
                       vertical: 4,
                     ),
                     decoration: pw.BoxDecoration(
@@ -391,7 +396,7 @@ class YarnPdfGenerator {
                     child: pw.Text(
                       'S/N: ${order.sn ?? "---"}',
                       style: pw.TextStyle(
-                        fontSize: 12,
+                        fontSize: 10,
                         fontWeight: pw.FontWeight.bold,
                         color: primaryColor,
                       ),
@@ -403,13 +408,14 @@ class YarnPdfGenerator {
 
             // --- Center Side ---
             pw.Expanded(
+              flex: 3,
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.center,
                 children: [
                   pw.Text(
                     'طلب بيع',
                     style: pw.TextStyle(
-                      fontSize: 24,
+                      fontSize: 18,
                       fontWeight: pw.FontWeight.bold,
                       color: primaryColor,
                     ),
@@ -417,12 +423,13 @@ class YarnPdfGenerator {
                   pw.SizedBox(height: 5),
                   if (order.branch != null)
                     pw.Text(
-                      order.branch!,
+                      _fixArabic(order.branch!),
                       style: pw.TextStyle(
                         fontSize: 12,
                         fontWeight: pw.FontWeight.bold,
                         color: PdfColors.black,
                       ),
+                      textDirection: pw.TextDirection.rtl,
                     ),
                   pw.SizedBox(height: 2),
                   // Delivery Responsibility below branch
@@ -430,11 +437,12 @@ class YarnPdfGenerator {
                     mainAxisAlignment: pw.MainAxisAlignment.center,
                     children: [
                       pw.Text(
-                        'مسئولية التوصيل: ',
+                        _fixArabic('مسئولية التوصيل: '),
                         style: const pw.TextStyle(
                           fontSize: 10,
                           color: PdfColors.grey700,
                         ),
+                        textDirection: pw.TextDirection.rtl,
                       ),
                       pw.Container(
                         padding: const pw.EdgeInsets.symmetric(
@@ -446,12 +454,13 @@ class YarnPdfGenerator {
                           borderRadius: pw.BorderRadius.circular(3),
                         ),
                         child: pw.Text(
-                          order.deliveryResponsibility,
+                          _fixArabic(order.deliveryResponsibility),
                           style: pw.TextStyle(
                             fontSize: 10,
                             fontWeight: pw.FontWeight.bold,
                             color: PdfColors.black,
                           ),
+                          textDirection: pw.TextDirection.rtl,
                         ),
                       ),
                     ],
@@ -470,12 +479,13 @@ class YarnPdfGenerator {
 
             // --- Left Side (Visual Left) ---
             pw.Expanded(
+              flex: 1,
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.end,
                 children: [
                   if (logoImage != null)
                     pw.Container(
-                      height: 60,
+                      height: 50,
                       child: pw.Image(logoImage, fit: pw.BoxFit.contain),
                     ),
                 ],
@@ -567,8 +577,9 @@ class YarnPdfGenerator {
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(vertical: 8, horizontal: 4),
       child: pw.Text(
-        text,
+        _fixArabic(text),
         textAlign: align,
+        textDirection: pw.TextDirection.rtl,
         style: pw.TextStyle(
           color: PdfColors.white,
           fontWeight: pw.FontWeight.bold,
@@ -585,8 +596,9 @@ class YarnPdfGenerator {
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 4),
       child: pw.Text(
-        text,
+        _fixArabic(text),
         textAlign: align,
+        textDirection: pw.TextDirection.rtl,
         style: const pw.TextStyle(fontSize: 10),
       ),
     );
@@ -604,8 +616,9 @@ class YarnPdfGenerator {
           pw.SizedBox(
             width: 50,
             child: pw.Text(
-              'القيمة $number',
+              _fixArabic('القيمة $number'),
               style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+              textDirection: pw.TextDirection.rtl,
             ),
           ),
           pw.Expanded(
@@ -614,7 +627,11 @@ class YarnPdfGenerator {
               decoration: pw.BoxDecoration(
                 border: pw.Border.all(color: PdfColors.grey300),
               ),
-              child: pw.Text(duration, style: const pw.TextStyle(fontSize: 8)),
+              child: pw.Text(
+                _fixArabic(duration),
+                style: const pw.TextStyle(fontSize: 8),
+                textDirection: pw.TextDirection.rtl,
+              ),
             ),
           ),
           pw.SizedBox(width: 5),
@@ -624,11 +641,19 @@ class YarnPdfGenerator {
               decoration: pw.BoxDecoration(
                 border: pw.Border.all(color: PdfColors.grey300),
               ),
-              child: pw.Text(value, style: const pw.TextStyle(fontSize: 8)),
+              child: pw.Text(
+                _fixArabic(value),
+                style: const pw.TextStyle(fontSize: 8),
+                textDirection: pw.TextDirection.rtl,
+              ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  static String _fixArabic(String text) {
+    return text; 
   }
 }

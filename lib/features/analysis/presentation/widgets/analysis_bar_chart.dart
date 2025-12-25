@@ -1,6 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import '../../data/analysis_service.dart';
+import 'package:annex_sales_order/features/analysis/data/analysis_service.dart';
 
 class AnalysisBarChart extends StatefulWidget {
   final AnalysisMetrics metrics;
@@ -18,62 +18,96 @@ class AnalysisBarChart extends StatefulWidget {
 
 class _AnalysisBarChartState extends State<AnalysisBarChart> {
   bool _isMonthlyBarChart = false;
+  late List<String> _allDates;
+  late Map<String, int> _chartGeneral;
+  late Map<String, int> _chartYarn;
+  late Map<String, int> _chartFabric;
+  late List<String> _chartKeys;
+  late double _maxVal;
 
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    super.initState();
+    _processData();
+  }
+
+  @override
+  void didUpdateWidget(AnalysisBarChart oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.metrics != widget.metrics) {
+      _processData();
+    }
+  }
+
+  void _processData() {
     final metrics = widget.metrics;
-    final isDark = widget.isDark;
+    final dailyGeneral = metrics.generalOrdersByDate;
+    final dailyYarn = metrics.yarnOrdersByDate;
+    final dailyFabric = metrics.fabricOrdersByDate;
 
-    // Determine chart data based on toggle and grouping
-    final Map<String, int> dailyGeneral = metrics.generalOrdersByDate;
-    final Map<String, int> dailyYarn = metrics.yarnOrdersByDate;
+    _allDates = {
+      ...dailyGeneral.keys,
+      ...dailyYarn.keys,
+      ...dailyFabric.keys,
+    }.toList()
+      ..sort();
 
-    // Get all unique dates and sort them
-    final allDates = {...dailyGeneral.keys, ...dailyYarn.keys}.toList()..sort();
-
-    Map<String, int> chartGeneral = {};
-    Map<String, int> chartYarn = {};
+    _chartGeneral = {};
+    _chartYarn = {};
+    _chartFabric = {};
 
     if (_isMonthlyBarChart) {
-      // Group by month (yyyy-MM)
-      for (var date in allDates) {
+      for (var date in _allDates) {
         final monthKey = date.length >= 7 ? date.substring(0, 7) : date;
-        chartGeneral[monthKey] = (chartGeneral[monthKey] ?? 0) + (dailyGeneral[date] ?? 0);
-        chartYarn[monthKey] = (chartYarn[monthKey] ?? 0) + (dailyYarn[date] ?? 0);
+        _chartGeneral[monthKey] =
+            (_chartGeneral[monthKey] ?? 0) + (dailyGeneral[date] ?? 0);
+        _chartYarn[monthKey] =
+            (_chartYarn[monthKey] ?? 0) + (dailyYarn[date] ?? 0);
+        _chartFabric[monthKey] =
+            (_chartFabric[monthKey] ?? 0) + (dailyFabric[date] ?? 0);
       }
     } else {
-      // Display daily
-      for (var date in allDates) {
-        chartGeneral[date] = dailyGeneral[date] ?? 0;
-        chartYarn[date] = dailyYarn[date] ?? 0;
+      for (var date in _allDates) {
+        _chartGeneral[date] = dailyGeneral[date] ?? 0;
+        _chartYarn[date] = dailyYarn[date] ?? 0;
+        _chartFabric[date] = dailyFabric[date] ?? 0;
       }
-      
-      // Optimization: Limit to last 15 days
-      if (allDates.length > 15) {
-        final recentDates = allDates.sublist(allDates.length - 15);
+
+      if (_allDates.length > 15) {
+        final recentDates = _allDates.sublist(_allDates.length - 15);
         final filteredGeneral = <String, int>{};
         final filteredYarn = <String, int>{};
+        final filteredFabric = <String, int>{};
         for (var d in recentDates) {
-          filteredGeneral[d] = chartGeneral[d] ?? 0;
-          filteredYarn[d] = chartYarn[d] ?? 0;
+          filteredGeneral[d] = _chartGeneral[d] ?? 0;
+          filteredYarn[d] = _chartYarn[d] ?? 0;
+          filteredFabric[d] = _chartFabric[d] ?? 0;
         }
-        chartGeneral = filteredGeneral;
-        chartYarn = filteredYarn;
+        _chartGeneral = filteredGeneral;
+        _chartYarn = filteredYarn;
+        _chartFabric = filteredFabric;
       }
     }
 
-    final chartKeys = chartGeneral.keys.toList()..sort();
+    _chartKeys = _chartGeneral.keys.toList()..sort();
+
+    _maxVal = _chartKeys.isEmpty
+        ? 10.0
+        : [
+              ..._chartGeneral.values,
+              ..._chartYarn.values,
+              ..._chartFabric.values,
+            ].reduce((a, b) => a > b ? a : b).toDouble() +
+            2;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = widget.isDark;
     final labelColor = isDark ? Colors.grey[400] : Colors.grey[600];
     final gridColor = isDark
         ? Colors.white.withValues(alpha: 0.05)
         : Colors.black.withValues(alpha: 0.05);
-
-    double maxVal = chartKeys.isEmpty
-        ? 10.0
-        : [
-            ...chartGeneral.values,
-            ...chartYarn.values
-          ].reduce((a, b) => a > b ? a : b).toDouble() + 2;
 
     return SizedBox(
       height: 300,
@@ -83,11 +117,12 @@ class _AnalysisBarChartState extends State<AnalysisBarChart> {
             child: BarChart(
               BarChartData(
                 alignment: BarChartAlignment.spaceAround,
-                maxY: maxVal,
-                barGroups: chartKeys.asMap().entries.map((e) {
+                maxY: _maxVal,
+                barGroups: _chartKeys.asMap().entries.map((e) {
                   final key = e.value;
-                  final generalCount = chartGeneral[key] ?? 0;
-                  final yarnCount = chartYarn[key] ?? 0;
+                  final generalCount = _chartGeneral[key] ?? 0;
+                  final yarnCount = _chartYarn[key] ?? 0;
+                  final fabricCount = _chartFabric[key] ?? 0;
 
                   return BarChartGroupData(
                     x: e.key,
@@ -116,6 +151,18 @@ class _AnalysisBarChartState extends State<AnalysisBarChart> {
                           top: Radius.circular(4),
                         ),
                       ),
+                      BarChartRodData(
+                        toY: fabricCount.toDouble(),
+                        gradient: const LinearGradient(
+                          colors: [Colors.purpleAccent, Colors.deepPurple],
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                        ),
+                        width: 12,
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(4),
+                        ),
+                      ),
                     ],
                   );
                 }).toList(),
@@ -125,11 +172,15 @@ class _AnalysisBarChartState extends State<AnalysisBarChart> {
                     sideTitles: SideTitles(
                       showTitles: true,
                       getTitlesWidget: (val, meta) {
-                        if (val.toInt() >= chartKeys.length) return const SizedBox();
-                        final key = chartKeys[val.toInt()];
-                        final displayKey = _isMonthlyBarChart 
-                            ? key 
-                            : (key.length >= 5 ? key.substring(key.length - 5) : key);
+                        if (val.toInt() >= _chartKeys.length) {
+                          return const SizedBox();
+                        }
+                        final key = _chartKeys[val.toInt()];
+                        final displayKey = _isMonthlyBarChart
+                            ? key
+                            : (key.length >= 5
+                                  ? key.substring(key.length - 5)
+                                  : key);
 
                         return Padding(
                           padding: const EdgeInsets.only(top: 10.0),
@@ -151,8 +202,12 @@ class _AnalysisBarChartState extends State<AnalysisBarChart> {
                       ),
                     ),
                   ),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                 ),
                 gridData: FlGridData(
                   show: true,
@@ -165,9 +220,16 @@ class _AnalysisBarChartState extends State<AnalysisBarChart> {
                   touchTooltipData: BarTouchTooltipData(
                     tooltipRoundedRadius: 8,
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                      final type = rodIndex == 0 ? "مستلزمات" : "غزل";
+                      String type;
+                      if (rodIndex == 0) {
+                        type = "مستلزمات";
+                      } else if (rodIndex == 1) {
+                        type = "غزل";
+                      } else {
+                        type = "قماش";
+                      }
                       return BarTooltipItem(
-                        "${chartKeys[groupIndex]}\n$type: ${rod.toY.toInt()}",
+                        "${_chartKeys[groupIndex]}\n$type: ${rod.toY.toInt()}",
                         const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -183,34 +245,59 @@ class _AnalysisBarChartState extends State<AnalysisBarChart> {
             ),
           ),
           const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isSmall = constraints.maxWidth < 450;
+              return Column(
                 children: [
-                  Text(
-                    'عرض شهري',
-                    style: TextStyle(fontSize: 12, color: labelColor),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'عرض شهري',
+                            style: TextStyle(fontSize: 12, color: labelColor),
+                          ),
+                          Switch.adaptive(
+                            value: _isMonthlyBarChart,
+                            onChanged: (v) {
+                                setState(() {
+                                  _isMonthlyBarChart = v;
+                                  _processData();
+                                });
+                              },
+                            activeTrackColor: Colors.teal.withValues(
+                              alpha: 0.5,
+                            ),
+                            activeThumbColor: Colors.teal,
+                          ),
+                        ],
+                      ),
+                      if (!isSmall) _buildLegend(isSmall),
+                    ],
                   ),
-                  Switch.adaptive(
-                    value: _isMonthlyBarChart,
-                    onChanged: (v) => setState(() => _isMonthlyBarChart = v),
-                    activeTrackColor: Colors.teal.withValues(alpha: 0.5),
-                    activeThumbColor: Colors.teal,
-                  ),
+                  if (isSmall) const SizedBox(height: 8),
+                  if (isSmall) _buildLegend(isSmall),
                 ],
-              ),
-              const Row(
-                children: [
-                  _LegendItem(label: 'فواتير مستلزمات', color: Color(0xFF00B4DB)),
-                  SizedBox(width: 20),
-                  _LegendItem(label: 'فواتير غزل', color: Colors.teal),
-                ],
-              ),
-            ],
+              );
+            },
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildLegend(bool isSmall) {
+    return Wrap(
+      spacing: 12,
+      runSpacing: 4,
+      alignment: isSmall ? WrapAlignment.center : WrapAlignment.end,
+      children: const [
+        _LegendItem(label: 'فواتير مستلزمات', color: Color(0xFF00B4DB)),
+        _LegendItem(label: 'فواتير غزل', color: Colors.teal),
+        _LegendItem(label: 'فواتير قماش', color: Colors.deepPurple),
+      ],
     );
   }
 }

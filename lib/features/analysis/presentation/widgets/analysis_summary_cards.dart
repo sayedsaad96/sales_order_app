@@ -1,5 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import '../../data/analysis_service.dart';
+import 'package:annex_sales_order/features/analysis/data/analysis_service.dart';
 
 class AnalysisSummaryCards extends StatelessWidget {
   final AnalysisMetrics metrics;
@@ -26,33 +27,35 @@ class AnalysisSummaryCards extends StatelessWidget {
         mainAxisSpacing: 15,
         childAspectRatio: constraints.maxWidth > 1200
             ? 3.0
-            : (constraints.maxWidth > 800 ? 2.5 : 2.8),
+            : (constraints.maxWidth > 800
+                  ? 2.5
+                  : (constraints.maxWidth > 500 ? 2.5 : 2.0)),
       ),
       children: [
         _AnalysisStatCard(
           title: 'إجمالي المبيعات',
           value: metrics.totalSalesValue.toStringAsFixed(0),
-          icon: Icons.account_balance_wallet,
+          icon: CupertinoIcons.money_dollar_circle,
           colors: const [Color(0xFF00B4DB), Color(0xFF0083B0)],
           constraints: constraints,
           index: 0,
           subtitle:
-              'مستلزمات: ${metrics.totalGeneralSales.toStringAsFixed(0)} | غزل: ${metrics.totalYarnSales.toStringAsFixed(0)}',
+              'مستلزمات: ${metrics.totalGeneralSales.toStringAsFixed(0)} | غزل: ${metrics.totalYarnSales.toStringAsFixed(0)} | قماش: ${metrics.totalFabricSales.toStringAsFixed(0)}',
         ),
         _AnalysisStatCard(
           title: 'عدد الطلبات',
           value: metrics.totalOrders.toString(),
-          icon: Icons.receipt_long,
+          icon: CupertinoIcons.doc_plaintext,
           colors: const [Color(0xFF6dd5ed), Color(0xFF2193b0)],
           constraints: constraints,
           index: 1,
           subtitle:
-              'مستلزمات: ${metrics.totalGeneralOrders} | غزل: ${metrics.totalYarnOrders}',
+              'مستلزمات: ${metrics.totalGeneralOrders} | غزل: ${metrics.totalYarnOrders} | قماش: ${metrics.totalFabricOrders}',
         ),
         _AnalysisStatCard(
           title: 'المرتجعات',
           value: metrics.totalReturns.toString(),
-          icon: Icons.keyboard_return,
+          icon: CupertinoIcons.arrow_2_squarepath,
           colors: const [Color(0xFFff9966), Color(0xFFff5e62)],
           constraints: constraints,
           index: 2,
@@ -93,7 +96,7 @@ class _AnalysisStatCard extends StatelessWidget {
           child: Opacity(
             opacity: anim.clamp(0.0, 1.0),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: colors,

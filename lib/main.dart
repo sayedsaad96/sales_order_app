@@ -4,17 +4,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
-import 'core/providers/theme_provider.dart';
-import 'core/theme/app_theme.dart';
-import 'features/sales_order/data/datasources/invoice_local_data_source.dart';
-import 'features/sales_order/data/datasources/yarn_invoice_local_data_source.dart';
-import 'features/sales_order/data/models/sales_order.dart';
-import 'features/sales_order/data/models/yarn_sales_order.dart';
-import 'features/user/data/datasources/user_local_data_source.dart';
-import 'features/user/data/models/user_model.dart';
-import 'features/splash/presentation/pages/splash_screen.dart';
-import 'features/return_order/data/models/return_order.dart';
-import 'features/return_order/data/datasources/return_order_local_data_source.dart';
+import 'package:annex_sales_order/core/providers/theme_provider.dart';
+import 'package:annex_sales_order/core/theme/app_theme.dart';
+import 'package:annex_sales_order/features/sales_order/data/datasources/invoice_local_data_source.dart';
+import 'package:annex_sales_order/features/sales_order/data/datasources/yarn_invoice_local_data_source.dart';
+import 'package:annex_sales_order/features/sales_order/data/models/sales_order.dart';
+import 'package:annex_sales_order/features/sales_order/data/models/yarn_sales_order.dart';
+import 'package:annex_sales_order/features/user/data/datasources/user_local_data_source.dart';
+import 'package:annex_sales_order/features/user/data/models/user_model.dart';
+import 'package:annex_sales_order/features/splash/presentation/pages/splash_screen.dart';
+import 'package:annex_sales_order/features/return_order/data/models/return_order.dart';
+import 'package:annex_sales_order/features/return_order/data/datasources/return_order_local_data_source.dart';
+import 'package:annex_sales_order/features/sales_order/data/models/fabrics_cm_sales_order.dart';
+import 'package:annex_sales_order/features/sales_order/data/datasources/fabrics_cm_invoice_local_data_source.dart';
 
 void main() async {
   runZonedGuarded<Future<void>>(
@@ -43,6 +45,10 @@ void main() async {
         Hive.registerAdapter(YarnInstallmentAdapter());
         Hive.registerAdapter(ReturnOrderAdapter());
         Hive.registerAdapter(ReturnOrderItemAdapter());
+        
+        // Register Fabrics & CM adapters
+        Hive.registerAdapter(FabricsCmSalesOrderAdapter());
+        Hive.registerAdapter(FabricsCmLineItemAdapter());
 
         final userDataSource = UserLocalDataSource();
         await userDataSource.init();
@@ -52,6 +58,8 @@ void main() async {
         await YarnInvoiceLocalDataSource().init();
         // Initialize Return Order data source
         await ReturnOrderLocalDataSource().init();
+        // Initialize Fabrics & CM data source
+        await FabricsCmInvoiceLocalDataSource().init();
       } catch (e, stack) {
         debugPrint('Initialization Error: $e\n$stack');
         // Consider showing a fallback UI here if critical init fails

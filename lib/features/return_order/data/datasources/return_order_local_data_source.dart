@@ -1,5 +1,5 @@
 import 'package:hive_flutter/hive_flutter.dart';
-import '../models/return_order.dart';
+import 'package:annex_sales_order/features/return_order/data/models/return_order.dart';
 
 class ReturnOrderLocalDataSource {
   static const String boxName = 'return_orders';

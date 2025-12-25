@@ -1,13 +1,13 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:annex_sales_order/features/analysis/data/analysis_service.dart';
 import 'package:annex_sales_order/features/user/data/datasources/user_local_data_source.dart';
-import '../../../../core/widgets/app_drawer.dart';
-
-import '../widgets/analysis_summary_cards.dart';
-import '../widgets/analysis_glass_card.dart';
-import '../widgets/analysis_pie_chart.dart';
-import '../widgets/analysis_bar_chart.dart';
-import '../widgets/analysis_customer_table.dart';
+import 'package:annex_sales_order/core/widgets/app_drawer.dart';
+import 'package:annex_sales_order/features/analysis/presentation/widgets/analysis_summary_cards.dart';
+import 'package:annex_sales_order/features/analysis/presentation/widgets/analysis_glass_card.dart';
+import 'package:annex_sales_order/features/analysis/presentation/widgets/analysis_pie_chart.dart';
+import 'package:annex_sales_order/features/analysis/presentation/widgets/analysis_bar_chart.dart';
+import 'package:annex_sales_order/features/analysis/presentation/widgets/analysis_customer_table.dart';
 
 class SalesAnalysisPage extends StatefulWidget {
   const SalesAnalysisPage({super.key});
@@ -20,6 +20,7 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
   late Future<AnalysisMetrics> _metricsFuture;
   String? _selectedCustomer;
   Future<AnalysisMetrics>? _customerDetailFuture;
+  bool _filterByRep = true;
 
   @override
   void initState() {
@@ -27,16 +28,21 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
     _refreshData();
   }
 
+  String? _currentDebugRep;
+
   void _refreshData({bool force = false}) {
     final user = UserLocalDataSource().getUser();
+    final repName = _filterByRep ? user?.fullName : null;
+    _currentDebugRep = user?.fullName;
+    
     setState(() {
       _metricsFuture = AnalysisService.getMetrics(
-        salesRepName: user?.fullName,
+        salesRepName: repName,
         forceRefresh: force,
       );
       if (_selectedCustomer != null) {
         _customerDetailFuture = AnalysisService.getMetrics(
-          salesRepName: user?.fullName,
+          salesRepName: repName,
           customerName: _selectedCustomer,
           forceRefresh: force,
         );
@@ -70,8 +76,32 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             }
+            if (snapshot.hasError) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(CupertinoIcons.exclamationmark_triangle, size: 60, color: Colors.red),
+                      const SizedBox(height: 16),
+                      Text(
+                        'حدث خطأ أثناء تحميل البيانات:\n${snapshot.error}',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => _refreshData(force: true),
+                        child: const Text('إعادة المحاولة'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
             if (!snapshot.hasData || snapshot.data!.totalOrders == 0) {
-              return _buildEmptyState();
+              return _buildEmptyState(snapshot.data);
             }
 
             final metrics = snapshot.data!;
@@ -84,6 +114,13 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
               child: NestedScrollView(
                 headerSliverBuilder: (context, innerBoxIsScrolled) => [
                   SliverAppBar(
+                    leading: Builder(
+                      builder: (context) => IconButton(
+                        icon: const Icon(CupertinoIcons.list_dash),
+                        onPressed: () => Scaffold.of(context).openDrawer(),
+                        tooltip: 'Menu',
+                      ),
+                    ),
                     expandedHeight: 120,
                     floating: true,
                     pinned: true,
@@ -93,8 +130,23 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
                     ),
                     centerTitle: true,
                     actions: [
+                      Row(
+                        children: [
+                          const Text('مبيعاتي فقط', style: TextStyle(fontSize: 12, color: Colors.white)),
+                          Switch.adaptive(
+                            value: _filterByRep,
+                            activeTrackColor: Colors.white,
+                            onChanged: (v) {
+                              setState(() {
+                                _filterByRep = v;
+                                _refreshData(force: true);
+                              });
+                            },
+                          ),
+                        ],
+                      ),
                       IconButton(
-                        icon: const Icon(Icons.refresh),
+                        icon: const Icon(CupertinoIcons.refresh),
                         onPressed: () => _refreshData(force: true),
                         tooltip: 'تحديث البيانات',
                       ),
@@ -123,6 +175,7 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
                       labelStyle: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
+                        color: Colors.white30,
                       ),
                       unselectedLabelStyle: TextStyle(fontSize: 14),
                     ),
@@ -142,16 +195,35 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(AnalysisMetrics? metrics) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.analytics_outlined, size: 80, color: Colors.grey[400]),
+          Icon(CupertinoIcons.graph_square, size: 80, color: Colors.grey[400]),
           const SizedBox(height: 16),
           const Text(
             'لا توجد بيانات كافية للتحليل حالياً',
             style: TextStyle(fontSize: 18, color: Colors.grey),
+          ),
+          if (metrics != null) ...[
+            const SizedBox(height: 20),
+            Text(
+              'Debug Info Raw: S:${metrics.rawGeneralCount}, Y:${metrics.rawYarnCount}, F:${metrics.rawFabricCount}',
+              style: const TextStyle(fontSize: 12, color: Colors.blue),
+            ),
+            Text(
+              'Filtered: ${metrics.totalOrders} | MyOnly:$_filterByRep | User:$_currentDebugRep',
+              style: const TextStyle(fontSize: 10, color: Colors.red),
+            ),
+          ],
+          const SizedBox(height: 10),
+          ElevatedButton(
+            onPressed: () {
+              AnalysisService.clearCache();
+              _refreshData(force: true);
+            },
+            child: const Text('تفريغ الكاش وتحديث'),
           ),
         ],
       ),
@@ -189,7 +261,10 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
                       child: AnalysisGlassCard(
                         title: 'عدد الفواتير ',
                         isDark: isDark,
-                        child: AnalysisBarChart(metrics: metrics, isDark: isDark),
+                        child: AnalysisBarChart(
+                          metrics: metrics,
+                          isDark: isDark,
+                        ),
                       ),
                     ),
                   ],
@@ -200,10 +275,7 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
                     AnalysisGlassCard(
                       title: 'توزيع القيمة حسب النوع',
                       isDark: isDark,
-                      child: AnalysisPieChart(
-                        metrics: metrics,
-                        isDark: isDark,
-                      ),
+                      child: AnalysisPieChart(metrics: metrics, isDark: isDark),
                     ),
                     const SizedBox(height: 20),
                     AnalysisGlassCard(
@@ -228,7 +300,7 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final useHorizontalLayout = constraints.maxWidth > 900;
-        
+
         if (_selectedCustomer != null) {
           return FutureBuilder<AnalysisMetrics>(
             future: _customerDetailFuture,
@@ -245,9 +317,10 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
                     Row(
                       children: [
                         ActionChip(
-                          avatar: const Icon(Icons.arrow_back, size: 16),
+                          avatar: const Icon(CupertinoIcons.arrow_right, size: 16),
                           label: const Text('كل العملاء'),
-                          onPressed: () => setState(() => _selectedCustomer = null),
+                          onPressed: () =>
+                              setState(() => _selectedCustomer = null),
                         ),
                         const SizedBox(width: 12),
                         Text(
@@ -261,7 +334,10 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
                       ],
                     ),
                     const SizedBox(height: 20),
-                    AnalysisSummaryCards(metrics: custMetrics, constraints: constraints),
+                    AnalysisSummaryCards(
+                      metrics: custMetrics,
+                      constraints: constraints,
+                    ),
                     const SizedBox(height: 30),
                     if (useHorizontalLayout)
                       Row(
@@ -271,7 +347,10 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
                             child: AnalysisGlassCard(
                               title: 'توزيع القيمة حسب النوع',
                               isDark: isDark,
-                              child: AnalysisPieChart(metrics: custMetrics, isDark: isDark),
+                              child: AnalysisPieChart(
+                                metrics: custMetrics,
+                                isDark: isDark,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 20),
@@ -279,7 +358,10 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
                             child: AnalysisGlassCard(
                               title: 'عدد الفواتير ',
                               isDark: isDark,
-                              child: AnalysisBarChart(metrics: custMetrics, isDark: isDark),
+                              child: AnalysisBarChart(
+                                metrics: custMetrics,
+                                isDark: isDark,
+                              ),
                             ),
                           ),
                         ],
@@ -290,13 +372,19 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
                           AnalysisGlassCard(
                             title: 'توزيع القيمة حسب النوع',
                             isDark: isDark,
-                            child: AnalysisPieChart(metrics: custMetrics, isDark: isDark),
+                            child: AnalysisPieChart(
+                              metrics: custMetrics,
+                              isDark: isDark,
+                            ),
                           ),
                           const SizedBox(height: 20),
                           AnalysisGlassCard(
                             title: 'عدد الفواتير ',
                             isDark: isDark,
-                            child: AnalysisBarChart(metrics: custMetrics, isDark: isDark),
+                            child: AnalysisBarChart(
+                              metrics: custMetrics,
+                              isDark: isDark,
+                            ),
                           ),
                         ],
                       ),
@@ -381,4 +469,3 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
     );
   }
 }
-

@@ -1,6 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import '../../data/analysis_service.dart';
+import 'package:annex_sales_order/features/analysis/data/analysis_service.dart';
 
 class AnalysisPieChart extends StatelessWidget {
   final AnalysisMetrics metrics;
@@ -16,6 +16,7 @@ class AnalysisPieChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasGeneral = metrics.totalGeneralSales > 0;
     final hasYarn = metrics.totalYarnSales > 0;
+    final hasFabric = metrics.totalFabricSales > 0;
 
     final sections = <PieChartSectionData>[];
 
@@ -43,6 +44,23 @@ class AnalysisPieChart extends StatelessWidget {
           title:
               '${(metrics.totalYarnSales / metrics.totalSalesValue * 100).toStringAsFixed(1)}%',
           color: Colors.teal,
+          radius: 60,
+          titleStyle: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+      );
+    }
+
+    if (hasFabric) {
+      sections.add(
+        PieChartSectionData(
+          value: metrics.totalFabricSales,
+          title:
+              '${(metrics.totalFabricSales / metrics.totalSalesValue * 100).toStringAsFixed(1)}%',
+          color: Colors.deepPurpleAccent,
           radius: 60,
           titleStyle: const TextStyle(
             fontSize: 12,
@@ -94,7 +112,7 @@ class AnalysisPieChart extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
             decoration: BoxDecoration(
               color: isDark
                   ? Colors.white10
@@ -104,26 +122,39 @@ class AnalysisPieChart extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildMiniStat(
-                  'مستلزمات',
-                  metrics.totalGeneralSales.toStringAsFixed(0),
-                  Colors.blue,
+                Expanded(
+                  child: _buildMiniStat(
+                    'مستلزمات',
+                    metrics.totalGeneralSales.toStringAsFixed(0),
+                    Colors.blue,
+                  ),
                 ),
-                _buildMiniStat(
-                  'غزل',
-                  metrics.totalYarnSales.toStringAsFixed(0),
-                  Colors.teal,
+                Expanded(
+                  child: _buildMiniStat(
+                    'غزل',
+                    metrics.totalYarnSales.toStringAsFixed(0),
+                    Colors.teal,
+                  ),
+                ),
+                Expanded(
+                  child: _buildMiniStat(
+                    'قماش',
+                    metrics.totalFabricSales.toStringAsFixed(0),
+                    Colors.deepPurpleAccent,
+                  ),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 10),
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          const Wrap(
+            spacing: 12,
+            runSpacing: 4,
+            alignment: WrapAlignment.center,
             children: [
               _LegendItem(label: 'مستلزمات', color: Color(0xFF00B4DB)),
-              SizedBox(width: 20),
               _LegendItem(label: 'غزل', color: Colors.teal),
+              _LegendItem(label: 'قماش', color: Colors.deepPurpleAccent),
             ],
           ),
         ],

@@ -1,13 +1,14 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/theme_provider.dart';
-import '../../features/sales_order/presentation/pages/price_list_page.dart';
-import '../../features/sales_order/presentation/pages/sales_order_container_page.dart';
-import '../../features/return_order/presentation/pages/return_order_page.dart';
+import 'package:annex_sales_order/core/providers/theme_provider.dart';
+import 'package:annex_sales_order/features/sales_order/presentation/pages/price_list_page.dart';
+import 'package:annex_sales_order/features/sales_order/presentation/pages/sales_order_container_page.dart';
+import 'package:annex_sales_order/features/return_order/presentation/pages/return_order_page.dart';
 
-import '../../features/user/presentation/pages/edit_profile_page.dart';
-import '../../features/about/presentation/pages/about_page.dart';
-import '../../features/analysis/presentation/pages/sales_analysis_page.dart';
+import 'package:annex_sales_order/features/user/presentation/pages/edit_profile_page.dart';
+import 'package:annex_sales_order/features/about/presentation/pages/about_page.dart';
+import 'package:annex_sales_order/features/analysis/presentation/pages/sales_analysis_page.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -49,12 +50,12 @@ class AppDrawer extends StatelessWidget {
                 _buildSectionHeader('Main Menu'),
                 _buildModernMenuItem(
                   context,
-                  icon: FontAwesomeIcons.receipt,
+                  icon: CupertinoIcons.doc_text,
                   title: 'Price Lists',
                   subtitle: 'View pricing information',
                   onTap: () {
                     Navigator.pop(context);
-                    Navigator.push(
+                    Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
                         builder: (context) => const PriceListPage(),
@@ -64,7 +65,7 @@ class AppDrawer extends StatelessWidget {
                 ),
                 _buildModernMenuItem(
                   context,
-                  icon: FontAwesomeIcons.linktree,
+                  icon: CupertinoIcons.square_list,
                   title: 'Essential Sales Order',
                   subtitle: 'Create essential orders',
                   onTap: () {
@@ -80,7 +81,7 @@ class AppDrawer extends StatelessWidget {
                 ),
                 _buildModernMenuItem(
                   context,
-                  icon: FontAwesomeIcons.yarn,
+                  icon: CupertinoIcons.layers_alt,
                   title: 'Yarn Sales Order',
                   subtitle: 'Create yarn orders',
                   onTap: () {
@@ -96,12 +97,28 @@ class AppDrawer extends StatelessWidget {
                 ),
                 _buildModernMenuItem(
                   context,
-                  icon: FontAwesomeIcons.rotateLeft,
+                  icon: CupertinoIcons.tag,
+                  title: 'Fabrics & CM Order',
+                  subtitle: 'Create fabrics & CM orders',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const SalesOrderContainerPage(initialIndex: 2),
+                      ),
+                    );
+                  },
+                ),
+                _buildModernMenuItem(
+                  context,
+                  icon: CupertinoIcons.arrow_counterclockwise,
                   title: 'Return Order',
                   subtitle: 'Create return orders',
                   onTap: () {
                     Navigator.pop(context);
-                    Navigator.push(
+                    Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
                         builder: (context) => const ReturnOrderPage(),
@@ -109,14 +126,15 @@ class AppDrawer extends StatelessWidget {
                     );
                   },
                 ),
+
                 _buildModernMenuItem(
                   context,
-                  icon: FontAwesomeIcons.chartLine,
+                  icon: CupertinoIcons.graph_square,
                   title: 'Sales Analysis',
                   subtitle: 'Insights and performance',
                   onTap: () {
                     Navigator.pop(context);
-                    Navigator.push(
+                    Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
                         builder: (context) => const SalesAnalysisPage(),
@@ -131,12 +149,12 @@ class AppDrawer extends StatelessWidget {
                 _buildSectionHeader('Information'),
                 _buildModernMenuItem(
                   context,
-                  icon: Icons.info,
+                  icon: CupertinoIcons.info,
                   title: 'About Us',
                   subtitle: 'Company information',
                   onTap: () {
                     Navigator.pop(context);
-                    Navigator.push(
+                    Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
                         builder: (context) => const AboutPage(),
@@ -151,7 +169,7 @@ class AppDrawer extends StatelessWidget {
                 _buildSectionHeader('Settings'),
                 _buildModernMenuItem(
                   context,
-                  icon: Icons.person,
+                  icon: CupertinoIcons.person,
                   title: 'Edit Profile',
                   subtitle: 'Update your information',
                   onTap: () {
@@ -271,7 +289,7 @@ class AppDrawer extends StatelessWidget {
         shape: const StadiumBorder(),
         onTap: () => themeProvider.toggleTheme(),
         leading: Icon(
-          themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
+          themeProvider.isDarkMode ? CupertinoIcons.moon_fill : CupertinoIcons.sun_max_fill,
           color: theme.colorScheme.onSurfaceVariant,
         ),
         title: Text(
@@ -286,7 +304,7 @@ class AppDrawer extends StatelessWidget {
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
-        trailing: Switch(
+        trailing: CupertinoSwitch(
           value: themeProvider.isDarkMode,
           onChanged: (value) => themeProvider.toggleTheme(),
         ),

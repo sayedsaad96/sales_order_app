@@ -1,7 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import '../../data/datasources/user_local_data_source.dart';
-import '../../data/models/user_model.dart';
-import '../../../../core/widgets/app_drawer.dart';
+import 'package:annex_sales_order/features/user/data/datasources/user_local_data_source.dart';
+import 'package:annex_sales_order/features/user/data/models/user_model.dart';
+import 'package:annex_sales_order/core/widgets/app_drawer.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -65,7 +66,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('تعديل الملف الشخصي')),
+      appBar: AppBar(
+        title: const Text('تعديل الملف الشخصي'),
+        leading: IconButton(
+          icon: const Icon(CupertinoIcons.back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       drawer: const AppDrawer(),
       body: Center(
         child: SingleChildScrollView(
@@ -78,14 +85,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.account_circle, size: 80, color: Colors.blue),
+                    const Icon(CupertinoIcons.person_crop_circle_fill, size: 80, color: Colors.blue),
                     const SizedBox(height: 30),
                     TextFormField(
                       controller: _nameController,
                       decoration: const InputDecoration(
                         labelText: 'الاسم بالكامل',
                         border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.person),
+                        prefixIcon:  Icon(CupertinoIcons.person),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -100,7 +107,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       decoration: const InputDecoration(
                         labelText: 'رقم الموبايل',
                         border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.phone),
+                        prefixIcon:  Icon(CupertinoIcons.phone),
                       ),
                       keyboardType: TextInputType.phone,
                       validator: (value) {

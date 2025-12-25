@@ -1,23 +1,25 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:annex_sales_order/features/sales_order/data/datasources/yarn_invoice_local_data_source.dart';
-import 'package:annex_sales_order/features/sales_order/data/models/yarn_sales_order.dart';
-import 'package:annex_sales_order/features/sales_order/presentation/pages/yarn_sales_order_page.dart';
+import 'package:annex_sales_order/features/sales_order/data/datasources/fabrics_cm_invoice_local_data_source.dart';
+import 'package:annex_sales_order/features/sales_order/data/models/fabrics_cm_sales_order.dart';
+import 'package:annex_sales_order/features/sales_order/presentation/pages/fabrics_cm_order_page.dart';
 import 'package:annex_sales_order/core/widgets/app_drawer.dart';
 import 'package:annex_sales_order/core/utils/performance_utils.dart';
 
-class SavedYarnInvoicesPage extends StatefulWidget {
-  const SavedYarnInvoicesPage({super.key});
+class SavedFabricsCmInvoicesPage extends StatefulWidget {
+  const SavedFabricsCmInvoicesPage({super.key});
 
   @override
-  State<SavedYarnInvoicesPage> createState() => _SavedYarnInvoicesPageState();
+  State<SavedFabricsCmInvoicesPage> createState() =>
+      _SavedFabricsCmInvoicesPageState();
 }
 
-class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
-  final _invoiceDataSource = YarnInvoiceLocalDataSource();
+class _SavedFabricsCmInvoicesPageState
+    extends State<SavedFabricsCmInvoicesPage> {
+  final _invoiceDataSource = FabricsCmInvoiceLocalDataSource();
   final _searchController = TextEditingController();
-  List<YarnSalesOrder> _invoices = [];
+  List<FabricsCmSalesOrder> _invoices = [];
   String? _selectedCustomer;
   bool _isLoading = true;
   String _searchQuery = '';
@@ -28,7 +30,6 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
   @override
   void initState() {
     super.initState();
-    // Use debouncing to avoid rebuilding on every keystroke
     _searchController.addListener(() {
       PerformanceUtils.debounce(
         duration: const Duration(milliseconds: 300),
@@ -58,7 +59,7 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
         _isLoading = true;
       });
 
-      final invoices = _invoiceDataSource.getAllInvoices();
+      final invoices = _invoiceDataSource.getInvoices();
 
       setState(() {
         _invoices = invoices;
@@ -116,27 +117,29 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
                 name.toLowerCase().contains(_searchQuery.toLowerCase()))
             .toList();
   }
-  Future<void> _deleteInvoice(YarnSalesOrder invoice) async {
-    await _invoiceDataSource.deleteInvoice(invoice);
+
+  Future<void> _deleteInvoice(FabricsCmSalesOrder invoice) async {
+    // Since FabricsCmSalesOrder extends HiveObject, we can delete directly
+    if (invoice.isInBox) {
+      await invoice.delete();
+    }
     _loadInvoices();
   }
 
   Future<void> _deleteCustomerFolder(String customerName) async {
-    // Show loading
     setState(() => _isLoading = true);
 
     try {
-      // Find all invoices for this customer
       final customerInvoices = _invoices
           .where((i) => (i.customerName ?? "بدون اسم") == customerName)
           .toList();
 
-      // Delete them all
       for (var invoice in customerInvoices) {
-        await _invoiceDataSource.deleteInvoice(invoice);
+        if (invoice.isInBox) {
+          await invoice.delete();
+        }
       }
 
-      // Reload
       _loadInvoices();
 
       if (mounted) {
@@ -150,7 +153,7 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
           context,
         ).showSnackBar(SnackBar(content: Text('خطأ أثناء الحذف: $e')));
       }
-      _loadInvoices(); // Reload to reset state
+      _loadInvoices();
     }
   }
 
@@ -186,7 +189,7 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
 
   Future<void> _confirmDelete(
     BuildContext context,
-    YarnSalesOrder invoice,
+    FabricsCmSalesOrder invoice,
   ) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -222,7 +225,11 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Center(
-              child: Image.asset('assets/images/logo.png', width: 150, height: 150),
+              child: Image.asset(
+                'assets/images/logo.png',
+                width: 150,
+                height: 150,
+              ),
             ),
             const SizedBox(height: 20),
             const Center(
@@ -241,11 +248,9 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
     if (_invoices.isEmpty) {
       return _buildEmptyState();
     }
-
     return CustomScrollView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       slivers: [
-        // Search bar and Stats wrapped in a sliver
         SliverToBoxAdapter(
           child: Column(
             children: [
@@ -278,8 +283,10 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
               ),
               if (_searchQuery.isNotEmpty)
                 Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   child: Text(
                     'النتائج: ${_filteredCustomers.length} من ${_sortedCustomers.length}',
                     style: TextStyle(color: Colors.grey[600]),
@@ -289,7 +296,6 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
           ),
         ),
 
-        // Grid View as a Sliver
         if (_filteredCustomers.isEmpty)
           SliverFillRemaining(
             hasScrollBody: false,
@@ -319,106 +325,96 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
                 mainAxisSpacing: 10,
                 childAspectRatio: 1.1,
               ),
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final customerName = _filteredCustomers[index];
-                  final count = _customerCounts[customerName] ?? 0;
-                  return Stack(
-                    children: [
-                      Card(
-                        elevation: 4,
-                        margin: EdgeInsets.zero,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final customerName = _filteredCustomers[index];
+                final count = _customerCounts[customerName] ?? 0;
+                return Stack(
+                  children: [
+                    Card(
+                      elevation: 4,
+                      margin: EdgeInsets.zero,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: InkWell(
+                        onTap: () {
+                          setState(() {
+                            _selectedCustomer = customerName;
+                            _searchController.clear();
+                          });
+                        },
+                        borderRadius: BorderRadius.circular(15),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  CupertinoIcons.folder,
+                                  size: 44,
+                                  color: Colors.blue,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  customerName,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '$count فواتير',
+                                  style: const TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 4,
+                      left: 4,
+                      child: Material(
+                        color: Colors.transparent,
                         child: InkWell(
-                          onTap: () {
-                            setState(() {
-                              _selectedCustomer = customerName;
-                              _searchController.clear();
-                            });
-                          },
-                          borderRadius: BorderRadius.circular(15),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Center(
-                              child: Column(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.center,
-                                children: [
-                                  const Icon(
-                                    CupertinoIcons.folder,
-                                    size: 44,
-                                    color: Colors.blue,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    customerName,
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '$count فواتير',
-                                    style: const TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                          borderRadius: BorderRadius.circular(20),
+                          onTap: () =>
+                              _confirmDeleteFolder(context, customerName),
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withAlpha(30),
+                              shape: BoxShape.circle,
                             ),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        top: 4,
-                        left: 4,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(20),
-                            onTap: () => _confirmDeleteFolder(
-                              context,
-                              customerName,
-                            ),
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: Colors.red.withAlpha(30),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
+                            child: const Icon(
                                 CupertinoIcons.trash,
-                                color: Colors.red,
-                                size: 18,
-                              ),
+                              color: Colors.red,
+                              size: 18,
                             ),
                           ),
                         ),
                       ),
-                    ],
-                  );
-                },
-                childCount: _filteredCustomers.length,
-              ),
+                    ),
+                  ],
+                );
+              }, childCount: _filteredCustomers.length),
             ),
           ),
       ],
     );
   }
 
-  double _calculateTotalValue(YarnSalesOrder invoice) {
-    double total = 0;
-    for (var item in invoice.items) {
-      total += item.price * item.quantity;
-    }
-    return total;
+  double _calculateTotalValue(FabricsCmSalesOrder invoice) {
+    return invoice.totalValue;
   }
 
   Widget _buildInvoiceList() {
@@ -435,65 +431,67 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
             child: Center(
               child: Text(
                 'عدد الفواتير: ${filteredInvoices.length}',
-                style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
         ),
         SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              final invoice = filteredInvoices[index];
-              final totalValue = _calculateTotalValue(invoice);
-              return Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 800),
-                  child: Dismissible(
-                    key: Key(invoice.key.toString()),
-                    background: Container(
-                      color: Colors.red,
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.only(right: 20),
-                      child: const Icon(CupertinoIcons.trash_fill, color: Colors.white),
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final invoice = filteredInvoices[index];
+            final totalValue = _calculateTotalValue(invoice);
+            return Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 800),
+                child: Dismissible(
+                  key: Key(invoice.key.toString()),
+                  background: Container(
+                    color: Colors.red,
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.only(right: 20),
+                    child: const Icon(CupertinoIcons.trash_fill, color: Colors.white),
+                  ),
+                  direction: DismissDirection.startToEnd,
+                  onDismissed: (direction) {
+                    _deleteInvoice(invoice);
+                  },
+                  child: Card(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
                     ),
-                    direction: DismissDirection.startToEnd,
-                    onDismissed: (direction) {
-                      _deleteInvoice(invoice);
-                    },
-                    child: Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      child: ListTile(
-                        title: Text(
-                          '${invoice.customerName ?? "بدون اسم"} - ${invoice.sn}',
-                        ),
-                        subtitle: Text(
-                          'التاريخ: ${DateFormat('dd-MMM-yyyy').format(invoice.orderDate)}\nالقيمة: ${totalValue.toStringAsFixed(2)}',
-                        ),
-                        isThreeLine: true,
-                        trailing: IconButton(
-                          icon: const Icon(CupertinoIcons.trash_fill, color: Colors.red),
-                          onPressed: () => _confirmDelete(context, invoice),
-                        ),
-                        onTap: () async {
-                          await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  YarnSalesOrderPage(existingOrder: invoice),
-                            ),
-                          );
-                          _loadInvoices();
-                        },
+                    child: ListTile(
+                      title: Text(
+                        '${invoice.customerName ?? "بدون اسم"} - ${invoice.sn}',
                       ),
+                      subtitle: Text(
+                        'التاريخ: ${DateFormat('dd-MMM-yyyy').format(invoice.orderDate)}\nالقيمة: ${totalValue.toStringAsFixed(2)}',
+                      ),
+                      isThreeLine: true,
+                      trailing: IconButton(
+                        icon: const Icon(CupertinoIcons.trash_fill, color: Colors.red),
+                        onPressed: () => _confirmDelete(context, invoice),
+                      ),
+                      onTap: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                FabricsCmOrderPage(existingOrder: invoice),
+                          ),
+                        );
+                        _loadInvoices();
+                      },
                     ),
                   ),
                 ),
-              );
-            },
-            childCount: filteredInvoices.length,
-          ),
+              ),
+            );
+          }, childCount: filteredInvoices.length),
         ),
-        // Bottom padding for scrollability
         const SliverPadding(padding: EdgeInsets.only(bottom: 20)),
       ],
     );
@@ -501,35 +499,18 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Define Teal Theme for this page
-    final tealTheme = Theme.of(context).copyWith(
-      primaryColor: Colors.teal,
+    // Blue/Purple Theme for this page to match Fabrics branding
+    final theme = Theme.of(context).copyWith(
+      primaryColor: Colors.blueAccent,
       colorScheme: Theme.of(context).colorScheme.copyWith(
-        primary: Colors.teal,
-        secondary: Colors.tealAccent,
-        surfaceContainerHigh: Colors.teal.withValues(alpha: 0.1),
-      ),
-      floatingActionButtonTheme: Theme.of(context).floatingActionButtonTheme
-          .copyWith(
-            backgroundColor: Colors.teal,
-            foregroundColor: Colors.white,
-          ),
-      inputDecorationTheme: Theme.of(context).inputDecorationTheme.copyWith(
-        focusedBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: Colors.teal, width: 2),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        floatingLabelStyle: const TextStyle(color: Colors.teal),
-      ),
-      textSelectionTheme: const TextSelectionThemeData(
-        cursorColor: Colors.teal,
-        selectionHandleColor: Colors.teal,
-        selectionColor: Color(0x4D009688), // Teal with opacity
+        primary: Colors.blueAccent,
+        secondary: Colors.purpleAccent,
+        surfaceContainerHigh: Colors.blue.withValues(alpha: 0.1),
       ),
     );
 
     return Theme(
-      data: tealTheme,
+      data: theme,
       child: PopScope(
         canPop: _selectedCustomer == null,
         onPopInvokedWithResult: (didPop, result) {
@@ -544,7 +525,7 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
         },
         child: Scaffold(
           appBar: AppBar(
-            title: Text(_selectedCustomer ?? 'فواتير الغزول المحفوظة'),
+            title: Text(_selectedCustomer ?? 'فواتير القماش المحفوظة'),
             leading: _selectedCustomer != null
                 ? IconButton(
                     icon: const Icon(CupertinoIcons.back),
@@ -554,7 +535,7 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
                       });
                     },
                   )
-              : null,
+                : null,
           ),
           drawer: const AppDrawer(),
           body: _isLoading

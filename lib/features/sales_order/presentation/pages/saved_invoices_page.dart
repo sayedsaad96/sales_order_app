@@ -1,11 +1,12 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../data/datasources/invoice_local_data_source.dart';
-import '../../data/models/sales_order.dart';
-import 'sales_order_page.dart';
-import '../../../../core/widgets/app_drawer.dart';
+import 'package:annex_sales_order/features/sales_order/data/datasources/invoice_local_data_source.dart';
+import 'package:annex_sales_order/features/sales_order/data/models/sales_order.dart';
+import 'package:annex_sales_order/features/sales_order/presentation/pages/sales_order_page.dart';
+import 'package:annex_sales_order/core/widgets/app_drawer.dart';
 
-import '../../../../core/utils/performance_utils.dart';
+import 'package:annex_sales_order/core/utils/performance_utils.dart';
 
 class SavedInvoicesPage extends StatefulWidget {
   const SavedInvoicesPage({super.key});
@@ -21,6 +22,9 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
   String? _selectedCustomer;
   bool _isLoading = true;
   String _searchQuery = '';
+  Map<String, int> _customerCounts = {};
+  List<String> _sortedCustomers = [];
+  List<String> _filteredCustomers = [];
 
   @override
   void initState() {
@@ -33,6 +37,7 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
           if (mounted) {
             setState(() {
               _searchQuery = _searchController.text;
+              _filterCustomers();
             });
           }
         },
@@ -59,7 +64,9 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
       setState(() {
         _invoices = invoices;
         _isLoading = false;
-        
+        _calculateCustomerFolders();
+        _filterCustomers();
+
         // If the selected customer no longer has invoices, go back to folders
         if (_selectedCustomer != null) {
           final hasInvoices = _invoices.any(
@@ -80,6 +87,35 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
         );
       }
     }
+  }
+
+  void _calculateCustomerFolders() {
+    final Map<String, int> counts = {};
+    final Map<String, DateTime> lastDateMap = {};
+
+    for (var invoice in _invoices) {
+      final name = invoice.customerName ?? "بدون اسم";
+      counts[name] = (counts[name] ?? 0) + 1;
+
+      final invoiceDate = invoice.orderDate;
+      if (!lastDateMap.containsKey(name) ||
+          invoiceDate.isAfter(lastDateMap[name]!)) {
+        lastDateMap[name] = invoiceDate;
+      }
+    }
+
+    _customerCounts = counts;
+    _sortedCustomers = counts.keys.toList()
+      ..sort((a, b) => lastDateMap[b]!.compareTo(lastDateMap[a]!));
+  }
+
+  void _filterCustomers() {
+    _filteredCustomers = _searchQuery.isEmpty
+        ? _sortedCustomers
+        : _sortedCustomers
+            .where((name) =>
+                name.toLowerCase().contains(_searchQuery.toLowerCase()))
+            .toList();
   }
 
   Future<void> _deleteInvoice(SalesOrder invoice) async {
@@ -200,38 +236,6 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
       return _buildEmptyState();
     }
 
-    // Build customer counts and last date map
-    final Map<String, int> customerCounts = {};
-    final Map<String, DateTime> customerLastDate = {};
-
-    for (var invoice in _invoices) {
-      final name = invoice.customerName ?? "بدون اسم";
-      customerCounts[name] = (customerCounts[name] ?? 0) + 1;
-
-      // Track latest date
-      final invoiceDate = invoice.orderDate;
-      if (!customerLastDate.containsKey(name) || 
-          invoiceDate.isAfter(customerLastDate[name]!)) {
-        customerLastDate[name] = invoiceDate;
-      }
-    }
-
-    // Sort customer names by last date (Descending: Newest first)
-    final sortedCustomers = customerCounts.keys.toList()
-      ..sort((a, b) {
-        final dateA = customerLastDate[a]!;
-        final dateB = customerLastDate[b]!;
-        // Compare B to A for descending order
-        return dateB.compareTo(dateA);
-      });
-
-    // Filter based on search query
-    final filteredCustomers = _searchQuery.isEmpty
-        ? sortedCustomers
-        : sortedCustomers
-            .where((name) => name.toLowerCase().contains(_searchQuery.toLowerCase()))
-            .toList();
-
     return CustomScrollView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       slivers: [
@@ -245,12 +249,16 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
                   controller: _searchController,
                   decoration: InputDecoration(
                     hintText: 'بحث عن عميل...',
-                    prefixIcon: const Icon(Icons.search),
+                    prefixIcon: const Icon(CupertinoIcons.search),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(Icons.clear),
+                            icon: const Icon(CupertinoIcons.clear_circled),
                             onPressed: () {
                               _searchController.clear();
+                              setState(() {
+                                _searchQuery = '';
+                                _filterCustomers();
+                              });
                             },
                           )
                         : null,
@@ -267,7 +275,7 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Text(
-                    'النتائج: ${filteredCustomers.length} من ${sortedCustomers.length}',
+                    'النتائج: ${_filteredCustomers.length} من ${_sortedCustomers.length}',
                     style: TextStyle(color: Colors.grey[600]),
                   ),
                 ),
@@ -275,14 +283,14 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
           ),
         ),
         
-        if (filteredCustomers.isEmpty)
+        if (_filteredCustomers.isEmpty)
           SliverFillRemaining(
             hasScrollBody: false,
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
+                  Icon(CupertinoIcons.search, size: 64, color: Colors.grey[400]),
                   const SizedBox(height: 16),
                   Text(
                     'لا توجد نتائج للبحث',
@@ -309,8 +317,8 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
               ),
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
-                  final customerName = filteredCustomers[index];
-                  final count = customerCounts[customerName] ?? 0;
+                  final customerName = _filteredCustomers[index];
+                  final count = _customerCounts[customerName] ?? 0;
                   return Stack(
                     children: [
                       Card(
@@ -334,7 +342,7 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   const Icon(
-                                    Icons.folder,
+                                    CupertinoIcons.folder,
                                     size: 44,
                                     color: Colors.blue,
                                   ),
@@ -378,7 +386,7 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
-                                Icons.delete_outline,
+                                CupertinoIcons.trash,
                                 color: Colors.red,
                                 size: 18,
                               ),
@@ -389,7 +397,7 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
                     ],
                   );
                 },
-                childCount: filteredCustomers.length,
+                childCount: _filteredCustomers.length,
               ),
             ),
           ),
@@ -429,7 +437,7 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
                       color: Colors.red,
                       alignment: Alignment.centerRight,
                       padding: const EdgeInsets.only(right: 20),
-                      child: const Icon(Icons.delete, color: Colors.white),
+                      child: const Icon(CupertinoIcons.trash_fill, color: Colors.white),
                     ),
                     direction: DismissDirection.startToEnd,
                     onDismissed: (direction) {
@@ -446,7 +454,7 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
                         ),
                         isThreeLine: true,
                         trailing: IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
+                          icon: const Icon(CupertinoIcons.trash_fill, color: Colors.red),
                           onPressed: () => _confirmDelete(context, invoice),
                         ),
                         onTap: () async {
@@ -492,7 +500,7 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
           title: Text(_selectedCustomer ?? 'الفواتير المحفوظة'),
           leading: _selectedCustomer != null
               ? IconButton(
-                  icon: const Icon(Icons.arrow_back),
+                  icon: const Icon(CupertinoIcons.back),
                   onPressed: () {
                     setState(() {
                       _selectedCustomer = null;

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as intl;
 import '../../data/datasources/return_order_local_data_source.dart';
@@ -21,6 +22,9 @@ class _SavedReturnOrdersPageState extends State<SavedReturnOrdersPage> {
   String? _selectedCustomer;
   bool _isLoading = true;
   String _searchQuery = '';
+  Map<String, int> _customerCounts = {};
+  List<String> _sortedCustomers = [];
+  List<String> _filteredCustomers = [];
 
   @override
   void initState() {
@@ -31,6 +35,7 @@ class _SavedReturnOrdersPageState extends State<SavedReturnOrdersPage> {
        if (mounted) {
           setState(() {
             _searchQuery = _searchController.text;
+            _filterCustomers();
           });
        }
     });
@@ -52,6 +57,8 @@ class _SavedReturnOrdersPageState extends State<SavedReturnOrdersPage> {
       setState(() {
         _orders = orders;
         _isLoading = false;
+        _calculateCustomerFolders();
+        _filterCustomers();
         
         if (_selectedCustomer != null) {
           final hasOrders = _orders.any(
@@ -70,6 +77,34 @@ class _SavedReturnOrdersPageState extends State<SavedReturnOrdersPage> {
         );
       }
     }
+  }
+
+  void _calculateCustomerFolders() {
+    final Map<String, int> counts = {};
+    final Map<String, DateTime> lastDateMap = {};
+
+    for (var order in _orders) {
+      final name = order.customerName ?? "بدون اسم";
+      counts[name] = (counts[name] ?? 0) + 1;
+      final orderDate = order.returnDate;
+      if (!lastDateMap.containsKey(name) ||
+          orderDate.isAfter(lastDateMap[name]!)) {
+        lastDateMap[name] = orderDate;
+      }
+    }
+
+    _customerCounts = counts;
+    _sortedCustomers = counts.keys.toList()
+      ..sort((a, b) => lastDateMap[b]!.compareTo(lastDateMap[a]!));
+  }
+
+  void _filterCustomers() {
+    _filteredCustomers = _searchQuery.isEmpty
+        ? _sortedCustomers
+        : _sortedCustomers
+            .where((name) =>
+                name.toLowerCase().contains(_searchQuery.toLowerCase()))
+            .toList();
   }
 
   Future<void> _deleteOrder(ReturnOrder order) async {
@@ -183,32 +218,6 @@ class _SavedReturnOrdersPageState extends State<SavedReturnOrdersPage> {
     if (_orders.isEmpty) {
       return _buildEmptyState();
     }
-
-    final Map<String, int> customerCounts = {};
-    final Map<String, DateTime> customerLastDate = {};
-
-    for (var order in _orders) {
-      final name = order.customerName ?? "بدون اسم";
-      customerCounts[name] = (customerCounts[name] ?? 0) + 1;
-      final orderDate = order.returnDate;
-      if (!customerLastDate.containsKey(name) || orderDate.isAfter(customerLastDate[name]!)) {
-        customerLastDate[name] = orderDate;
-      }
-    }
-
-    final sortedCustomers = customerCounts.keys.toList()
-      ..sort((a, b) {
-        final dateA = customerLastDate[a]!;
-        final dateB = customerLastDate[b]!;
-        return dateB.compareTo(dateA);
-      });
-
-    final filteredCustomers = _searchQuery.isEmpty
-        ? sortedCustomers
-        : sortedCustomers
-            .where((name) => name.toLowerCase().contains(_searchQuery.toLowerCase()))
-            .toList();
-
     return CustomScrollView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       slivers: [
@@ -221,14 +230,21 @@ class _SavedReturnOrdersPageState extends State<SavedReturnOrdersPage> {
                   controller: _searchController,
                   decoration: InputDecoration(
                     hintText: 'بحث عن عميل...',
-                    prefixIcon: const Icon(Icons.search),
+                    prefixIcon: const Icon(CupertinoIcons.search),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () => _searchController.clear(),
+                            icon: const Icon(CupertinoIcons.clear_circled),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {
+                                _searchQuery = '';
+                                _filterCustomers();
+                              });
+                            },
                           )
                         : null,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15)),
                     filled: true,
                     fillColor: Theme.of(context).cardColor,
                   ),
@@ -236,9 +252,10 @@ class _SavedReturnOrdersPageState extends State<SavedReturnOrdersPage> {
               ),
               if (_searchQuery.isNotEmpty)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   child: Text(
-                    'النتائج: ${filteredCustomers.length} من ${sortedCustomers.length}',
+                    'النتائج: ${_filteredCustomers.length} من ${_sortedCustomers.length}',
                     style: TextStyle(color: Colors.grey[600]),
                   ),
                 ),
@@ -246,19 +263,19 @@ class _SavedReturnOrdersPageState extends State<SavedReturnOrdersPage> {
           ),
         ),
 
-        if (filteredCustomers.isEmpty)
+        if (_filteredCustomers.isEmpty)
           SliverFillRemaining(
             hasScrollBody: false,
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                   Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
-                   const SizedBox(height: 16),
-                   Text(
-                     'لا توجد نتائج للبحث',
-                     style: TextStyle(color: Colors.grey[600], fontSize: 18),
-                   ),
+                  Icon(CupertinoIcons.search, size: 64, color: Colors.grey[400]),
+                  const SizedBox(height: 16),
+                  Text(
+                    'لا توجد نتائج للبحث',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 18),
+                  ),
                 ],
               ),
             ),
@@ -268,8 +285,8 @@ class _SavedReturnOrdersPageState extends State<SavedReturnOrdersPage> {
             padding: const EdgeInsets.all(10),
             sliver: SliverGrid(
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: MediaQuery.of(context).size.width > 900 
-                    ? 5 
+                crossAxisCount: MediaQuery.of(context).size.width > 900
+                    ? 5
                     : (MediaQuery.of(context).size.width > 600 ? 3 : 2),
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
@@ -277,8 +294,8 @@ class _SavedReturnOrdersPageState extends State<SavedReturnOrdersPage> {
               ),
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
-                  final customerName = filteredCustomers[index];
-                  final count = customerCounts[customerName];
+                  final customerName = _filteredCustomers[index];
+                  final count = _customerCounts[customerName];
                   return Stack(
                     children: [
                       Card(
@@ -297,7 +314,7 @@ class _SavedReturnOrdersPageState extends State<SavedReturnOrdersPage> {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Icon(Icons.folder, size: 44, color: Colors.blue),
+                                  const Icon(CupertinoIcons.folder, size: 44, color: Colors.blue),
                                   const SizedBox(height: 8),
                                   Text(
                                     customerName,
@@ -327,7 +344,7 @@ class _SavedReturnOrdersPageState extends State<SavedReturnOrdersPage> {
                                 color: Colors.red.withAlpha(30),
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(Icons.delete_outline, color: Colors.red, size: 18),
+                                child: const Icon(CupertinoIcons.trash, color: Colors.red, size: 18),
                             ),
                           ),
                         ),
@@ -335,7 +352,7 @@ class _SavedReturnOrdersPageState extends State<SavedReturnOrdersPage> {
                     ],
                   );
                 },
-                childCount: filteredCustomers.length,
+                childCount: _filteredCustomers.length,
               ),
             ),
           ),
@@ -375,7 +392,7 @@ class _SavedReturnOrdersPageState extends State<SavedReturnOrdersPage> {
                       color: Colors.red,
                       alignment: Alignment.centerRight,
                       padding: const EdgeInsets.only(right: 20),
-                      child: const Icon(Icons.delete, color: Colors.white),
+                      child: const Icon(CupertinoIcons.trash_fill, color: Colors.white),
                     ),
                     direction: DismissDirection.startToEnd,
                     onDismissed: (_) => _deleteOrder(order),
@@ -388,7 +405,7 @@ class _SavedReturnOrdersPageState extends State<SavedReturnOrdersPage> {
                         ),
                         isThreeLine: true,
                         trailing: IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
+                          icon: const Icon(CupertinoIcons.trash_fill, color: Colors.red),
                           onPressed: () => _confirmDelete(context, order),
                         ),
                         onTap: () async {
@@ -425,10 +442,9 @@ class _SavedReturnOrdersPageState extends State<SavedReturnOrdersPage> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(_selectedCustomer ?? 'طلبات المرتجعات المحفوظة'),
-          backgroundColor: const Color(0xFFD32F2F), // Match ReturnOrderPage
           leading: _selectedCustomer != null
               ? IconButton(
-                  icon: const Icon(Icons.arrow_back),
+                  icon: const Icon(CupertinoIcons.back),
                   onPressed: () => setState(() => _selectedCustomer = null),
                 )
               : null,

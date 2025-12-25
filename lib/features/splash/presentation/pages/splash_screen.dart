@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../../../user/data/datasources/user_local_data_source.dart';
-import '../../../sales_order/presentation/pages/sales_order_container_page.dart';
-import '../../../user/presentation/pages/registration_page.dart';
+import 'package:annex_sales_order/features/user/data/datasources/user_local_data_source.dart';
+import 'package:annex_sales_order/features/sales_order/presentation/pages/sales_order_container_page.dart';
+import 'package:annex_sales_order/features/user/presentation/pages/registration_page.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

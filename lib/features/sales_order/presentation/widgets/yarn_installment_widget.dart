@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class YarnInstallmentWidget extends StatelessWidget {
@@ -92,7 +93,7 @@ class YarnInstallmentWidget extends StatelessWidget {
                 ),
                 if (durationControllers.length > 1)
                   IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                    icon: const Icon(CupertinoIcons.delete, color: Colors.red, size: 20),
                     onPressed: () => onRemoveInstallment(index),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
@@ -105,7 +106,7 @@ class YarnInstallmentWidget extends StatelessWidget {
         Center(
           child: TextButton.icon(
             onPressed: onAddInstallment,
-            icon: const Icon(Icons.add),
+            icon: const Icon(CupertinoIcons.add),
             label: const Text('إضافة دفعة'),
             style: TextButton.styleFrom(foregroundColor: Colors.blue),
           ),
@@ -148,7 +149,7 @@ class YarnInstallmentWidget extends StatelessWidget {
         Center(
           child: TextButton.icon(
             onPressed: onAddInstallment,
-            icon: const Icon(Icons.add),
+            icon: const Icon(CupertinoIcons.add),
             label: const Text('إضافة دفعة'),
             style: TextButton.styleFrom(foregroundColor: Colors.blue),
           ),
@@ -203,7 +204,7 @@ class YarnInstallmentWidget extends StatelessWidget {
           ),
           if (durationControllers.length > 1)
             IconButton(
-              icon: const Icon(Icons.delete, color: Colors.red, size: 18),
+              icon: const Icon(CupertinoIcons.delete, color: Colors.red, size: 18),
               onPressed: () => onRemoveInstallment(index),
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),

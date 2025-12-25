@@ -1,7 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import '../../data/datasources/user_local_data_source.dart';
-import '../../data/models/user_model.dart';
-import '../../../sales_order/presentation/pages/sales_order_page.dart';
+import 'package:annex_sales_order/features/user/data/datasources/user_local_data_source.dart';
+import 'package:annex_sales_order/features/user/data/models/user_model.dart';
+import 'package:annex_sales_order/features/sales_order/presentation/pages/sales_order_page.dart';
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
@@ -32,9 +33,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('خطأ في التسجيل: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('خطأ في التسجيل: $e')));
         }
       }
     }
@@ -73,7 +74,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                       decoration: const InputDecoration(
                         labelText: 'الاسم بالكامل',
                         border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.person),
+                        prefixIcon: Icon(CupertinoIcons.person),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -88,7 +89,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                       decoration: const InputDecoration(
                         labelText: 'رقم الموبايل',
                         border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.phone),
+                        prefixIcon: Icon(CupertinoIcons.phone),
                       ),
                       keyboardType: TextInputType.phone,
                       validator: (value) {

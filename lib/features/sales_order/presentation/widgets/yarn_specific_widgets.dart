@@ -1,6 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'carton_calculator_dialog.dart';
+import 'package:annex_sales_order/features/sales_order/presentation/widgets/carton_calculator_dialog.dart';
 
 class YarnOrderHeader extends StatelessWidget {
   final TextEditingController snController;
@@ -26,10 +27,9 @@ class YarnOrderHeader extends StatelessWidget {
                 children: [
                   Center(
                     child: Text(
-                      'طلب بيع',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                      'Yarn Sales Order',
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(fontWeight: FontWeight.bold, fontSize: 22),
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -49,16 +49,12 @@ class YarnOrderHeader extends StatelessWidget {
                     child: Center(
                       child: Text(
                         'Yarn Sales Order',
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
-                  SizedBox(
-                    width: 150,
-                    child: _buildDatePicker(context),
-                  ),
+                  SizedBox(width: 150, child: _buildDatePicker(context)),
                   const SizedBox(width: 10),
                   SizedBox(
                     width: 150,
@@ -159,9 +155,10 @@ class YarnBranchAndTypeSection extends StatelessWidget {
               ? const EdgeInsets.symmetric(horizontal: 10)
               : null,
         ),
-        items: ['القاهرة', 'المحلة']
-            .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-            .toList(),
+        items: [
+          'القاهرة',
+          'المحلة',
+        ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
         onChanged: onBranchChanged,
         validator: (v) => v == null ? 'مطلوب' : null,
       ),
@@ -196,7 +193,7 @@ class YarnCustomerInfoSection extends StatelessWidget {
   final TextEditingController mobileNumberController;
   final TextEditingController regionController;
   final TextEditingController deliveryPlaceController;
-  final TextEditingController paymentMethodController;
+  final String? paymentMethod;
   final TextEditingController salesResponsibleController;
   final DateTime? deliveryDate;
   final String editQuantity;
@@ -204,6 +201,7 @@ class YarnCustomerInfoSection extends StatelessWidget {
   final Function(DateTime) onDeliveryDateChanged;
   final Function(String) onEditQuantityChanged;
   final Function(String) onDeliveryResponsibilityChanged;
+  final Function(String?) onPaymentMethodChanged;
   final bool isMobile;
 
   const YarnCustomerInfoSection({
@@ -213,7 +211,8 @@ class YarnCustomerInfoSection extends StatelessWidget {
     required this.mobileNumberController,
     required this.regionController,
     required this.deliveryPlaceController,
-    required this.paymentMethodController,
+    required this.paymentMethod,
+    required this.onPaymentMethodChanged,
     required this.salesResponsibleController,
     required this.deliveryDate,
     required this.editQuantity,
@@ -256,7 +255,7 @@ class YarnCustomerInfoSection extends StatelessWidget {
         const SizedBox(height: 12),
         _buildDatePicker(context),
         const SizedBox(height: 12),
-        _buildTextField(paymentMethodController, 'طريقة السداد'),
+        _buildPaymentMethodDropdown(),
         const SizedBox(height: 12),
         _buildTextField(salesResponsibleController, 'مسئول البيع'),
         const SizedBox(height: 12),
@@ -270,7 +269,13 @@ class YarnCustomerInfoSection extends StatelessWidget {
       children: [
         Row(
           children: [
-            Expanded(child: _buildTextField(customerNameController, 'اسم العميل', required: true)),
+            Expanded(
+              child: _buildTextField(
+                customerNameController,
+                'اسم العميل',
+                required: true,
+              ),
+            ),
             const SizedBox(width: 12),
             Expanded(child: _buildTextField(regionController, 'المنطقة')),
           ],
@@ -278,15 +283,21 @@ class YarnCustomerInfoSection extends StatelessWidget {
         const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(child: _buildTextField(contactNameController, 'اسم للتواصل')),
+            Expanded(
+              child: _buildTextField(contactNameController, 'اسم للتواصل'),
+            ),
             const SizedBox(width: 12),
-            Expanded(child: _buildTextField(mobileNumberController, 'رقم للتواصل')),
+            Expanded(
+              child: _buildTextField(mobileNumberController, 'رقم للتواصل'),
+            ),
           ],
         ),
         const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(child: _buildTextField(deliveryPlaceController, 'مكان التسليم')),
+            Expanded(
+              child: _buildTextField(deliveryPlaceController, 'مكان التسليم'),
+            ),
             const SizedBox(width: 12),
             Expanded(child: _buildDatePicker(context, isDesktop: true)),
           ],
@@ -294,9 +305,11 @@ class YarnCustomerInfoSection extends StatelessWidget {
         const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(child: _buildTextField(paymentMethodController, 'طريقة السداد')),
+            Expanded(child: _buildPaymentMethodDropdown()),
             const SizedBox(width: 12),
-            Expanded(child: _buildTextField(salesResponsibleController, 'مسئول البيع')),
+            Expanded(
+              child: _buildTextField(salesResponsibleController, 'مسئول البيع'),
+            ),
           ],
         ),
         const SizedBox(height: 12),
@@ -305,7 +318,43 @@ class YarnCustomerInfoSection extends StatelessWidget {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, {bool required = false}) {
+  Widget _buildPaymentMethodDropdown() {
+    return DropdownButtonFormField<String>(
+      initialValue:
+          [
+            'كاش',
+            'تحويل بنكي',
+            'اجل اسبوعين ',
+            'اجل 3 اسابيع ',
+            'اجل شهر',
+            'اجل شهرين',
+            'اجل 3 شهور',
+          ].contains(paymentMethod)
+          ? paymentMethod
+          : null,
+      decoration: const InputDecoration(
+        labelText: 'طريقة السداد',
+        border: OutlineInputBorder(),
+      ),
+      items: [
+        'كاش',
+        'تحويل بنكي',
+        'اجل اسبوعين ',
+        'اجل 3 اسابيع ',
+        'اجل شهر',
+        'اجل شهرين',
+        'اجل 3 شهور',
+      ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+      onChanged: onPaymentMethodChanged,
+      validator: (v) => v == null ? 'مطلوب' : null,
+    );
+  }
+
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label, {
+    bool required = false,
+  }) {
     return TextFormField(
       controller: controller,
       decoration: InputDecoration(
@@ -329,15 +378,15 @@ class YarnCustomerInfoSection extends StatelessWidget {
       },
       child: InputDecorator(
         decoration: InputDecoration(
-          labelText: isDesktop ? 'تاريخ التوصيل' : 'تاريخ التسليم',
+          labelText: isDesktop ? 'تاريخ التوصيل' : 'تاريخ التوصيل',
           border: const OutlineInputBorder(),
         ),
         child: Text(
           deliveryDate != null
-              ? (isDesktop 
-                  ? '${deliveryDate!.year}-${deliveryDate!.month}-${deliveryDate!.day}'
-                  : DateFormat('dd-MMM-yyyy').format(deliveryDate!))
-              : (isDesktop ? ' ' : 'اختر التاريخ'),
+              ? (isDesktop
+                    ? '${deliveryDate!.year}-${deliveryDate!.month}-${deliveryDate!.day}'
+                    : DateFormat('dd-MMM-yyyy').format(deliveryDate!))
+              : (isDesktop ? ' ' : ' '),
         ),
       ),
     );
@@ -371,62 +420,84 @@ class YarnCustomerInfoSection extends StatelessWidget {
       runSpacing: 8,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        const Text('تعديل الكمية', style: TextStyle(fontWeight: FontWeight.bold)),
-        ...['الكمية المحددة', 'يفضل الزيادة', 'يفضل التخفيض'].map((e) => Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Radio<String>(
-                  value: e,
-                  // ignore: deprecated_member_use
-                  groupValue: editQuantity,
-                  // ignore: deprecated_member_use
-                  onChanged: (v) => onEditQuantityChanged(v!),
-                ),
-                Text(e),
-              ],
-            )),
+        const Text(
+          'تعديل الكمية',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        ...['الكمية المحددة', 'يفضل الزيادة', 'يفضل التخفيض'].map(
+          (e) => Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Radio<String>(
+                value: e,
+                // ignore: deprecated_member_use
+                groupValue: editQuantity,
+                // ignore: deprecated_member_use
+                onChanged: (v) => onEditQuantityChanged(v!),
+              ),
+              Text(e),
+            ],
+          ),
+        ),
         const SizedBox(width: 24),
-        const Text('مسئولية التوصيل', style: TextStyle(fontWeight: FontWeight.bold)),
-        ...['العميل', 'الشركة'].map((e) => Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Radio<String>(
-                  value: e,
-                  // ignore: deprecated_member_use
-                  groupValue: deliveryResponsibility,
-                  // ignore: deprecated_member_use
-                  onChanged: (v) => onDeliveryResponsibilityChanged(v!),
-                ),
-                Text(e),
-              ],
-            )),
+        const Text(
+          'مسئولية التوصيل',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        ...['العميل', 'الشركة'].map(
+          (e) => Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Radio<String>(
+                value: e,
+                // ignore: deprecated_member_use
+                groupValue: deliveryResponsibility,
+                // ignore: deprecated_member_use
+                onChanged: (v) => onDeliveryResponsibilityChanged(v!),
+              ),
+              Text(e),
+            ],
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildRadioGroup(String title, List<String> options, String groupValue, Function(String) onChanged, {bool isRow = false}) {
-    final list = options.map((e) => isRow 
-      ? Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Radio<String>(value: e, // ignore: deprecated_member_use
-            groupValue: groupValue, // ignore: deprecated_member_use
-            // ignore: deprecated_member_use
-            onChanged: (v) => onChanged(v!)),
-            Text(e),
-            if (e != options.last) const SizedBox(width: 16),
-          ],
+  Widget _buildRadioGroup(
+    String title,
+    List<String> options,
+    String groupValue,
+    Function(String) onChanged, {
+    bool isRow = false,
+  }) {
+    final list = options
+        .map(
+          (e) => isRow
+              ? Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Radio<String>(
+                      value: e, // ignore: deprecated_member_use
+                      groupValue: groupValue, // ignore: deprecated_member_use
+                      // ignore: deprecated_member_use
+                      onChanged: (v) => onChanged(v!),
+                    ),
+                    Text(e),
+                    if (e != options.last) const SizedBox(width: 16),
+                  ],
+                )
+              : RadioListTile<String>(
+                  title: Text(e),
+                  value: e,
+                  // ignore: deprecated_member_use
+                  groupValue: groupValue,
+                  // ignore: deprecated_member_use
+                  onChanged: (v) => onChanged(v!),
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
         )
-      : RadioListTile<String>(
-          title: Text(e),
-          value: e,
-          // ignore: deprecated_member_use
-          groupValue: groupValue,
-          // ignore: deprecated_member_use
-          onChanged: (v) => onChanged(v!),
-          dense: true,
-          contentPadding: EdgeInsets.zero,
-        )).toList();
+        .toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -475,7 +546,7 @@ class YarnItemsTable extends StatelessWidget {
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: onAddItem,
-              icon: const Icon(Icons.add),
+              icon: const Icon(CupertinoIcons.add),
               label: const Text('إضافة صنف'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.teal,
@@ -503,10 +574,12 @@ class YarnItemsTable extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('صنف #${index + 1}',
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(
+                      'صنف #${index + 1}',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
+                      icon: const Icon(CupertinoIcons.delete, color: Colors.red),
                       onPressed: () => onRemoveItem(index),
                     ),
                   ],
@@ -521,9 +594,7 @@ class YarnItemsTable extends StatelessWidget {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Expanded(
-                      child: _buildQuantityField(context, index),
-                    ),
+                    Expanded(child: _buildQuantityField(context, index)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: TextFormField(
@@ -550,9 +621,7 @@ class YarnItemsTable extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Expanded(
-                      child: _buildValueField(context, index),
-                    ),
+                    Expanded(child: _buildValueField(context, index)),
                   ],
                 ),
               ],
@@ -619,7 +688,7 @@ class YarnItemsTable extends StatelessWidget {
                 child: _buildValueField(context, index),
               ),
               IconButton(
-                icon: const Icon(Icons.delete, color: Colors.red),
+                icon: const Icon(CupertinoIcons.delete, color: Colors.red),
                 onPressed: () => onRemoveItem(index),
               ),
             ],
@@ -666,14 +735,13 @@ class YarnItemsTable extends StatelessWidget {
         border: const OutlineInputBorder(),
         contentPadding: const EdgeInsets.symmetric(horizontal: 8),
         suffixIcon: IconButton(
-          icon: const Icon(Icons.calculate, color: Colors.teal, size: 20),
+          icon: const Icon(CupertinoIcons.divide_circle, color: Colors.teal, size: 20),
           onPressed: () async {
             final currentQty = double.tryParse(quantityControllers[index].text);
             final result = await showDialog<double>(
               context: context,
-              builder: (context) => CartonCalculatorDialog(
-                initialQuantity: currentQty,
-              ),
+              builder: (context) =>
+                  CartonCalculatorDialog(initialQuantity: currentQty),
             );
             if (result != null) {
               quantityControllers[index].text = result.toStringAsFixed(2);
@@ -701,12 +769,11 @@ class YarnItemsTable extends StatelessWidget {
             border: const OutlineInputBorder(),
             contentPadding: const EdgeInsets.symmetric(horizontal: 8),
             filled: true,
-            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+            fillColor: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
           ),
-          child: Text(
-            value.toStringAsFixed(2),
-            textAlign: TextAlign.center,
-          ),
+          child: Text(value.toStringAsFixed(2), textAlign: TextAlign.center),
         );
       },
     );
@@ -755,5 +822,3 @@ class YarnItemsTable extends StatelessWidget {
     );
   }
 }
-
-

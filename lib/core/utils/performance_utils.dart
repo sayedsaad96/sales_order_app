@@ -35,4 +35,12 @@ class PerformanceUtils {
       action();
     }
   }
+
+  /// Runs a heavy task in a separate isolate
+  static Future<T> runInBackground<T, P>(
+    ComputeCallback<P, T> callback,
+    P message,
+  ) {
+    return compute(callback, message);
+  }
 }

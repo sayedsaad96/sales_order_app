@@ -1,17 +1,18 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
-import '../../../../core/utils/responsive_constants.dart';
-import '../../../../core/widgets/app_drawer.dart';
-import '../../../user/data/datasources/user_local_data_source.dart';
-import '../../data/models/yarn_sales_order.dart';
-import '../../data/datasources/yarn_invoice_local_data_source.dart';
-import '../../pdf/yarn_pdf_generator.dart';
-import '../widgets/yarn_installment_widget.dart';
-import '../widgets/yarn_specific_widgets.dart';
-import 'saved_yarn_invoices_page.dart';
+import 'package:annex_sales_order/core/utils/responsive_constants.dart';
+import 'package:annex_sales_order/core/widgets/app_drawer.dart';
+import 'package:annex_sales_order/features/user/data/datasources/user_local_data_source.dart';
+import 'package:annex_sales_order/features/sales_order/data/models/yarn_sales_order.dart';
+import 'package:annex_sales_order/features/sales_order/data/datasources/yarn_invoice_local_data_source.dart';
+import 'package:annex_sales_order/features/sales_order/pdf/yarn_pdf_generator.dart';
+import 'package:annex_sales_order/features/sales_order/presentation/widgets/yarn_installment_widget.dart';
+import 'package:annex_sales_order/features/sales_order/presentation/widgets/yarn_specific_widgets.dart';
+import 'package:annex_sales_order/features/sales_order/presentation/pages/saved_yarn_invoices_page.dart';
 
 class YarnSalesOrderPage extends StatefulWidget {
   final YarnSalesOrder? existingOrder;
@@ -32,9 +33,9 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
   final _mobileNumberController = TextEditingController();
   final _regionController = TextEditingController();
   final _deliveryPlaceController = TextEditingController();
-  final _paymentMethodController = TextEditingController();
   final _salesResponsibleController = TextEditingController();
   final _notesController = TextEditingController();
+  String? _paymentMethod;
 
   // Selected values
   DateTime _orderDate = DateTime.now();
@@ -58,7 +59,8 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
   final List<TextEditingController> _installmentDurationControllers = [];
   final List<TextEditingController> _installmentValueControllers = [];
 
-  final ValueNotifier<double> _totalValueNotifier = ValueNotifier<double>(0.0);
+  final ValueNotifier<double> _totalValueNotifier = ValueNotifier(0.0);
+  bool _saveAsNew = false;
 
   @override
   void initState() {
@@ -68,13 +70,156 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
 
   void _loadInitialData() {
     if (widget.existingOrder != null) {
-      _loadExistingOrder();
+      final order = widget.existingOrder!;
+      _snController.text = order.sn ?? '';
+      _customerNameController.text = order.customerName ?? '';
+      _contactNameController.text = order.contactName ?? '';
+      _mobileNumberController.text = order.mobileNumber ?? '';
+      _regionController.text = order.region ?? '';
+      _deliveryPlaceController.text = order.deliveryPlace ?? '';
+      _paymentMethod = _mapPaymentMethod(order.paymentMethod);
+      _salesResponsibleController.text = order.salesResponsible ?? '';
+      _notesController.text = order.notes ?? '';
+      _orderDate = order.orderDate;
+      _deliveryDate = order.deliveryDate;
+      _selectedBranch = order.branch ?? 'القاهرة';
+      _editQuantity = order.editQuantity ?? 'الكمية المحددة';
+      _deliveryResponsibility = order.deliveryResponsibility;
+
+      _orderTypes.clear();
+      _orderTypes['غزل'] = order.orderTypes.contains('غزل');
+      _orderTypes['قماش'] = order.orderTypes.contains('قماش');
+
+      for (var item in order.items) {
+        _addItem(
+          description: item.description,
+          quantity: item.quantity,
+          unit: item.unit,
+          price: item.price,
+        );
+      }
+      if (order.items.isEmpty) _addItem();
+
+      for (var inst in order.installments) {
+        _addInstallment(
+          duration: inst.duration,
+          value: inst.value,
+        );
+      }
+      if (order.installments.isEmpty) _addInstallment();
     } else {
       _snController.text = 'YSO-${DateTime.now().microsecond}';
-      _loadCurrentUser();
       _addItem();
       _addInstallment();
+      _loadCurrentUser();
     }
+    _calculateTotal();
+  }
+
+  YarnSalesOrder _createOrderObject() {
+    final List<YarnSalesOrderItem> items = [];
+    for (int i = 0; i < _descriptionControllers.length; i++) {
+      final desc = _descriptionControllers[i].text;
+      final qty = double.tryParse(_quantityControllers[i].text) ?? 0.0;
+      final unit = _unitControllers[i].text;
+      final price = double.tryParse(_priceControllers[i].text) ?? 0.0;
+      if (desc.isNotEmpty || qty > 0) {
+        items.add(YarnSalesOrderItem(
+          description: desc,
+          quantity: qty,
+          unit: unit,
+          price: price,
+        ));
+      }
+    }
+
+    final List<YarnInstallment> installments = [];
+    for (int i = 0; i < _installmentDurationControllers.length; i++) {
+      final duration = _installmentDurationControllers[i].text;
+      final value = _installmentValueControllers[i].text;
+      if (duration.isNotEmpty || value.isNotEmpty) {
+        installments.add(YarnInstallment(duration: duration, value: value));
+      }
+    }
+
+    return YarnSalesOrder(
+      sn: _snController.text,
+      customerName: _customerNameController.text,
+      contactName: _contactNameController.text,
+      mobileNumber: _mobileNumberController.text,
+      region: _regionController.text,
+      deliveryPlace: _deliveryPlaceController.text,
+      paymentMethod: _paymentMethod,
+      salesResponsible: _salesResponsibleController.text,
+      notes: _notesController.text,
+      orderDate: _orderDate,
+      deliveryDate: _deliveryDate,
+      branch: _selectedBranch,
+      editQuantity: _editQuantity,
+      deliveryResponsibility: _deliveryResponsibility,
+      orderTypes: _orderTypes.entries.where((e) => e.value).map((e) => e.key).toList(),
+      items: items,
+      installments: installments,
+    );
+  }
+
+  void _addItem({String? description, double? quantity, String? unit, double? price}) {
+    setState(() {
+      _descriptionControllers.add(TextEditingController(text: description ?? ''));
+      _quantityControllers.add(TextEditingController(text: quantity?.toString() ?? ''));
+      _unitControllers.add(TextEditingController(text: unit ?? 'KG'));
+      _priceControllers.add(TextEditingController(text: price?.toString() ?? ''));
+      
+      _quantityControllers.last.addListener(_calculateTotal);
+      _priceControllers.last.addListener(_calculateTotal);
+    });
+  }
+
+  void _removeItem(int index) {
+    if (_descriptionControllers.length > 1) {
+      setState(() {
+        _descriptionControllers[index].dispose();
+        _quantityControllers[index].dispose();
+        _unitControllers[index].dispose();
+        _priceControllers[index].dispose();
+
+        _descriptionControllers.removeAt(index);
+        _quantityControllers.removeAt(index);
+        _unitControllers.removeAt(index);
+        _priceControllers.removeAt(index);
+        _calculateTotal();
+      });
+    }
+  }
+
+  void _addInstallment({String? duration, String? value}) {
+    setState(() {
+      _installmentDurationControllers.add(TextEditingController(text: duration ?? ''));
+      _installmentValueControllers.add(TextEditingController(text: value ?? ''));
+    });
+  }
+
+  void _removeInstallment(int index) {
+    if (_installmentDurationControllers.length > 1) {
+      setState(() {
+        _installmentDurationControllers[index].dispose();
+        _installmentValueControllers[index].dispose();
+        _installmentDurationControllers.removeAt(index);
+        _installmentValueControllers.removeAt(index);
+      });
+    }
+  }
+
+   String? _mapPaymentMethod(String? method) {
+    if (method == null) return null;
+    final mapping = {
+      'Cash': 'كاش',
+      'Bank transfer': 'تحويل بنكي',
+      'Credit': 'اجل شهر',
+      'Cheque': 'تحويل بنكي',
+      'Other': 'كاش',
+    };
+    return mapping[method] ?? method;
   }
 
   Future<void> _loadCurrentUser() async {
@@ -90,161 +235,46 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
     }
   }
 
-  void _loadExistingOrder() {
-    final order = widget.existingOrder!;
-    _snController.text = order.sn ?? '';
-    _orderDate = order.orderDate;
-    _deliveryDate = order.deliveryDate;
-    _selectedBranch = order.branch;
-    _customerNameController.text = order.customerName ?? '';
-    _contactNameController.text = order.contactName ?? '';
-    _mobileNumberController.text = order.mobileNumber ?? '';
-    _regionController.text = order.region ?? '';
-    _deliveryPlaceController.text = order.deliveryPlace ?? '';
-    _paymentMethodController.text = order.paymentMethod ?? '';
-    _salesResponsibleController.text = order.salesResponsible ?? '';
-    _notesController.text = order.notes ?? '';
-    _editQuantity = order.editQuantity ?? 'الكمية المحددة';
-    _deliveryResponsibility = order.deliveryResponsibility;
-
-    _orderTypes.updateAll((key, value) => order.orderTypes.contains(key));
-
-    for (var item in order.items) {
-      _addItem(
-        description: item.description,
-        quantity: item.quantity,
-        unit: item.unit,
-        price: item.price,
-      );
-    }
-
-    for (var inst in order.installments) {
-      _addInstallment(duration: inst.duration, value: inst.value);
-    }
-
-    _calculateTotal();
-  }
-
-  void _addItem({
-    String? description,
-    double? quantity,
-    String? unit,
-    double? price,
-  }) {
-    setState(() {
-      final descCtrl = TextEditingController(text: description);
-      final qtyCtrl = TextEditingController(text: quantity?.toString() ?? '');
-      final unitCtrl = TextEditingController(text: unit ?? 'KG');
-      final priceCtrl = TextEditingController(text: price?.toString() ?? '');
-
-      descCtrl.addListener(_calculateTotal);
-      qtyCtrl.addListener(_calculateTotal);
-      priceCtrl.addListener(_calculateTotal);
-
-      _descriptionControllers.add(descCtrl);
-      _quantityControllers.add(qtyCtrl);
-      _unitControllers.add(unitCtrl);
-      _priceControllers.add(priceCtrl);
-    });
-  }
-
-  void _removeItem(int index) {
-    if (_descriptionControllers.length > 1) {
-      setState(() {
-        _descriptionControllers.removeAt(index).dispose();
-        _quantityControllers.removeAt(index).dispose();
-        _unitControllers.removeAt(index).dispose();
-        _priceControllers.removeAt(index).dispose();
-      });
-      _calculateTotal();
-    }
-  }
-
-  void _addInstallment({String? duration, String? value}) {
-    setState(() {
-      _installmentDurationControllers
-          .add(TextEditingController(text: duration));
-      _installmentValueControllers
-          .add(TextEditingController(text: value ?? ''));
-    });
-  }
-
-  void _removeInstallment(int index) {
-      setState(() {
-        if (_installmentDurationControllers.length > 1) {
-           _installmentDurationControllers.removeAt(index).dispose();
-           _installmentValueControllers.removeAt(index).dispose();
-        }
-      });
-  }
-
   void _calculateTotal() {
-    double total = 0;
-    for (int i = 0; i < _descriptionControllers.length; i++) {
-      double qty = double.tryParse(_quantityControllers[i].text) ?? 0;
-      double price = double.tryParse(_priceControllers[i].text) ?? 0;
+    double total = 0.0;
+    for (int i = 0; i < _quantityControllers.length; i++) {
+      final qty = double.tryParse(_quantityControllers[i].text) ?? 0.0;
+      final price = double.tryParse(_priceControllers[i].text) ?? 0.0;
       total += qty * price;
     }
     _totalValueNotifier.value = total;
   }
 
-  YarnSalesOrder _createOrderObject() {
-    final List<YarnSalesOrderItem> items = [];
-    for (int i = 0; i < _descriptionControllers.length; i++) {
-        final description = _descriptionControllers[i].text;
-        final price = double.tryParse(_priceControllers[i].text) ?? 0;
-        final quantity = double.tryParse(_quantityControllers[i].text) ?? 0;
-
-        if (description.isNotEmpty || price > 0 || quantity > 0) {
-          items.add(YarnSalesOrderItem(
-            description: description,
-            quantity: quantity,
-            unit: _unitControllers[i].text,
-            price: price,
-          ));
-        }
-    }
-
-    final List<YarnInstallment> installments = [];
-    for (int i = 0; i < _installmentDurationControllers.length; i++) {
-      final duration = _installmentDurationControllers[i].text;
-      final value = _installmentValueControllers[i].text;
-      if (duration.isNotEmpty || value.isNotEmpty) {
-        installments.add(YarnInstallment(
-          duration: duration,
-          value: value,
-        ));
-      }
-    }
-
-    return (widget.existingOrder ?? YarnSalesOrder(orderDate: _orderDate))
-      ..sn = _snController.text
-      ..orderDate = _orderDate
-      ..deliveryDate = _deliveryDate
-      ..branch = _selectedBranch ?? 'القاهرة'
-      ..customerName = _customerNameController.text
-      ..contactName = _contactNameController.text
-      ..mobileNumber = _mobileNumberController.text
-      ..region = _regionController.text
-      ..deliveryPlace = _deliveryPlaceController.text
-      ..paymentMethod = _paymentMethodController.text
-      ..salesResponsible = _salesResponsibleController.text
-      ..notes = _notesController.text
-      ..editQuantity = _editQuantity
-      ..deliveryResponsibility = _deliveryResponsibility
-      ..orderTypes = _orderTypes.entries
-          .where((e) => e.value)
-          .map((e) => e.key)
-          .toList()
-      ..items = items
-      ..installments = installments;
-  }
-
   Future<void> _saveInvoice() async {
     if (_formKey.currentState!.validate()) {
       try {
-        final order = _createOrderObject();
-        await YarnInvoiceLocalDataSource().saveInvoice(order);
+        final newOrderData = _createOrderObject();
+        
+        if (widget.existingOrder != null && !_saveAsNew) {
+           // Update existing order
+           widget.existingOrder!.sn = newOrderData.sn;
+           widget.existingOrder!.orderDate = newOrderData.orderDate;
+           widget.existingOrder!.deliveryDate = newOrderData.deliveryDate;
+           widget.existingOrder!.branch = newOrderData.branch;
+           widget.existingOrder!.customerName = newOrderData.customerName;
+           widget.existingOrder!.contactName = newOrderData.contactName;
+           widget.existingOrder!.mobileNumber = newOrderData.mobileNumber;
+           widget.existingOrder!.region = newOrderData.region;
+           widget.existingOrder!.deliveryPlace = newOrderData.deliveryPlace;
+           widget.existingOrder!.paymentMethod = newOrderData.paymentMethod;
+           widget.existingOrder!.salesResponsible = newOrderData.salesResponsible;
+           widget.existingOrder!.notes = newOrderData.notes;
+           widget.existingOrder!.editQuantity = newOrderData.editQuantity;
+           widget.existingOrder!.deliveryResponsibility = newOrderData.deliveryResponsibility;
+           widget.existingOrder!.orderTypes = newOrderData.orderTypes;
+           widget.existingOrder!.items = newOrderData.items;
+           widget.existingOrder!.installments = newOrderData.installments;
+
+           await widget.existingOrder!.save();
+        } else {
+           await YarnInvoiceLocalDataSource().saveInvoice(newOrderData);
+        }
+
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('تم حفظ الفاتورة بنجاح')),
@@ -281,7 +311,7 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                       'assets/images/logo.png',
                       height: 80,
                       width: 80,
-                      errorBuilder: (context, error, stackTrace) => const Icon(Icons.picture_as_pdf, size: 80, color: Colors.teal),
+                      errorBuilder: (context, error, stackTrace) => const Icon(CupertinoIcons.doc_text_fill, size: 80, color: Colors.teal),
                     ),
                     const SizedBox(height: 15),
                     const Text('جارٍ إعداد ملف PDF...'),
@@ -296,8 +326,34 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
       );
 
       try {
-        final order = _createOrderObject();
-        final pdf = await YarnPdfGenerator.generate(order);
+        final newOrderData = _createOrderObject();
+        
+        // Auto-save logic
+        if (widget.existingOrder != null && !_saveAsNew) {
+           widget.existingOrder!.sn = newOrderData.sn;
+           widget.existingOrder!.orderDate = newOrderData.orderDate;
+           widget.existingOrder!.deliveryDate = newOrderData.deliveryDate;
+           widget.existingOrder!.branch = newOrderData.branch;
+           widget.existingOrder!.customerName = newOrderData.customerName;
+           widget.existingOrder!.contactName = newOrderData.contactName;
+           widget.existingOrder!.mobileNumber = newOrderData.mobileNumber;
+           widget.existingOrder!.region = newOrderData.region;
+           widget.existingOrder!.deliveryPlace = newOrderData.deliveryPlace;
+           widget.existingOrder!.paymentMethod = newOrderData.paymentMethod;
+           widget.existingOrder!.salesResponsible = newOrderData.salesResponsible;
+           widget.existingOrder!.notes = newOrderData.notes;
+           widget.existingOrder!.editQuantity = newOrderData.editQuantity;
+           widget.existingOrder!.deliveryResponsibility = newOrderData.deliveryResponsibility;
+           widget.existingOrder!.orderTypes = newOrderData.orderTypes;
+           widget.existingOrder!.items = newOrderData.items;
+           widget.existingOrder!.installments = newOrderData.installments;
+
+           await widget.existingOrder!.save();
+        } else {
+           await YarnInvoiceLocalDataSource().saveInvoice(newOrderData);
+        }
+
+        final pdf = await YarnPdfGenerator.generate(newOrderData);
         final bytes = await pdf.save();
 
         Directory? directory;
@@ -306,8 +362,11 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
         }
         directory ??= await getApplicationDocumentsDirectory();
 
-        final safeCustomerName = order.customerName?.replaceAll(RegExp(r'[^\w\s\u0600-\u06FF]'), '') ?? 'Client';
-        final fileName = '${safeCustomerName}_${order.sn}.pdf';
+        final safeCustomerName = newOrderData.customerName?.replaceAll(RegExp(r'[^\w\s\u0600-\u06FF]'), '') ?? 'Client';
+        // Unique timestamp for file
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        final fileName = '${safeCustomerName}_${newOrderData.sn}_$timestamp.pdf';
+        
         final file = File('${directory.path}/$fileName');
         await file.writeAsBytes(bytes);
 
@@ -340,14 +399,17 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
 
   void _resetForm() {
     setState(() {
+      _saveAsNew = false;
       _snController.text = 'YSO-${DateTime.now().microsecond}';
+// ... rest of reset
+
       _customerNameController.clear();
       _contactNameController.clear();
       _mobileNumberController.clear();
       _regionController.clear();
       _deliveryPlaceController.clear();
-      _paymentMethodController.clear();
       _notesController.clear();
+      _paymentMethod = null;
       _selectedBranch = "القاهرة";
       _deliveryResponsibility = "العميل";
       _editQuantity = "الكمية المحددة";
@@ -391,7 +453,7 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
         appBar: AppBar(
           leading: widget.onMenuPressed != null
               ? IconButton(
-                  icon: const Icon(Icons.menu),
+                  icon: const Icon(CupertinoIcons.list_dash),
                   onPressed: widget.onMenuPressed,
                   tooltip: 'Menu',
                 )
@@ -400,12 +462,12 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
           centerTitle: true,
           actions: [
             IconButton(
-              icon: const Icon(Icons.add),
+              icon: const Icon(CupertinoIcons.add),
               tooltip: 'طلب جديد',
               onPressed: _resetForm,
             ),
             IconButton(
-              icon: const Icon(Icons.folder),
+              icon: const Icon(CupertinoIcons.folder),
               tooltip: 'الفواتير المحفوظة',
               onPressed: () {
                 Navigator.push(
@@ -451,7 +513,8 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                         mobileNumberController: _mobileNumberController,
                         regionController: _regionController,
                         deliveryPlaceController: _deliveryPlaceController,
-                        paymentMethodController: _paymentMethodController,
+                        paymentMethod: _paymentMethod,
+                        onPaymentMethodChanged: (v) => setState(() => _paymentMethod = v),
                         salesResponsibleController: _salesResponsibleController,
                         deliveryDate: _deliveryDate,
                         editQuantity: _editQuantity,
@@ -473,14 +536,6 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                         isMobile: isMobile,
                       ),
                       const SizedBox(height: 20),
-                      YarnInstallmentWidget(
-                        durationControllers: _installmentDurationControllers,
-                        valueControllers: _installmentValueControllers,
-                        isMobile: isMobile,
-                        onAddInstallment: _addInstallment,
-                        onRemoveInstallment: _removeInstallment,
-                      ),
-                      const SizedBox(height: 20),
                       Card(
                         child: Padding(
                           padding: const EdgeInsets.all(16.0),
@@ -496,7 +551,25 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 20),
+                      YarnInstallmentWidget(
+                        durationControllers: _installmentDurationControllers,
+                        valueControllers: _installmentValueControllers,
+                        isMobile: isMobile,
+                        onAddInstallment: _addInstallment,
+                        onRemoveInstallment: _removeInstallment,
+                      ),
                       const SizedBox(height: 30),
+                      const SizedBox(height: 20),
+                      if (widget.existingOrder != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16.0),
+                          child: CheckboxListTile(
+                            title: const Text('حفظ كفاتورة جديدة (نسخة)'),
+                            value: _saveAsNew,
+                            onChanged: (val) => setState(() => _saveAsNew = val ?? false),
+                          ),
+                        ),
                       _buildActionButtons(),
                     ],
                   ),
@@ -511,28 +584,37 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
 
   Widget _buildActionButtons() {
     return Center(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Wrap(
+        spacing: 20,
+        runSpacing: 10,
+        alignment: WrapAlignment.center,
         children: [
           ElevatedButton.icon(
             onPressed: _saveInvoice,
-            icon: const Icon(Icons.save),
+            icon: const Icon(CupertinoIcons.floppy_disk, size: 24),
             label: const Text('حفظ', style: TextStyle(fontSize: 18)),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
               backgroundColor: Colors.green,
               foregroundColor: Colors.white,
+              minimumSize: const Size(150, 50),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
             ),
           ),
-          const SizedBox(width: 20),
           ElevatedButton.icon(
             onPressed: _generatePdf,
-            icon: const Icon(Icons.picture_as_pdf),
-            label: const Text('إنشاء PDF', style: TextStyle(fontSize: 18)),
+            icon: const Icon(CupertinoIcons.doc_text_fill, size: 24),
+            label: const Text('PDF', style: TextStyle(fontSize: 18)),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
+              minimumSize: const Size(150, 50),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
             ),
           ),
         ],
@@ -548,7 +630,6 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
     _mobileNumberController.dispose();
     _regionController.dispose();
     _deliveryPlaceController.dispose();
-    _paymentMethodController.dispose();
     _salesResponsibleController.dispose();
     _notesController.dispose();
     

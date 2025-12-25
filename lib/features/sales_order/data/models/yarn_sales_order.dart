@@ -22,9 +22,9 @@ class YarnSalesOrder extends HiveObject {
   String? deliveryPlace;
   @HiveField(8)
   String? editQuantity;
-  @HiveField(9)
-  String? contactName;
   @HiveField(10)
+  String? contactName;
+  @HiveField(9)
   bool specifiedQuantity;
   @HiveField(11)
   String? paymentMethod;

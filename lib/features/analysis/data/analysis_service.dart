@@ -1,7 +1,9 @@
 import 'package:hive_flutter/hive_flutter.dart';
-import '../../sales_order/data/models/sales_order.dart';
-import '../../sales_order/data/models/yarn_sales_order.dart';
-import '../../return_order/data/models/return_order.dart';
+import 'package:annex_sales_order/features/sales_order/data/models/sales_order.dart';
+import 'package:annex_sales_order/features/sales_order/data/models/yarn_sales_order.dart';
+import 'package:annex_sales_order/features/sales_order/data/models/fabrics_cm_sales_order.dart';
+import 'package:annex_sales_order/features/return_order/data/models/return_order.dart';
+import 'package:flutter/foundation.dart';
 
 class AnalysisMetrics {
   final Map<String, double> salesByRep;
@@ -12,20 +14,30 @@ class AnalysisMetrics {
   // Breakdown by type
   final Map<String, double> generalSalesByRep;
   final Map<String, double> yarnSalesByRep;
+  final Map<String, double> fabricSalesByRep;
   final Map<String, int> generalOrdersByRep;
   final Map<String, int> yarnOrdersByRep;
+  final Map<String, int> fabricOrdersByRep;
 
   // Time-based aggregation (Key: "yyyy-MM-dd")
   final Map<String, int> generalOrdersByDate;
   final Map<String, int> yarnOrdersByDate;
+  final Map<String, int> fabricOrdersByDate;
 
   final double totalSalesValue;
   final double totalGeneralSales;
   final double totalYarnSales;
+  final double totalFabricSales;
   final int totalOrders;
   final int totalGeneralOrders;
   final int totalYarnOrders;
+  final int totalFabricOrders;
   final int totalReturns;
+
+  // Raw counts (unfiltered)
+  final int rawGeneralCount;
+  final int rawYarnCount;
+  final int rawFabricCount;
 
   AnalysisMetrics({
     required this.salesByRep,
@@ -34,19 +46,46 @@ class AnalysisMetrics {
     required this.ordersByCustomer,
     required this.generalSalesByRep,
     required this.yarnSalesByRep,
+    required this.fabricSalesByRep,
     required this.generalOrdersByRep,
     required this.yarnOrdersByRep,
+    required this.fabricOrdersByRep,
     required this.generalOrdersByDate,
     required this.yarnOrdersByDate,
+    required this.fabricOrdersByDate,
     required this.totalSalesValue,
     required this.totalGeneralSales,
     required this.totalYarnSales,
+    required this.totalFabricSales,
     required this.totalOrders,
     required this.totalGeneralOrders,
     required this.totalYarnOrders,
+    required this.totalFabricOrders,
     required this.totalReturns,
+    required this.rawGeneralCount,
+    required this.rawYarnCount,
+    required this.rawFabricCount,
   });
 }
+
+class AnalysisData {
+  final List<SalesOrder> sales;
+  final List<YarnSalesOrder> yarnSales;
+  final List<FabricsCmSalesOrder> fabricSales;
+  final List<ReturnOrder> returns;
+  final String? salesRepFilter;
+  final String? customerFilter;
+
+  AnalysisData({
+    required this.sales,
+    required this.yarnSales,
+    required this.fabricSales,
+    required this.returns,
+    this.salesRepFilter,
+    this.customerFilter,
+  });
+}
+
 
 class AnalysisService {
   static final _cache = <String, AnalysisMetrics>{};
@@ -62,25 +101,57 @@ class AnalysisService {
   }) async {
     const salesBoxName = 'invoicesBox';
     const yarnBoxName = 'yarn_invoices';
+    const fabricBoxName = 'fabrics_cm_orders';
     const returnsBoxName = 'return_orders';
 
     if (!Hive.isBoxOpen(salesBoxName)) await Hive.openBox<SalesOrder>(salesBoxName);
     if (!Hive.isBoxOpen(yarnBoxName)) await Hive.openBox<YarnSalesOrder>(yarnBoxName);
+    if (!Hive.isBoxOpen(fabricBoxName)) {
+      await Hive.openBox<FabricsCmSalesOrder>(fabricBoxName);
+    }
     if (!Hive.isBoxOpen(returnsBoxName)) await Hive.openBox<ReturnOrder>(returnsBoxName);
 
     final salesBox = Hive.box<SalesOrder>(salesBoxName);
     final yarnBox = Hive.box<YarnSalesOrder>(yarnBoxName);
+    final fabricBox = Hive.box<FabricsCmSalesOrder>(fabricBoxName);
     final returnsBox = Hive.box<ReturnOrder>(returnsBoxName);
 
-    final currentCountsKey = '${salesBox.length}-${yarnBox.length}-${returnsBox.length}';
+    // Better cache key including specific filters
     final cacheKey = 'rep_${salesRepName ?? 'all'}_cust_${customerName ?? 'all'}';
+    
+    // Improved current state key (using lengths and checksum if possible, but lengths are a good start)
+    final currentStateKey =
+        '${salesBox.length}-${yarnBox.length}-${fabricBox.length}-${returnsBox.length}';
 
-    if (!forceRefresh && 
-        _cache.containsKey(cacheKey) && 
-        _lastCounts[cacheKey] == currentCountsKey) {
+    if (!forceRefresh &&
+        _cache.containsKey(cacheKey) &&
+        _lastCounts[cacheKey] == currentStateKey) {
       return _cache[cacheKey]!;
     }
 
+    final data = AnalysisData(
+      sales: salesBox.values.toList(),
+      yarnSales: yarnBox.values.toList(),
+      fabricSales: fabricBox.values.toList(),
+      returns: returnsBox.values.toList(),
+      salesRepFilter: salesRepName,
+      customerFilter: customerName,
+    );
+
+    final metrics = _processMetrics(data);
+    
+    debugPrint('AnalysisService: Computed metrics. Total Orders: ${metrics.totalOrders}');
+    debugPrint('AnalysisService: Rep Filter: ${salesRepName ?? 'NONE'}');
+    debugPrint('AnalysisService: Cust Filter: ${customerName ?? 'NONE'}');
+    debugPrint('AnalysisService: Box lengths - Sales: ${salesBox.length}, Yarn: ${yarnBox.length}, Fabric: ${fabricBox.length}');
+
+    _cache[cacheKey] = metrics;
+    _lastCounts[cacheKey] = currentStateKey;
+
+    return metrics;
+  }
+
+  static AnalysisMetrics _processMetrics(AnalysisData data) {
     final salesByRep = <String, double>{};
     final ordersByRep = <String, int>{};
     final salesByCustomer = <String, double>{};
@@ -88,27 +159,40 @@ class AnalysisService {
 
     final generalSalesByRep = <String, double>{};
     final yarnSalesByRep = <String, double>{};
+    final fabricSalesByRep = <String, double>{};
     final generalOrdersByRep = <String, int>{};
     final yarnOrdersByRep = <String, int>{};
+    final fabricOrdersByRep = <String, int>{};
 
     final generalOrdersByDate = <String, int>{};
     final yarnOrdersByDate = <String, int>{};
+    final fabricOrdersByDate = <String, int>{};
 
     double totalSalesValue = 0;
     double totalGeneralSales = 0;
     double totalYarnSales = 0;
+    double totalFabricSales = 0;
     int totalOrders = 0;
     int totalGeneralOrders = 0;
     int totalYarnOrders = 0;
+    int totalFabricOrders = 0;
     int totalReturns = 0;
 
+    final salesRepName = data.salesRepFilter;
+    final customerName = data.customerFilter;
+
     // Process General Sales
-    for (var order in salesBox.values) {
+    debugPrint('AnalysisService: Processing ${data.sales.length} general sales');
+    for (var order in data.sales) {
       final rep = order.salesResponsible ?? 'غير محدد';
-      if (salesRepName != null && rep != salesRepName) continue;
+      if (salesRepName != null && rep.trim().toLowerCase() != salesRepName.trim().toLowerCase()) {
+        continue;
+      }
 
       final customer = order.customerName ?? 'عميل غير معروف';
-      if (customerName != null && customer != customerName) continue;
+      if (customerName != null && customer.trim().toLowerCase() != customerName.trim().toLowerCase()) {
+        continue;
+      }
       final val = order.totalValue;
       final dateKey = _formatDate(order.orderDate);
 
@@ -130,12 +214,17 @@ class AnalysisService {
     }
 
     // Process Yarn Sales
-    for (var order in yarnBox.values) {
+    debugPrint('AnalysisService: Processing ${data.yarnSales.length} yarn sales');
+    for (var order in data.yarnSales) {
       final rep = order.salesResponsible ?? 'غير محدد';
-      if (salesRepName != null && rep != salesRepName) continue;
+      if (salesRepName != null && rep.trim().toLowerCase() != salesRepName.trim().toLowerCase()) {
+        continue;
+      }
 
       final customer = order.customerName ?? 'عميل غير معروف';
-      if (customerName != null && customer != customerName) continue;
+      if (customerName != null && customer.trim().toLowerCase() != customerName.trim().toLowerCase()) {
+        continue;
+      }
       final val = order.totalValue;
       final dateKey = _formatDate(order.orderDate);
 
@@ -156,41 +245,81 @@ class AnalysisService {
       totalYarnOrders++;
     }
 
+    // Process Fabric Sales
+    debugPrint('AnalysisService: Processing ${data.fabricSales.length} fabric sales');
+    for (var order in data.fabricSales) {
+      final rep = order.salesResponsible ?? 'غير محدد';
+      if (salesRepName != null && rep.trim().toLowerCase() != salesRepName.trim().toLowerCase()) {
+        continue;
+      }
+
+      final customer = order.customerName ?? 'عميل غير معروف';
+      if (customerName != null && customer.trim().toLowerCase() != customerName.trim().toLowerCase()) {
+        continue;
+      }
+      final val = order.totalValue;
+      final dateKey = _formatDate(order.orderDate);
+
+      salesByRep[rep] = (salesByRep[rep] ?? 0) + val;
+      ordersByRep[rep] = (ordersByRep[rep] ?? 0) + 1;
+
+      fabricSalesByRep[rep] = (fabricSalesByRep[rep] ?? 0) + val;
+      fabricOrdersByRep[rep] = (fabricOrdersByRep[rep] ?? 0) + 1;
+
+      fabricOrdersByDate[dateKey] = (fabricOrdersByDate[dateKey] ?? 0) + 1;
+
+      salesByCustomer[customer] = (salesByCustomer[customer] ?? 0) + val;
+      ordersByCustomer[customer] = (ordersByCustomer[customer] ?? 0) + 1;
+
+      totalSalesValue += val;
+      totalFabricSales += val;
+      totalOrders++;
+      totalFabricOrders++;
+    }
+
     // Process Returns
-    for (var ret in returnsBox.values) {
+    debugPrint('AnalysisService: Processing ${data.returns.length} returns');
+    for (var ret in data.returns) {
       final rep = ret.returnResponsible ?? 'غير محدد';
-      if (salesRepName != null && rep != salesRepName) continue;
+      if (salesRepName != null && rep.trim().toLowerCase() != salesRepName.trim().toLowerCase()) {
+        continue;
+      }
       
       final customer = ret.customerName ?? 'عميل غير معروف';
-      if (customerName != null && customer != customerName) continue;
+      if (customerName != null && customer.trim().toLowerCase() != customerName.trim().toLowerCase()) {
+        continue;
+      }
 
       totalReturns++;
     }
 
-    final metrics = AnalysisMetrics(
+    return AnalysisMetrics(
       salesByRep: salesByRep,
       ordersByRep: ordersByRep,
       salesByCustomer: salesByCustomer,
       ordersByCustomer: ordersByCustomer,
       generalSalesByRep: generalSalesByRep,
       yarnSalesByRep: yarnSalesByRep,
+      fabricSalesByRep: fabricSalesByRep,
       generalOrdersByRep: generalOrdersByRep,
       yarnOrdersByRep: yarnOrdersByRep,
+      fabricOrdersByRep: fabricOrdersByRep,
       generalOrdersByDate: generalOrdersByDate,
       yarnOrdersByDate: yarnOrdersByDate,
+      fabricOrdersByDate: fabricOrdersByDate,
       totalSalesValue: totalSalesValue,
       totalGeneralSales: totalGeneralSales,
       totalYarnSales: totalYarnSales,
+      totalFabricSales: totalFabricSales,
       totalOrders: totalOrders,
       totalGeneralOrders: totalGeneralOrders,
       totalYarnOrders: totalYarnOrders,
+      totalFabricOrders: totalFabricOrders,
       totalReturns: totalReturns,
+      rawGeneralCount: data.sales.length,
+      rawYarnCount: data.yarnSales.length,
+      rawFabricCount: data.fabricSales.length,
     );
-
-    _cache[cacheKey] = metrics;
-    _lastCounts[cacheKey] = currentCountsKey;
-
-    return metrics;
   }
 
   static void clearCache() {

@@ -1,8 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'sales_order_page.dart';
-import 'yarn_sales_order_page.dart';
-import '../../../../core/widgets/app_drawer.dart';
+import 'package:annex_sales_order/features/sales_order/presentation/pages/sales_order_page.dart';
+import 'package:annex_sales_order/features/sales_order/presentation/pages/yarn_sales_order_page.dart';
+import 'package:annex_sales_order/features/sales_order/presentation/pages/fabrics_cm_order_page.dart';
+import 'package:annex_sales_order/core/widgets/app_drawer.dart';
 
 class SalesOrderContainerPage extends StatefulWidget {
   final int initialIndex;
@@ -38,6 +39,9 @@ class _SalesOrderContainerPageState extends State<SalesOrderContainerPage> {
           YarnSalesOrderPage(
             onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
           ),
+          FabricsCmOrderPage(
+            onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+          ),
         ],
       ),
       bottomNavigationBar: _buildFloatingNavBar(context),
@@ -68,17 +72,24 @@ class _SalesOrderContainerPageState extends State<SalesOrderContainerPage> {
           children: [
             _buildNavItem(
               index: 0,
-              icon: FontAwesomeIcons.linktree,
-              label: 'Essential',
+              icon: CupertinoIcons.square_list_fill,
+              label: 'مستلزمات',
               activeColor: Colors.blue.shade600,
               activeBg: Colors.blue.shade50,
             ),
             _buildNavItem(
               index: 1,
-              icon: FontAwesomeIcons.yarn,
-              label: 'Yarn',
+              icon: CupertinoIcons.layers_alt_fill,
+              label: 'غزل',
               activeColor: Colors.teal.shade600,
               activeBg: Colors.teal.shade50,
+            ),
+            _buildNavItem(
+              index: 2,
+              icon: CupertinoIcons.tag_fill,
+              label: 'قماش',
+              activeColor: Colors.purple.shade600,
+              activeBg: Colors.purple.shade50,
             ),
           ],
         ),

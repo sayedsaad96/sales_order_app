@@ -11,11 +11,15 @@ class ReturnOrderPdfGenerator {
 
     // Load Font
     pw.Font arabicFont;
+    pw.Font arabicFontBold;
     try {
       final fontData = await rootBundle.load("assets/fonts/Cairo-Regular.ttf");
       arabicFont = pw.Font.ttf(fontData);
+      final fontDataBold = await rootBundle.load("assets/fonts/Cairo-Bold.ttf");
+      arabicFontBold = pw.Font.ttf(fontDataBold);
     } catch (e) {
       arabicFont = pw.Font.courier();
+      arabicFontBold = pw.Font.courierBold();
     }
 
     // Load Logo
@@ -31,7 +35,7 @@ class ReturnOrderPdfGenerator {
     const primaryColor = PdfColor.fromInt(0xFFC62828); // Red
     const accentColor = PdfColor.fromInt(0xFFFFEBEE); // Light Red
 
-    final theme = pw.ThemeData.withFont(base: arabicFont, bold: arabicFont);
+    final theme = pw.ThemeData.withFont(base: arabicFont, bold: arabicFontBold);
 
     pdf.addPage(
       pw.MultiPage(
@@ -260,12 +264,13 @@ class ReturnOrderPdfGenerator {
           children: [
             // --- Right Side ---
             pw.Expanded(
+              flex: 1,
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
                   pw.Container(
                     padding: const pw.EdgeInsets.symmetric(
-                      horizontal: 10,
+                      horizontal: 8,
                       vertical: 4,
                     ),
                     decoration: pw.BoxDecoration(
@@ -275,7 +280,7 @@ class ReturnOrderPdfGenerator {
                     child: pw.Text(
                       'S/N: ${order.sn ?? "---"}',
                       style: pw.TextStyle(
-                        fontSize: 12,
+                        fontSize: 10,
                         fontWeight: pw.FontWeight.bold,
                         color: primaryColor,
                       ),
@@ -287,13 +292,14 @@ class ReturnOrderPdfGenerator {
 
             // --- Center Side ---
             pw.Expanded(
+              flex: 3,
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.center,
                 children: [
                   pw.Text(
                     'طلب مرتجع',
                     style: pw.TextStyle(
-                      fontSize: 24,
+                      fontSize: 18,
                       fontWeight: pw.FontWeight.bold,
                       color: primaryColor,
                     ),
@@ -301,21 +307,23 @@ class ReturnOrderPdfGenerator {
                   pw.SizedBox(height: 5),
                   if (order.branch != null)
                     pw.Text(
-                      order.branch!,
+                      _fixArabic(order.branch!),
                       style: pw.TextStyle(
                         fontSize: 12,
                         fontWeight: pw.FontWeight.bold,
                         color: PdfColors.black,
                       ),
+                      textDirection: pw.TextDirection.rtl,
                     ),
                   pw.SizedBox(height: 2),
                   if (order.category != null)
                     pw.Text(
-                      order.category!,
+                      _fixArabic(order.category!),
                       style: const pw.TextStyle(
                         fontSize: 10,
                         color: PdfColors.grey700,
                       ),
+                      textDirection: pw.TextDirection.rtl,
                     ),
                 ],
               ),
@@ -323,12 +331,13 @@ class ReturnOrderPdfGenerator {
 
             // --- Left Side ---
             pw.Expanded(
+              flex: 1,
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.end,
                 children: [
                   if (logoImage != null)
                     pw.Container(
-                      height: 60,
+                      height: 50,
                       child: pw.Image(logoImage, fit: pw.BoxFit.contain),
                     ),
                 ],
@@ -420,8 +429,9 @@ class ReturnOrderPdfGenerator {
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(vertical: 8, horizontal: 4),
       child: pw.Text(
-        text,
+        _fixArabic(text),
         textAlign: align,
+        textDirection: pw.TextDirection.rtl,
         style: pw.TextStyle(
           color: PdfColors.white,
           fontWeight: pw.FontWeight.bold,
@@ -438,10 +448,15 @@ class ReturnOrderPdfGenerator {
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 4),
       child: pw.Text(
-        text,
+        _fixArabic(text),
         textAlign: align,
+        textDirection: pw.TextDirection.rtl,
         style: const pw.TextStyle(fontSize: 10),
       ),
     );
+  }
+
+  static String _fixArabic(String text) {
+    return text; 
   }
 }

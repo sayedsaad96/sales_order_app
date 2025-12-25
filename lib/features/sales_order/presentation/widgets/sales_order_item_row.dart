@@ -1,6 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import '../../data/models/sales_order.dart';
-import '../utils/sales_order_helpers.dart'; // For ItemControllers
+import 'package:annex_sales_order/features/sales_order/data/models/sales_order.dart';
+import 'package:annex_sales_order/features/sales_order/presentation/utils/sales_order_helpers.dart'; // For ItemControllers
 
 class SalesOrderItemRow extends StatefulWidget {
   final int index;
@@ -126,7 +127,7 @@ class _SalesOrderItemRowState extends State<SalesOrderItemRow> {
           Align(
             alignment: Alignment.centerLeft,
             child: IconButton(
-              icon: const Icon(Icons.delete, color: Colors.red),
+              icon: const Icon(CupertinoIcons.delete, color: Colors.red),
               onPressed: widget.onDelete,
             ),
           ),
@@ -218,7 +219,7 @@ class _SalesOrderItemRowState extends State<SalesOrderItemRow> {
         ),
         IconButton(
           icon: Icon(
-            Icons.delete,
+            CupertinoIcons.delete,
             color: Theme.of(context).colorScheme.error,
             size: 20,
           ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../data/models/sales_order.dart';
+import 'package:annex_sales_order/features/sales_order/data/models/sales_order.dart';
 
 class ItemControllers {
   final TextEditingController nameController;
