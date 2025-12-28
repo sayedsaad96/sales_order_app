@@ -5,7 +5,7 @@ import '../../data/datasources/return_order_local_data_source.dart';
 import '../../data/models/return_order.dart';
 import 'return_order_page.dart';
 import '../../../../core/widgets/app_drawer.dart';
- 
+
 // Assuming core/utils exists as seen in SavedInvoicesPage path: ../../../../core/utils/performance_utils.dart
 
 class SavedReturnOrdersPage extends StatefulWidget {
@@ -32,12 +32,12 @@ class _SavedReturnOrdersPageState extends State<SavedReturnOrdersPage> {
     _searchController.addListener(() {
       // Simple debounce logic if PerformanceUtils is not available or to simplify imports
       // But assuming it is available since copied from SavedInvoicesPage
-       if (mounted) {
-          setState(() {
-            _searchQuery = _searchController.text;
-            _filterCustomers();
-          });
-       }
+      if (mounted) {
+        setState(() {
+          _searchQuery = _searchController.text;
+          _filterCustomers();
+        });
+      }
     });
     _loadOrders();
   }
@@ -53,13 +53,13 @@ class _SavedReturnOrdersPageState extends State<SavedReturnOrdersPage> {
       setState(() => _isLoading = true);
       // Assuming getReturnOrders returns List<ReturnOrder>
       final orders = _dataSource.getReturnOrders();
-      
+
       setState(() {
         _orders = orders;
         _isLoading = false;
         _calculateCustomerFolders();
         _filterCustomers();
-        
+
         if (_selectedCustomer != null) {
           final hasOrders = _orders.any(
             (i) => (i.customerName ?? "بدون اسم") == _selectedCustomer,
@@ -72,9 +72,9 @@ class _SavedReturnOrdersPageState extends State<SavedReturnOrdersPage> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('خطأ في تحميل الطلبات: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('خطأ في تحميل المرتجعات: $e')));
       }
     }
   }
@@ -102,9 +102,11 @@ class _SavedReturnOrdersPageState extends State<SavedReturnOrdersPage> {
     _filteredCustomers = _searchQuery.isEmpty
         ? _sortedCustomers
         : _sortedCustomers
-            .where((name) =>
-                name.toLowerCase().contains(_searchQuery.toLowerCase()))
-            .toList();
+              .where(
+                (name) =>
+                    name.toLowerCase().contains(_searchQuery.toLowerCase()),
+              )
+              .toList();
   }
 
   Future<void> _deleteOrder(ReturnOrder order) async {
@@ -115,14 +117,14 @@ class _SavedReturnOrdersPageState extends State<SavedReturnOrdersPage> {
   Future<void> _deleteCustomerFolder(String customerName) async {
     setState(() => _isLoading = true);
     try {
-      final customerOrders = _orders.where(
-        (i) => (i.customerName ?? "بدون اسم") == customerName,
-      ).toList();
+      final customerOrders = _orders
+          .where((i) => (i.customerName ?? "بدون اسم") == customerName)
+          .toList();
 
       for (var order in customerOrders) {
         await _dataSource.deleteReturnOrder(order);
       }
-      
+
       _loadOrders();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -131,20 +133,25 @@ class _SavedReturnOrdersPageState extends State<SavedReturnOrdersPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-           SnackBar(content: Text('خطأ أثناء الحذف: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('خطأ أثناء الحذف: $e')));
       }
       _loadOrders();
     }
   }
 
-  Future<void> _confirmDeleteFolder(BuildContext context, String customerName) async {
+  Future<void> _confirmDeleteFolder(
+    BuildContext context,
+    String customerName,
+  ) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('حذف المجلد'),
-        content: Text('هل أنت متأكد من حذف مجلد "$customerName" وجميع الطلبات بداخله؟\nلا يمكن التراجع عن هذا الإجراء.'),
+        content: Text(
+          'هل أنت متأكد من حذف مجلد "$customerName" وجميع المرتجعات بداخله؟\nلا يمكن التراجع عن هذا الإجراء.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -169,7 +176,7 @@ class _SavedReturnOrdersPageState extends State<SavedReturnOrdersPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('تأكيد الحذف'),
-        content: const Text('هل أنت متأكد من حذف هذا الطلب؟'),
+        content: const Text('هل أنت متأكد من حذف هذا المرتجع؟'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -199,12 +206,16 @@ class _SavedReturnOrdersPageState extends State<SavedReturnOrdersPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Center(
-              child: Image.asset('assets/images/logo.png', width: 150, height: 150),
+              child: Image.asset(
+                'assets/images/logo.png',
+                width: 150,
+                height: 150,
+              ),
             ),
             const SizedBox(height: 20),
             const Center(
               child: Text(
-                'لا توجد طلبات مرتجعة محفوظة',
+                'لا توجد مرتجعات محفوظة',
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
             ),
@@ -244,7 +255,8 @@ class _SavedReturnOrdersPageState extends State<SavedReturnOrdersPage> {
                           )
                         : null,
                     border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15)),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
                     filled: true,
                     fillColor: Theme.of(context).cardColor,
                   ),
@@ -252,8 +264,10 @@ class _SavedReturnOrdersPageState extends State<SavedReturnOrdersPage> {
               ),
               if (_searchQuery.isNotEmpty)
                 Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   child: Text(
                     'النتائج: ${_filteredCustomers.length} من ${_sortedCustomers.length}',
                     style: TextStyle(color: Colors.grey[600]),
@@ -270,7 +284,11 @@ class _SavedReturnOrdersPageState extends State<SavedReturnOrdersPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(CupertinoIcons.search, size: 64, color: Colors.grey[400]),
+                  Icon(
+                    CupertinoIcons.search,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'لا توجد نتائج للبحث',
@@ -292,68 +310,86 @@ class _SavedReturnOrdersPageState extends State<SavedReturnOrdersPage> {
                 mainAxisSpacing: 10,
                 childAspectRatio: 1.1,
               ),
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final customerName = _filteredCustomers[index];
-                  final count = _customerCounts[customerName];
-                  return Stack(
-                    children: [
-                      Card(
-                        elevation: 4,
-                        margin: EdgeInsets.zero,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                        child: InkWell(
-                          onTap: () => setState(() {
-                            _selectedCustomer = customerName;
-                            _searchController.clear();
-                          }),
-                          borderRadius: BorderRadius.circular(15),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(CupertinoIcons.folder, size: 44, color: Colors.blue),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    customerName,
-                                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                                    textAlign: TextAlign.center,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final customerName = _filteredCustomers[index];
+                final count = _customerCounts[customerName];
+                return Stack(
+                  children: [
+                    Card(
+                      elevation: 4,
+                      margin: EdgeInsets.zero,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: InkWell(
+                        onTap: () => setState(() {
+                          _selectedCustomer = customerName;
+                          _searchController.clear();
+                        }),
+                        borderRadius: BorderRadius.circular(15),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  CupertinoIcons.folder,
+                                  size: 44,
+                                  color: Colors.blue,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  customerName,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text('$count طلبات', style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                                ],
-                              ),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '$count مرتجع',
+                                  style: const TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ),
-                      Positioned(
-                        top: 4, left: 4,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(20),
-                            onTap: () => _confirmDeleteFolder(context, customerName),
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: Colors.red.withAlpha(30),
-                                shape: BoxShape.circle,
-                              ),
-                                child: const Icon(CupertinoIcons.trash, color: Colors.red, size: 18),
+                    ),
+                    Positioned(
+                      top: 4,
+                      left: 4,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(20),
+                          onTap: () =>
+                              _confirmDeleteFolder(context, customerName),
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withAlpha(30),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              CupertinoIcons.trash,
+                              color: Colors.red,
+                              size: 18,
                             ),
                           ),
                         ),
                       ),
-                    ],
-                  );
-                },
-                childCount: _filteredCustomers.length,
-              ),
+                    ),
+                  ],
+                );
+              }, childCount: _filteredCustomers.length),
             ),
           ),
       ],
@@ -374,55 +410,69 @@ class _SavedReturnOrdersPageState extends State<SavedReturnOrdersPage> {
             child: Center(
               child: Text(
                 'عدد الطلبات: ${filteredOrders.length}',
-                style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
         ),
         SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              final order = filteredOrders[index];
-              return Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 800),
-                  child: Dismissible(
-                    key: Key(order.key.toString()),
-                    background: Container(
-                      color: Colors.red,
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.only(right: 20),
-                      child: const Icon(CupertinoIcons.trash_fill, color: Colors.white),
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final order = filteredOrders[index];
+            return Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 800),
+                child: Dismissible(
+                  key: Key(order.key.toString()),
+                  background: Container(
+                    color: Colors.red,
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.only(right: 20),
+                    child: const Icon(
+                      CupertinoIcons.trash_fill,
+                      color: Colors.white,
                     ),
-                    direction: DismissDirection.startToEnd,
-                    onDismissed: (_) => _deleteOrder(order),
-                    child: Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      child: ListTile(
-                        title: Text('${order.customerName ?? "بدون اسم"} - ${order.sn}'),
-                        subtitle: Text(
-                          'التاريخ: ${intl.DateFormat('dd-MMM-yyyy').format(order.returnDate)}\nإجمالي الكمية: ${order.totalQuantity.toStringAsFixed(2)}',
-                        ),
-                        isThreeLine: true,
-                        trailing: IconButton(
-                          icon: const Icon(CupertinoIcons.trash_fill, color: Colors.red),
-                          onPressed: () => _confirmDelete(context, order),
-                        ),
-                        onTap: () async {
-                          await Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => ReturnOrderPage(existingOrder: order)),
-                          );
-                          _loadOrders();
-                        },
+                  ),
+                  direction: DismissDirection.startToEnd,
+                  onDismissed: (_) => _deleteOrder(order),
+                  child: Card(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    child: ListTile(
+                      title: Text(
+                        '${order.customerName ?? "بدون اسم"} - ${order.sn}',
                       ),
+                      subtitle: Text(
+                        'التاريخ: ${intl.DateFormat('dd-MMM-yyyy').format(order.returnDate)}\nإجمالي الكمية: ${order.totalQuantity.toStringAsFixed(2)}',
+                      ),
+                      isThreeLine: true,
+                      trailing: IconButton(
+                        icon: const Icon(
+                          CupertinoIcons.trash_fill,
+                          color: Colors.red,
+                        ),
+                        onPressed: () => _confirmDelete(context, order),
+                      ),
+                      onTap: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                ReturnOrderPage(existingOrder: order),
+                          ),
+                        );
+                        _loadOrders();
+                      },
                     ),
                   ),
                 ),
-              );
-            },
-            childCount: filteredOrders.length,
-          ),
+              ),
+            );
+          }, childCount: filteredOrders.length),
         ),
         const SliverPadding(padding: EdgeInsets.only(bottom: 20)),
       ],
@@ -447,14 +497,20 @@ class _SavedReturnOrdersPageState extends State<SavedReturnOrdersPage> {
                   icon: const Icon(CupertinoIcons.back),
                   onPressed: () => setState(() => _selectedCustomer = null),
                 )
-              : null,
+              : Builder(
+                  builder: (context) => IconButton(
+                    icon: const Icon(CupertinoIcons.list_dash),
+                    onPressed: () => Scaffold.of(context).openDrawer(),
+                    tooltip: 'Menu',
+                  ),
+                ),
         ),
         drawer: const AppDrawer(),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : _selectedCustomer == null
-                ? _buildCustomerFolders()
-                : _buildOrderList(),
+            ? _buildCustomerFolders()
+            : _buildOrderList(),
       ),
     );
   }

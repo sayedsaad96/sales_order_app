@@ -554,7 +554,13 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
                       });
                     },
                   )
-              : null,
+                : Builder(
+                    builder: (context) => IconButton(
+                      icon: const Icon(CupertinoIcons.list_dash),
+                      onPressed: () => Scaffold.of(context).openDrawer(),
+                      tooltip: 'Menu',
+                    ),
+                  ),
           ),
           drawer: const AppDrawer(),
           body: _isLoading

@@ -20,7 +20,6 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
   late Future<AnalysisMetrics> _metricsFuture;
   String? _selectedCustomer;
   Future<AnalysisMetrics>? _customerDetailFuture;
-  bool _filterByRep = true;
 
   @override
   void initState() {
@@ -31,18 +30,12 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
   String? _currentDebugRep;
 
   void _refreshData({bool force = false}) {
-    final user = UserLocalDataSource().getUser();
-    final repName = _filterByRep ? user?.fullName : null;
-    _currentDebugRep = user?.fullName;
-    
+    _currentDebugRep = UserLocalDataSource().getUser()?.fullName;
+
     setState(() {
-      _metricsFuture = AnalysisService.getMetrics(
-        salesRepName: repName,
-        forceRefresh: force,
-      );
+      _metricsFuture = AnalysisService.getMetrics(forceRefresh: force);
       if (_selectedCustomer != null) {
         _customerDetailFuture = AnalysisService.getMetrics(
-          salesRepName: repName,
           customerName: _selectedCustomer,
           forceRefresh: force,
         );
@@ -51,11 +44,9 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
   }
 
   void _onCustomerSelected(String customerName) {
-    final user = UserLocalDataSource().getUser();
     setState(() {
       _selectedCustomer = customerName;
       _customerDetailFuture = AnalysisService.getMetrics(
-        salesRepName: user?.fullName,
         customerName: customerName,
       );
     });
@@ -83,7 +74,11 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(CupertinoIcons.exclamationmark_triangle, size: 60, color: Colors.red),
+                      const Icon(
+                        CupertinoIcons.exclamationmark_triangle,
+                        size: 60,
+                        color: Colors.red,
+                      ),
                       const SizedBox(height: 16),
                       Text(
                         'حدث خطأ أثناء تحميل البيانات:\n${snapshot.error}',
@@ -130,21 +125,6 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
                     ),
                     centerTitle: true,
                     actions: [
-                      Row(
-                        children: [
-                          const Text('مبيعاتي فقط', style: TextStyle(fontSize: 12, color: Colors.white)),
-                          Switch.adaptive(
-                            value: _filterByRep,
-                            activeTrackColor: Colors.white,
-                            onChanged: (v) {
-                              setState(() {
-                                _filterByRep = v;
-                                _refreshData(force: true);
-                              });
-                            },
-                          ),
-                        ],
-                      ),
                       IconButton(
                         icon: const Icon(CupertinoIcons.refresh),
                         onPressed: () => _refreshData(force: true),
@@ -167,7 +147,7 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
                     ),
                     bottom: const TabBar(
                       tabs: [
-                        Tab(text: 'إحصائيات المندوب'),
+                        Tab(text: 'إحصائياتي '),
                         Tab(text: 'إحصائيات العملاء'),
                       ],
                       indicatorColor: Colors.white,
@@ -213,7 +193,7 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
               style: const TextStyle(fontSize: 12, color: Colors.blue),
             ),
             Text(
-              'Filtered: ${metrics.totalOrders} | MyOnly:$_filterByRep | User:$_currentDebugRep',
+              'Filtered: ${metrics.totalOrders} | User:$_currentDebugRep',
               style: const TextStyle(fontSize: 10, color: Colors.red),
             ),
           ],
@@ -317,7 +297,10 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
                     Row(
                       children: [
                         ActionChip(
-                          avatar: const Icon(CupertinoIcons.arrow_right, size: 16),
+                          avatar: const Icon(
+                            CupertinoIcons.arrow_right,
+                            size: 16,
+                          ),
                           label: const Text('كل العملاء'),
                           onPressed: () =>
                               setState(() => _selectedCustomer = null),
