@@ -579,7 +579,10 @@ class YarnItemsTable extends StatelessWidget {
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     IconButton(
-                      icon: const Icon(CupertinoIcons.delete, color: Colors.red),
+                      icon: const Icon(
+                        CupertinoIcons.delete,
+                        color: Colors.red,
+                      ),
                       onPressed: () => onRemoveItem(index),
                     ),
                   ],
@@ -735,7 +738,11 @@ class YarnItemsTable extends StatelessWidget {
         border: const OutlineInputBorder(),
         contentPadding: const EdgeInsets.symmetric(horizontal: 8),
         suffixIcon: IconButton(
-          icon: const Icon(CupertinoIcons.divide_circle, color: Colors.teal, size: 20),
+          icon: const Icon(
+            CupertinoIcons.divide_circle,
+            color: Colors.teal,
+            size: 20,
+          ),
           onPressed: () async {
             final currentQty = double.tryParse(quantityControllers[index].text);
             final result = await showDialog<double>(
@@ -800,7 +807,7 @@ class YarnItemsTable extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'إجمالي القيمة:',
+                'الإجمالي الكلي:',
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,

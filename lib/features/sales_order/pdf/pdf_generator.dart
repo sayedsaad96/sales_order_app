@@ -33,7 +33,6 @@ class PdfSalesOrderGenerator {
     // Define Colors
     const primaryColor = PdfColor.fromInt(0xFF1565C0);
     const accentColor = PdfColor.fromInt(0xFFE3F2FD); // Light Blue
-    const lightGrey = PdfColor.fromInt(0xFFEEEEEE);
 
     final theme = pw.ThemeData.withFont(base: arabicFont, bold: arabicFontBold);
 
@@ -231,7 +230,7 @@ class PdfSalesOrderGenerator {
                       margin: const pw.EdgeInsets.only(top: 20, left: 20),
                       padding: const pw.EdgeInsets.all(10),
                       decoration: pw.BoxDecoration(
-                        color: lightGrey,
+                        color: PdfColors.white,
                         borderRadius: pw.BorderRadius.circular(4),
                       ),
                       child: pw.Column(
@@ -520,6 +519,6 @@ class PdfSalesOrderGenerator {
   }
 
   static String _fixArabic(String text) {
-    return text; 
+    return text;
   }
 }
