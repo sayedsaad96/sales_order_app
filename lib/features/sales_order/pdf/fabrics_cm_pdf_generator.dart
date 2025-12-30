@@ -35,6 +35,7 @@ class FabricsCmPdfGenerator {
     const lightGrey = PdfColor.fromInt(0xFFEEEEEE);
 
     final theme = pw.ThemeData.withFont(base: arabicFont, bold: arabicFontBold);
+    final numberFormat = intl.NumberFormat('#,###.##');
 
     pdf.addPage(
       pw.MultiPage(
@@ -127,15 +128,20 @@ class FabricsCmPdfGenerator {
                   ],
                 ),
                 // Rows
-                ...order.items.map((item) {
+                ...order.items.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final item = entry.value;
+                  final isEven = index % 2 == 0;
                   return pw.TableRow(
-                    decoration: const pw.BoxDecoration(color: PdfColors.white),
+                    decoration: pw.BoxDecoration(
+                      color: isEven ? PdfColors.white : accentColor,
+                    ),
                     children: [
-                       _buildTableCell(item.price.toString()),
+                       _buildTableCell(numberFormat.format(item.price)),
                        _buildTableCell(item.spinningCompany),
-                       _buildTableCell(item.stitchLength.toString()),
+                       _buildTableCell(numberFormat.format(item.stitchLength)),
                        _buildTableCell(item.gauge.toString()),
-                       _buildTableCell(item.widthInches.toString()),
+                       _buildTableCell(numberFormat.format(item.widthInches)),
                        _buildTableCell(
                          'نوع الغزل: ${item.yarnType}\n'
                          'نمرة الغزل: ${item.yarnCount}\n'
@@ -143,7 +149,7 @@ class FabricsCmPdfGenerator {
                          'نسبة الليكرا: ${item.lycraPercentage}%\n'
                          'نمرة الليكرا: ${item.lycraNumber}'
                        ),
-                       _buildTableCell(item.quantity.toString()),
+                       _buildTableCell(numberFormat.format(item.quantity)),
                     ],
                   );
                 }),
@@ -169,7 +175,7 @@ class FabricsCmPdfGenerator {
                         style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
                       ),
                       pw.Text(
-                        order.totalValue.toStringAsFixed(2),
+                        numberFormat.format(order.totalValue),
                         style: pw.TextStyle(
                           fontWeight: pw.FontWeight.bold,
                           color: primaryColor,
@@ -208,7 +214,7 @@ class FabricsCmPdfGenerator {
           crossAxisAlignment: pw.CrossAxisAlignment.center,
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
-            // Right Side (Visual Right in RTL) - S/N
+            // --- Right Side (Visual Right) ---
             pw.Expanded(
               flex: 1,
               child: pw.Column(
@@ -235,14 +241,15 @@ class FabricsCmPdfGenerator {
                 ],
               ),
             ),
-            // Center - Title
+
+            // --- Center Side ---
             pw.Expanded(
               flex: 3,
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.center,
                 children: [
                   pw.Text(
-                    'Fabrics & CM Sales Order',
+                    'طلب بيع',
                     style: pw.TextStyle(
                       fontSize: 18,
                       fontWeight: pw.FontWeight.bold,
@@ -251,7 +258,7 @@ class FabricsCmPdfGenerator {
                   ),
                   pw.SizedBox(height: 5),
                   if (order.branch != null)
-                     pw.Text(
+                    pw.Text(
                       _fixArabic(order.branch!),
                       style: pw.TextStyle(
                         fontSize: 12,
@@ -260,10 +267,19 @@ class FabricsCmPdfGenerator {
                       ),
                       textDirection: pw.TextDirection.rtl,
                     ),
+                  pw.SizedBox(height: 10), // Space for missing delivery info
+                  pw.Text(
+                    'Fabrics & CM Sales Order',
+                    style: const pw.TextStyle(
+                      fontSize: 10,
+                      color: PdfColors.grey700,
+                    ),
+                  ),
                 ],
               ),
             ),
-            // Left Side (Visual Left) - Logo
+
+            // --- Left Side (Visual Left) ---
             pw.Expanded(
               flex: 1,
               child: pw.Column(
@@ -279,7 +295,7 @@ class FabricsCmPdfGenerator {
             ),
           ],
         ),
-        pw.SizedBox(height: 20),
+        pw.SizedBox(height: 10),
       ],
     );
   }
@@ -288,16 +304,6 @@ class FabricsCmPdfGenerator {
     return pw.Column(
       children: [
         pw.Divider(color: PdfColors.grey300),
-        pw.SizedBox(height: 5),
-        pw.Row(
-          mainAxisAlignment: pw.MainAxisAlignment.center,
-          children: [
-            pw.Text(
-              'شكراً لتعاملكم معنا',
-              style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey500),
-            ),
-          ],
-        ),
         pw.SizedBox(height: 5),
         pw.Text(
           'Page ${context.pageNumber} of ${context.pagesCount}',

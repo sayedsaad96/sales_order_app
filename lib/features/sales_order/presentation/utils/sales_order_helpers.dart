@@ -27,19 +27,23 @@ class ItemControllers {
 
 class OrderSection {
   TextEditingController categoryController;
+  TextEditingController defaultUnitController;
   List<SalesOrderItem> items;
   List<ItemControllers> itemControllers;
 
   OrderSection({
     String category = '',
+    String defaultUnit = '',
     List<SalesOrderItem>? items,
     List<ItemControllers>? itemControllers,
   }) : categoryController = TextEditingController(text: category),
+       defaultUnitController = TextEditingController(text: defaultUnit),
        items = items ?? [],
        itemControllers = itemControllers ?? [];
 
   void dispose() {
     categoryController.dispose();
+    defaultUnitController.dispose();
     for (var controller in itemControllers) {
       controller.dispose();
     }

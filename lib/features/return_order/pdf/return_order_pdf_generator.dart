@@ -36,6 +36,7 @@ class ReturnOrderPdfGenerator {
     const accentColor = PdfColor.fromInt(0xFFFFEBEE); // Light Red
 
     final theme = pw.ThemeData.withFont(base: arabicFont, bold: arabicFontBold);
+    final numberFormat = intl.NumberFormat('#,###.##');
 
     pdf.addPage(
       pw.MultiPage(
@@ -115,10 +116,6 @@ class ReturnOrderPdfGenerator {
                               'dd/MM/yyyy',
                             ).format(order.deliveryDate!),
                           ),
-                        _buildInfoRow(
-                          'تكلفة التوصيل:',
-                          order.deliveryCostPayer,
-                        ),
                         _buildInfoRow('سبب المرتجع:', order.returnReason),
                       ],
                     ),
@@ -140,8 +137,7 @@ class ReturnOrderPdfGenerator {
               columnWidths: const {
                 0: pw.FlexColumnWidth(1), // Unit
                 1: pw.FlexColumnWidth(1), // Qty
-                2: pw.FlexColumnWidth(2.5), // Item Name
-                3: pw.FlexColumnWidth(1.5), // Notes
+                2: pw.FlexColumnWidth(4), // Item Name
               },
               children: [
                 // Header
@@ -151,7 +147,6 @@ class ReturnOrderPdfGenerator {
                     _buildTableHeader('الوحدة'),
                     _buildTableHeader('الكمية'),
                     _buildTableHeader('الصنف', align: pw.TextAlign.right),
-                    _buildTableHeader('ملاحظات'),
                   ],
                 ),
                 // Rows
@@ -165,21 +160,8 @@ class ReturnOrderPdfGenerator {
                     ),
                     children: [
                       _buildTableCell(item.unit),
-                      _buildTableCell(item.quantity.toString()),
+                      _buildTableCell(numberFormat.format(item.quantity)),
                       _buildTableCell(item.item, align: pw.TextAlign.right),
-                      pw.Padding(
-                        padding: const pw.EdgeInsets.symmetric(
-                          vertical: 6,
-                          horizontal: 4,
-                        ),
-                        child: pw.TextField(
-                          name: 'return_note_$index',
-                          textStyle: pw.TextStyle(
-                            font: arabicFont,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
                     ],
                   );
                 }),
@@ -225,7 +207,7 @@ class ReturnOrderPdfGenerator {
                                 ),
                               ),
                               pw.Text(
-                                order.totalQuantity.toStringAsFixed(2),
+                                numberFormat.format(order.totalQuantity),
                                 style: pw.TextStyle(
                                   color: PdfColors.white,
                                   fontWeight: pw.FontWeight.bold,
@@ -325,6 +307,40 @@ class ReturnOrderPdfGenerator {
                       ),
                       textDirection: pw.TextDirection.rtl,
                     ),
+                  pw.SizedBox(height: 2),
+                  // Delivery Cost Payer
+                  pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.center,
+                    children: [
+                      pw.Text(
+                        _fixArabic('تكلفة التوصيل على: '),
+                        style: const pw.TextStyle(
+                          fontSize: 10,
+                          color: PdfColors.grey700,
+                        ),
+                        textDirection: pw.TextDirection.rtl,
+                      ),
+                      pw.Container(
+                        padding: const pw.EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: pw.BoxDecoration(
+                          border: pw.Border.all(color: PdfColors.grey400),
+                          borderRadius: pw.BorderRadius.circular(3),
+                        ),
+                        child: pw.Text(
+                          _fixArabic(order.deliveryCostPayer),
+                          style: pw.TextStyle(
+                            fontSize: 10,
+                            fontWeight: pw.FontWeight.bold,
+                            color: PdfColors.black,
+                          ),
+                          textDirection: pw.TextDirection.rtl,
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),

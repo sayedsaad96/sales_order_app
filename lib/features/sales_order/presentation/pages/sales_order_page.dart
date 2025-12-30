@@ -101,9 +101,13 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                 ),
               )
               .toList();
+
+          final defaultUnit = items.isNotEmpty ? items.first.unit : '';
+
           _sections.add(
             OrderSection(
               category: cat,
+              defaultUnit: defaultUnit,
               items: items,
               itemControllers: controllers,
             ),
@@ -203,12 +207,18 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
     if (section.items.isNotEmpty && section.items.first.price > 0) {
       defaultPrice = section.items.first.price;
     }
-    section.items.add(SalesOrderItem(price: defaultPrice ?? 0));
+    section.items.add(
+      SalesOrderItem(
+        price: defaultPrice ?? 0,
+        unit: section.defaultUnitController.text,
+      ),
+    );
     section.itemControllers.add(
       ItemControllers(
         price: (defaultPrice != null && defaultPrice > 0)
             ? defaultPrice.toString()
             : '',
+        unit: section.defaultUnitController.text,
       ),
     );
     // Trigger rebuild only after adding item
@@ -237,6 +247,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
       for (var item in section.items) {
         if (item.itemName.isNotEmpty || item.quantity > 0) {
           item.category = section.categoryController.text;
+          item.unit = section.defaultUnitController.text;
           allItems.add(item);
         }
       }
@@ -449,15 +460,8 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
         }
         directory ??= await getApplicationDocumentsDirectory();
 
-        final safeCustomerName =
-            order.customerName?.replaceAll(
-              RegExp(r'[^\w\s\u0600-\u06FF]'),
-              '',
-            ) ??
-            'Client';
-        // Add timestamp to ensure unique filename
-        final fileName =
-            '${safeCustomerName}_${order.sn}_${DateTime.now().millisecondsSinceEpoch}.pdf';
+        final safeName = (order.customerName ?? 'Client').replaceAll(RegExp(r'[^\w\s\u0600-\u06FF]'), '');
+        final fileName = '${safeName}_${order.sn}.pdf';
         final file = File('${directory.path}/$fileName');
         await file.writeAsBytes(bytes);
 
@@ -846,7 +850,10 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                               children: [
                                 ElevatedButton.icon(
                                   onPressed: _saveInvoice,
-                                  icon: const Icon(CupertinoIcons.floppy_disk, size: 24),
+                                  icon: const Icon(
+                                    CupertinoIcons.floppy_disk,
+                                    size: 24,
+                                  ),
                                   label: Text(
                                     _isEditing && !_saveAsNew ? 'تحديث' : 'حفظ',
                                     style: const TextStyle(fontSize: 18),
@@ -921,29 +928,44 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  isMobile
-                      ? Expanded(
-                          child: TextFormField(
-                            controller: section.categoryController,
-                            decoration: const InputDecoration(
-                              labelText: 'التصنيف',
-                            ),
-                          ),
-                        )
-                      : SizedBox(
-                          width: 250,
-                          child: TextFormField(
-                            controller: section.categoryController,
-                            decoration: const InputDecoration(
-                              labelText: 'التصنيف',
-                            ),
-                          ),
-                        ),
+                  Expanded(
+                    flex: 2,
+                    child: TextFormField(
+                      controller: section.categoryController,
+                      decoration: const InputDecoration(
+                        labelText: 'التصنيف',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    flex: 2,
+                    child: TextFormField(
+                      controller: section.defaultUnitController,
+                      decoration: const InputDecoration(
+                        labelText: 'الوحدة',
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          for (var item in section.items) {
+                            item.unit = value;
+                          }
+                          for (var controller in section.itemControllers) {
+                            controller.unitController.text = value;
+                          }
+                        });
+                      },
+                    ),
+                  ),
                   if (_sections.length > 1)
                     IconButton(
-                      icon: const Icon(CupertinoIcons.delete, color: Colors.red),
+                      icon: const Icon(
+                        CupertinoIcons.delete,
+                        color: Colors.red,
+                      ),
                       onPressed: () => _removeSection(sectionIndex),
                     ),
                 ],

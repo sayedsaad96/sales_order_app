@@ -65,7 +65,16 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
           future: _metricsFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset('assets/images/logo.png', width: 100),
+                    SizedBox(height: 20),
+                    CircularProgressIndicator(),
+                  ],
+                ),
+              );
             }
             if (snapshot.hasError) {
               return Center(
@@ -286,7 +295,16 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
             future: _customerDetailFuture,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset('assets/images/logo.png', width: 100),
+                      SizedBox(height: 20),
+                      CircularProgressIndicator(),
+                    ],
+                  ),
+                );
               }
               final custMetrics = snapshot.data!;
               return SingleChildScrollView(

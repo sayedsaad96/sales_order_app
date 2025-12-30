@@ -505,9 +505,8 @@ class FabricsCmOrderProvider extends ChangeNotifier {
         }
         directory ??= await getApplicationDocumentsDirectory();
 
-        final safeCustomerName = newOrderData.customerName?.replaceAll(RegExp(r'[^\w\s\u0600-\u06FF]'), '') ?? 'Client';
-        final timestamp = DateTime.now().millisecondsSinceEpoch;
-        final fileName = '${safeCustomerName}_${newOrderData.sn}_$timestamp.pdf';
+        final safeName = (newOrderData.customerName ?? 'Client').replaceAll(RegExp(r'[^\w\s\u0600-\u06FF]'), '');
+        final fileName = '${safeName}_${newOrderData.sn}.pdf';
         final file = File('${directory.path}/$fileName');
         await file.writeAsBytes(bytes);
 

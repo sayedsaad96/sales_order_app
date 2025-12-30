@@ -31,16 +31,17 @@ class PdfSalesOrderGenerator {
     }
 
     // Define Colors
-    const primaryColor = PdfColor.fromInt(0xFF1565C0);
+    const primaryColor = PdfColor.fromInt(0xFF1565C0); // Blue
     const accentColor = PdfColor.fromInt(0xFFE3F2FD); // Light Blue
 
     final theme = pw.ThemeData.withFont(base: arabicFont, bold: arabicFontBold);
+    final numberFormat = intl.NumberFormat('#,###.##');
 
     pdf.addPage(
       pw.MultiPage(
         theme: theme,
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(30),
+        margin: const pw.EdgeInsets.only(top: 30, left: 30, right: 30, bottom: 20),
         textDirection: pw.TextDirection.rtl,
         header: (context) =>
             _buildHeaderRow(order, logoImage, primaryColor, accentColor),
@@ -114,7 +115,7 @@ class PdfSalesOrderGenerator {
                 ),
               ],
             ),
-            pw.SizedBox(height: 20),
+            pw.SizedBox(height: 5),
 
             // --- Valid Items Logic with Orphan Protection ---
             ...(() {
@@ -134,7 +135,7 @@ class PdfSalesOrderGenerator {
                   if (groupedItems.length > 1 ||
                       (category != 'عام' && category.isNotEmpty))
                     pw.Container(
-                      padding: const pw.EdgeInsets.only(top: 15, bottom: 5),
+                      padding: const pw.EdgeInsets.only(top: 5, bottom: 5),
                       child: pw.Center(
                         child: pw.Text(
                           'تصنيف: $category',
@@ -156,12 +157,11 @@ class PdfSalesOrderGenerator {
                       bottom: pw.BorderSide(color: PdfColors.grey300, width: 1),
                     ),
                     columnWidths: const {
-                      0: pw.FlexColumnWidth(1), // Total
-                      1: pw.FlexColumnWidth(1), // Price
-                      2: pw.FlexColumnWidth(1), // Unit
-                      3: pw.FlexColumnWidth(1), // Qty
-                      4: pw.FlexColumnWidth(2.5), // Item Name
-                      5: pw.FlexColumnWidth(1.5), // Notes
+                      0: pw.FlexColumnWidth(2), // Total (Value)
+                      1: pw.FlexColumnWidth(1.5), // Price
+                      2: pw.FlexColumnWidth(1.5), // Unit
+                      3: pw.FlexColumnWidth(1.5), // Qty
+                      4: pw.FlexColumnWidth(3), // Item Name
                     },
                     children: [
                       // Header
@@ -173,7 +173,6 @@ class PdfSalesOrderGenerator {
                           _buildTableHeader('الوحدة'),
                           _buildTableHeader('الكمية'),
                           _buildTableHeader('الصنف', align: pw.TextAlign.right),
-                          _buildTableHeader('ملاحظات'),
                         ],
                       ),
                       // Rows
@@ -186,26 +185,13 @@ class PdfSalesOrderGenerator {
                             color: isEven ? PdfColors.white : accentColor,
                           ),
                           children: [
-                            _buildTableCell(item.value.toStringAsFixed(2)),
-                            _buildTableCell(item.price.toString()),
+                            _buildTableCell(numberFormat.format(item.value)),
+                            _buildTableCell(numberFormat.format(item.price)),
                             _buildTableCell(item.unit),
-                            _buildTableCell(item.quantity.toString()),
+                            _buildTableCell(numberFormat.format(item.quantity)),
                             _buildTableCell(
                               item.itemName,
                               align: pw.TextAlign.right,
-                            ),
-                            pw.Padding(
-                              padding: const pw.EdgeInsets.symmetric(
-                                vertical: 6,
-                                horizontal: 4,
-                              ),
-                              child: pw.TextField(
-                                name: 'note_${category}_$index',
-                                textStyle: pw.TextStyle(
-                                  font: arabicFont,
-                                  fontSize: 16,
-                                ),
-                              ),
                             ),
                           ],
                         );
@@ -287,7 +273,7 @@ class PdfSalesOrderGenerator {
                                 ),
                               ),
                               pw.Text(
-                                order.totalValue.toStringAsFixed(2),
+                                numberFormat.format(order.totalValue),
                                 style: pw.TextStyle(
                                   color: PdfColors.white,
                                   fontWeight: pw.FontWeight.bold,
@@ -311,7 +297,6 @@ class PdfSalesOrderGenerator {
     return pdf;
   }
 
-  // --- Header Builder ---
   static pw.Widget _buildHeaderRow(
     SalesOrder order,
     pw.MemoryImage? logoImage,
@@ -321,7 +306,7 @@ class PdfSalesOrderGenerator {
     return pw.Column(
       children: [
         pw.Row(
-          crossAxisAlignment: pw.CrossAxisAlignment.center, // Center vertically
+          crossAxisAlignment: pw.CrossAxisAlignment.center,
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
             // --- Right Side (Visual Right) ---
@@ -378,13 +363,48 @@ class PdfSalesOrderGenerator {
                       textDirection: pw.TextDirection.rtl,
                     ),
                   pw.SizedBox(height: 2),
+                  // Delivery Responsibility below branch
+                  pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.center,
+                    children: [
+                      pw.Text(
+                        _fixArabic('مسئولية التوصيل: '),
+                        style: const pw.TextStyle(
+                          fontSize: 10,
+                          color: PdfColors.grey700,
+                        ),
+                        textDirection: pw.TextDirection.rtl,
+                      ),
+                      pw.Container(
+                        padding: const pw.EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: pw.BoxDecoration(
+                          border: pw.Border.all(color: PdfColors.grey400),
+                          borderRadius: pw.BorderRadius.circular(3),
+                        ),
+                        child: pw.Text(
+                          _fixArabic(
+                            order.deliveryIncluded ? 'الشركة' : 'العميل',
+                          ),
+                          style: pw.TextStyle(
+                            fontSize: 10,
+                            fontWeight: pw.FontWeight.bold,
+                            color: PdfColors.black,
+                          ),
+                          textDirection: pw.TextDirection.rtl,
+                        ),
+                      ),
+                    ],
+                  ),
+                  pw.SizedBox(height: 2),
                   pw.Text(
-                    _fixArabic('(${order.orderTypes.join(', ')})'),
+                    'Sales Order',
                     style: const pw.TextStyle(
                       fontSize: 10,
                       color: PdfColors.grey700,
                     ),
-                    textDirection: pw.TextDirection.rtl,
                   ),
                 ],
               ),
@@ -406,7 +426,6 @@ class PdfSalesOrderGenerator {
             ),
           ],
         ),
-        // Add a line divider or spacing if needed
         pw.SizedBox(height: 10),
       ],
     );
@@ -417,16 +436,6 @@ class PdfSalesOrderGenerator {
     return pw.Column(
       children: [
         pw.Divider(color: PdfColors.grey300),
-        pw.SizedBox(height: 5),
-        pw.Row(
-          mainAxisAlignment: pw.MainAxisAlignment.center,
-          children: [
-            pw.Text(
-              'شكراً لتعاملكم معنا',
-              style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey500),
-            ),
-          ],
-        ),
         pw.SizedBox(height: 5),
         pw.Text(
           'صفحة ${context.pageNumber} من ${context.pagesCount}',

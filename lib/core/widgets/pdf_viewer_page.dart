@@ -36,10 +36,15 @@ class PdfViewerPage extends StatelessWidget {
             if (assetPath.startsWith('http')) {
               // Create a unique filename based on the URL or Title
               // Simple sanitize of title for filename
-              final safeTitle = title.replaceAll(RegExp(r'[^\w\s]+'), '').replaceAll(' ', '_');
-              final filename = '$safeTitle.pdf';
-              
-              final file = await DocumentRepository().getPdf(assetPath, filename);
+              final safeTitle = title
+                  .replaceAll(RegExp(r'[^\w\s\u0600-\u06FF]+'), '')
+                  .replaceAll(' ', '_');
+              final filename = '${safeTitle}_${assetPath.hashCode}.pdf';
+
+              final file = await DocumentRepository().getPdf(
+                assetPath,
+                filename,
+              );
               return file.readAsBytes();
             } else {
               final byteData = await rootBundle.load(assetPath);
@@ -60,7 +65,16 @@ class PdfViewerPage extends StatelessWidget {
         canChangePageFormat: false,
         canDebug: false,
         maxPageWidth: 1200,
-        loadingWidget: const Center(child: CircularProgressIndicator()),
+        loadingWidget: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset('assets/images/logo.png', width: 100),
+              SizedBox(height: 20),
+              CircularProgressIndicator(),
+            ],
+          ),
+        ),
         onError: (context, error) => Center(child: Text('حدث خطأ: $error')),
       ),
     );

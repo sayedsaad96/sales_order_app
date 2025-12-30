@@ -45,6 +45,7 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
   // Items
   final List<ReturnOrderItem> _items = [];
   final ValueNotifier<double> _totalQuantityNotifier = ValueNotifier(0.0);
+  String? _currentSn;
 
   // Data Source
   final _dataSource = ReturnOrderLocalDataSource();
@@ -59,9 +60,11 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
 
     if (widget.existingOrder != null) {
       _loadExistingOrder(widget.existingOrder!);
+      _currentSn = widget.existingOrder!.sn;
     } else {
       _addNewItem();
       _loadCurrentUser();
+      _currentSn = 'RET-${DateTime.now().millisecondsSinceEpoch % 10000}';
     }
   }
 
@@ -115,7 +118,7 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
       _items.add(ReturnOrderItem(unit: '')); // No default unit
     });
     // No need to update total as new item has 0 quantity, but good practice
-    // _updateTotalQuantity(); 
+    // _updateTotalQuantity();
   }
 
   void _removeItem(int index) {
@@ -128,7 +131,10 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
   }
 
   void _updateTotalQuantity() {
-    _totalQuantityNotifier.value = _items.fold(0.0, (sum, item) => sum + item.quantity);
+    _totalQuantityNotifier.value = _items.fold(
+      0.0,
+      (sum, item) => sum + item.quantity,
+    );
   }
 
   // Calculate Total Quantity
@@ -139,7 +145,7 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
+      lastDate: DateTime(2035),
     );
     if (picked != null) {
       if (!mounted) return;
@@ -239,13 +245,11 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
       }
       directory ??= await getApplicationDocumentsDirectory();
 
-      final safeCustomerName =
-          returnOrder.customerName?.replaceAll(
-            RegExp(r'[^\w\s\u0600-\u06FF]'),
-            '',
-          ) ??
-          'Client';
-      final fileName = 'Return_${safeCustomerName}_${returnOrder.sn}.pdf';
+      final safeName = (returnOrder.customerName ?? 'Client').replaceAll(
+        RegExp(r'[^\w\s\u0600-\u06FF]'),
+        '',
+      );
+      final fileName = '${safeName}_${returnOrder.sn}.pdf';
       final file = File('${directory.path}/$fileName');
       await file.writeAsBytes(bytes);
 
@@ -277,10 +281,14 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
   }
 
   ReturnOrder _buildReturnOrderFromForm() {
-    final order = widget.existingOrder ?? ReturnOrder(
-      sn: (DateTime.now().millisecondsSinceEpoch % 100000000).toString().padLeft(8, '0'),
-      returnDate: _returnDate,
-    );
+    final order =
+        widget.existingOrder ??
+        ReturnOrder(
+          sn:
+              _currentSn ??
+              'RET-${DateTime.now().millisecondsSinceEpoch % 10000}',
+          returnDate: _returnDate,
+        );
 
     order
       ..category = _selectedCategory
@@ -311,7 +319,7 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
           ),
         ),
         centerTitle: true,
-        title: const Text('طلب مرتجع'),
+        title: const Text('Annex Group'),
         actions: [
           IconButton(
             icon: const Icon(CupertinoIcons.add),
@@ -373,24 +381,23 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
 
                     // Items List
                     SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-                            child: ReturnOrderItemRow(
-                              key: ObjectKey(_items[index]),
-                              index: index,
-                              item: _items[index],
-                              isMobile: isMobile,
-                              onRemove: () => _removeItem(index),
-                              onUpdate: _updateTotalQuantity,
-                            ),
-                          );
-                        },
-                        childCount: _items.length,
-                      ),
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16.0,
+                            vertical: 4.0,
+                          ),
+                          child: ReturnOrderItemRow(
+                            key: ObjectKey(_items[index]),
+                            index: index,
+                            item: _items[index],
+                            isMobile: isMobile,
+                            onRemove: () => _removeItem(index),
+                            onUpdate: _updateTotalQuantity,
+                          ),
+                        );
+                      }, childCount: _items.length),
                     ),
-
 
                     SliverPadding(
                       padding: const EdgeInsets.all(16.0),
@@ -455,7 +462,9 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
                                     children: [
                                       ElevatedButton.icon(
                                         onPressed: _saveOrder,
-                                        icon: const Icon(CupertinoIcons.floppy_disk),
+                                        icon: const Icon(
+                                          CupertinoIcons.floppy_disk,
+                                        ),
                                         label: const Text(
                                           'حفظ',
                                           style: TextStyle(fontSize: 18),
@@ -472,7 +481,9 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
                                       const SizedBox(width: 20),
                                       ElevatedButton.icon(
                                         onPressed: _generatePdf,
-                                        icon: const Icon(CupertinoIcons.doc_text_fill),
+                                        icon: const Icon(
+                                          CupertinoIcons.doc_text_fill,
+                                        ),
                                         label: const Text(
                                           'PDF',
                                           style: TextStyle(fontSize: 18),
@@ -509,11 +520,17 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
           children: [
             const Center(
               child: Text(
-                'طلب مرتجع',
+                'Return Order',
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
             ),
             const SizedBox(height: 20),
+            _buildTextField(
+              'رقم المرتجع',
+              TextEditingController(text: _currentSn),
+              readOnly: true,
+            ),
+            const SizedBox(height: 10),
             if (isMobile) ...[
               _buildDropdown('الفرع', _selectedBranch, [
                 'المحلة',
@@ -675,7 +692,11 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
         labelText: label,
         border: const OutlineInputBorder(),
         filled: readOnly,
-        fillColor: readOnly ? Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3) : null,
+        fillColor: readOnly
+            ? Theme.of(
+                context,
+              ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3)
+            : null,
       ),
       validator: (v) {
         if (isRequired && !readOnly && (v == null || v.isEmpty)) return 'مطلوب';
@@ -748,6 +769,4 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
       ),
     );
   }
-
-
 }

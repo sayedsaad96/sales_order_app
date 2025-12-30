@@ -2,6 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:http/http.dart' as http;
+import 'package:csv/csv.dart';
+import 'dart:convert';
 
 // Bank Account Data Model
 class BankAccount {
@@ -30,40 +33,86 @@ class BankAccount {
   }
 }
 
-class BankAccountsPage extends StatelessWidget {
+class BankAccountsPage extends StatefulWidget {
   const BankAccountsPage({super.key});
 
-  // Bank accounts data
-  static final List<BankAccount> bankAccounts = [
-    BankAccount(
-      bankName: 'البنك الاهلي المصري',
-      branch: 'المحله الكبري',
-      accountName: 'مصنع الحفناوي للنسيج الدائري والتريكو والملابس الجاهزة',
-      accountNumber: '6053130666990103039',
-      iban: 'EG41000360531306669901030390',
-    ),
-    BankAccount(
-      bankName: 'بنك الامارات دبي',
-      branch: 'المحله الكبري',
-      accountName: 'مصنع الحفناوي للنسيج الدائري والتريكو والملابس الجاهزة',
-      accountNumber: '7329280999508',
-      iban: 'EG040014005800007329280999508',
-    ),
-    BankAccount(
-      bankName: 'ابو ظبي الاول مصر',
-      branch: 'مكرم عبيد - مصر',
-      accountName: 'مصنع الحفناوي للنسيج الدائري والتريكو والملابس الجاهزة',
-      accountNumber: '001643570002',
-      iban: 'EG040019000900000016435700002',
-    ),
-    BankAccount(
-      bankName: 'ابو ظبي الاول مصر',
-      branch: 'مكرم عبيد - مصر',
-      accountName: 'شركة انكس للتجارة',
-      accountNumber: '003169450001',
-      iban: 'EG760019000900000003169450001',
-    ),
-  ];
+  @override
+  State<BankAccountsPage> createState() => _BankAccountsPageState();
+}
+
+class _BankAccountsPageState extends State<BankAccountsPage> {
+  List<BankAccount> _bankAccounts = [];
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  // The Google Sheet URL (Export as CSV)
+  static const String _sheetUrl =
+      'https://docs.google.com/spreadsheets/d/1AKbsYP6EX9jDwSktzw-M6acTsl68al8rDz8B92Nt45A/export?format=csv';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchBankAccounts();
+  }
+
+  Future<void> _fetchBankAccounts() async {
+    try {
+      final response = await http.get(Uri.parse(_sheetUrl));
+
+      if (response.statusCode == 200) {
+        // Parse CSV
+        // Decode logic: Use utf8.decode to ensure Arabic text is displayed correctly.
+        final decodedBody = utf8.decode(response.bodyBytes);
+        final List<List<dynamic>> rows = const CsvToListConverter().convert(
+          decodedBody,
+        );
+
+        if (rows.isEmpty) {
+          setState(() {
+            _isLoading = false;
+            _errorMessage = 'لا توجد بيانات في الملف';
+          });
+          return;
+        }
+
+        final List<BankAccount> loadedAccounts = [];
+
+        // Skip header row (index 0) and iterate through data
+        for (int i = 1; i < rows.length; i++) {
+          final row = rows[i];
+          // Ensure the row has enough columns (at least 5 based on our structure)
+          // Structure: bank_name, branch, account_name, account_number, iban
+          if (row.length >= 5) {
+            loadedAccounts.add(
+              BankAccount(
+                bankName: row[0].toString(),
+                branch: row[1].toString(),
+                accountName: row[2].toString(),
+                accountNumber: row[3].toString(), // Ensure string
+                iban: row[4].toString(), // Ensure string
+              ),
+            );
+          }
+        }
+
+        if (mounted) {
+          setState(() {
+            _bankAccounts = loadedAccounts;
+            _isLoading = false;
+          });
+        }
+      } else {
+        throw Exception('Failed to load data: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'تعذر تحميل البيانات. تأكد من اتصالك بالإنترنت.\n$e';
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,26 +124,88 @@ class BankAccountsPage extends StatelessWidget {
           icon: const Icon(CupertinoIcons.back),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              setState(() {
+                _isLoading = true;
+                _errorMessage = null;
+              });
+              _fetchBankAccounts();
+            },
+            tooltip: 'تحديث',
+          ),
+        ],
       ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 800),
-          child: ListView.builder(
-            padding: const EdgeInsets.all(16.0),
-            itemCount: bankAccounts.length,
-            itemBuilder: (context, index) {
-              return _buildBankAccountCard(context, bankAccounts[index], index + 1);
-            },
-          ),
+          child: _buildBody(),
         ),
       ),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset('assets/images/logo.png', width: 100),
+            const SizedBox(height: 20),
+            CircularProgressIndicator(),
+          ],
+        ),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: Colors.amber),
+            const SizedBox(height: 16),
+            Text(
+              _errorMessage!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _isLoading = true;
+                  _errorMessage = null;
+                });
+                _fetchBankAccounts();
+              },
+              child: const Text('إعادة المحاولة'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_bankAccounts.isEmpty) {
+      return const Center(child: Text('لا توجد حسابات بنكية مضافة حالياً'));
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16.0),
+      itemCount: _bankAccounts.length,
+      itemBuilder: (context, index) {
+        return _buildBankAccountCard(context, _bankAccounts[index], index + 1);
+      },
     );
   }
 
   Widget _buildBankAccountCard(
     BuildContext context,
     BankAccount account,
-    int accountNumber,
+    int index,
   ) {
     return Card(
       elevation: 3,
@@ -118,7 +229,7 @@ class BankAccountsPage extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'حساب رقم $accountNumber',
+                      'حساب رقم $index',
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -136,11 +247,23 @@ class BankAccountsPage extends StatelessWidget {
             const Divider(height: 24),
 
             // Bank details
-            _buildDetailRow(CupertinoIcons.money_dollar_circle, 'البنك', account.bankName),
+            _buildDetailRow(
+              CupertinoIcons.money_dollar_circle,
+              'البنك',
+              account.bankName,
+            ),
             const SizedBox(height: 12),
-            _buildDetailRow(CupertinoIcons.location_solid, 'الفرع', account.branch),
+            _buildDetailRow(
+              CupertinoIcons.location_solid,
+              'الفرع',
+              account.branch,
+            ),
             const SizedBox(height: 12),
-            _buildDetailRow(CupertinoIcons.person, 'اسم الحساب', account.accountName),
+            _buildDetailRow(
+              CupertinoIcons.person,
+              'اسم الحساب',
+              account.accountName,
+            ),
             const SizedBox(height: 12),
             _buildCopyableDetailRow(
               context,

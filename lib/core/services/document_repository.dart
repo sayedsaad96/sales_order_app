@@ -8,28 +8,33 @@ class DocumentRepository {
   static const Duration _cacheTtl = Duration(hours: 24);
 
   Future<File> getPdf(String url, String filename) async {
+    final downloadUrl = _convertDriveUrl(url);
     final docsDir = await getApplicationDocumentsDirectory();
     final file = File('${docsDir.path}/$filename');
 
     bool shouldDownload = true;
 
     if (await file.exists()) {
-      final lastModified = await file.lastModified();
-      final difference = DateTime.now().difference(lastModified);
-
-      if (difference < _cacheTtl) {
-        // Cache is fresh, use it
-        shouldDownload = false;
-        // print('Using fresh cached file: $filename');
+      // 1. Check if file is a valid PDF
+      final isValidPdf = await _isValidPdf(file);
+      if (!isValidPdf) {
+        // print('Invalid PDF found in cache (HTML or corrupted). Deleting...');
+        await file.delete();
+        shouldDownload = true;
       } else {
-        // Cache is stale, try to update
-        // print('Cache is stale for: $filename, attempting update...');
+        // 2. Check TTL
+        final lastModified = await file.lastModified();
+        final difference = DateTime.now().difference(lastModified);
+
+        if (difference < _cacheTtl) {
+          shouldDownload = false;
+        }
       }
     }
 
     if (shouldDownload) {
       try {
-        final response = await http.get(Uri.parse(url));
+        final response = await http.get(Uri.parse(downloadUrl));
         if (response.statusCode == 200) {
           await file.writeAsBytes(response.bodyBytes, flush: true);
           // print('Downloaded and cached: $filename');
@@ -48,11 +53,42 @@ class DocumentRepository {
         if (await file.exists()) {
           // print('Fallback to stale cache (offline) for: $filename');
           return file;
+          // ignore: dead_code
         }
         rethrow;
       }
     }
 
     return file;
+  }
+
+  Future<bool> _isValidPdf(File file) async {
+    try {
+      if (await file.length() < 5) return false;
+      final bytes = await file.openRead(0, 5).first;
+      final header = String.fromCharCodes(bytes);
+      // More robust check: %PDF is often at start, but sometimes has BOM or whitespace
+      return header.contains('%PDF');
+    } catch (_) {
+      return false;
+    }
+  }
+
+  String _convertDriveUrl(String url) {
+    if (url.contains('drive.google.com')) {
+      // Extract ID from various formats
+      // 1. /file/d/ID/view
+      // 2. id=ID
+      RegExp regExp = RegExp(r'\/file\/d\/([a-zA-Z0-9_-]+)|id=([a-zA-Z0-9_-]+)');
+      Match? match = regExp.firstMatch(url);
+      
+      if (match != null) {
+        String? id = match.group(1) ?? match.group(2);
+        if (id != null) {
+          return 'https://drive.google.com/uc?export=download&id=$id';
+        }
+      }
+    }
+    return url;
   }
 }
