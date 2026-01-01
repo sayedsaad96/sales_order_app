@@ -223,6 +223,40 @@ class ReturnOrderPdfGenerator {
                 ),
               ],
             ),
+
+            
+             if (order.notes != null && order.notes!.isNotEmpty) ...[
+              pw.SizedBox(height: 20),
+              pw.Container(
+                width: double.infinity,
+                padding: const pw.EdgeInsets.all(10),
+                decoration: pw.BoxDecoration(
+                  color: PdfColors.white, // Changed to white as per user preference in previous tasks
+                  border: pw.Border.all(color: PdfColors.grey300),
+                  borderRadius: pw.BorderRadius.circular(8),
+                ),
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                     pw.Text(
+                      'ملاحظات:',
+                      style: pw.TextStyle(
+                        fontWeight: pw.FontWeight.bold,
+                        fontSize: 12,
+                        color: primaryColor,
+                      ),
+                       textDirection: pw.TextDirection.rtl,
+                    ),
+                    pw.SizedBox(height: 5),
+                    pw.Text(
+                      _fixArabic(order.notes!),
+                      style: const pw.TextStyle(fontSize: 10),
+                       textDirection: pw.TextDirection.rtl,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ];
         },
       ),

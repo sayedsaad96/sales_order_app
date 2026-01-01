@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:annex_sales_order/features/sales_order/data/models/sales_order.dart';
 
@@ -36,6 +37,13 @@ class InvoiceLocalDataSource {
       // Return empty list on error to prevent crash
       return [];
     }
+  }
+
+  ValueListenable<Box<SalesOrder>> getInvoicesListenable() {
+    if (!Hive.isBoxOpen(_boxName)) {
+      throw Exception('Box not open');
+    }
+    return Hive.box<SalesOrder>(_boxName).listenable();
   }
 
   Future<void> deleteInvoice(SalesOrder invoice) async {

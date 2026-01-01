@@ -21,20 +21,24 @@ class YarnSalesOrderAdapter extends TypeAdapter<YarnSalesOrder> {
       branch: fields[1] as String?,
       deliveryResponsibility: fields[2] as String,
       customerName: fields[3] as String?,
-      contactName: fields[10] is String ? fields[10] as String : null,
+      contactName: fields[18] as String?,
       region: fields[4] as String?,
       deliveryDate: fields[5] as DateTime?,
       orderDate: fields[6] as DateTime,
       deliveryPlace: fields[7] as String?,
       editQuantity: fields[8] as String?,
       mobileNumber: fields[17] as String?,
-      specifiedQuantity: fields[9] is bool ? fields[9] as bool : false,
+      specifiedQuantity: fields[19] == null ? false : fields[19] as bool,
       paymentMethod: fields[11] as String?,
       salesResponsible: fields[12] as String?,
-      items: fields[13] is List ? (fields[13] as List).cast<YarnSalesOrderItem>() : [],
-      installments: fields[14] is List ? (fields[14] as List).cast<YarnInstallment>() : [],
+      items: fields[13] == null
+          ? []
+          : (fields[13] as List).cast<YarnSalesOrderItem>(),
+      installments: fields[14] == null
+          ? []
+          : (fields[14] as List).cast<YarnInstallment>(),
       notes: fields[15] as String?,
-      orderTypes: fields[16] is List ? (fields[16] as List).cast<String>() : [],
+      orderTypes: fields[16] == null ? [] : (fields[16] as List).cast<String>(),
     );
   }
 
@@ -60,9 +64,9 @@ class YarnSalesOrderAdapter extends TypeAdapter<YarnSalesOrder> {
       ..write(obj.deliveryPlace)
       ..writeByte(8)
       ..write(obj.editQuantity)
-      ..writeByte(10)
+      ..writeByte(18)
       ..write(obj.contactName)
-      ..writeByte(9)
+      ..writeByte(19)
       ..write(obj.specifiedQuantity)
       ..writeByte(11)
       ..write(obj.paymentMethod)

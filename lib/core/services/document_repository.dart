@@ -4,8 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 
 class DocumentRepository {
-  // Time-To-Live: 24 Hours
-  static const Duration _cacheTtl = Duration(hours: 24);
+  // Time-To-Live: 7 Days
+  static const Duration _cacheTtl = Duration(days: 7);
 
   Future<File> getPdf(String url, String filename) async {
     final downloadUrl = _convertDriveUrl(url);

@@ -22,21 +22,21 @@ class YarnSalesOrder extends HiveObject {
   String? deliveryPlace;
   @HiveField(8)
   String? editQuantity;
-  @HiveField(10)
+  @HiveField(18)
   String? contactName;
-  @HiveField(9)
+  @HiveField(19, defaultValue: false)
   bool specifiedQuantity;
   @HiveField(11)
   String? paymentMethod;
   @HiveField(12)
   String? salesResponsible;
-  @HiveField(13)
+  @HiveField(13, defaultValue: [])
   List<YarnSalesOrderItem> items;
-  @HiveField(14)
+  @HiveField(14, defaultValue: [])
   List<YarnInstallment> installments;
   @HiveField(15)
   String? notes;
-  @HiveField(16)
+  @HiveField(16, defaultValue: [])
   List<String> orderTypes;
   @HiveField(17)
   String? mobileNumber;

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:annex_sales_order/features/sales_order/data/models/yarn_sales_order.dart';
 
@@ -39,6 +40,13 @@ class YarnInvoiceLocalDataSource {
     } catch (e) {
       return [];
     }
+  }
+
+  ValueListenable<Box<YarnSalesOrder>> getInvoicesListenable() {
+    if (!Hive.isBoxOpen(_boxName)) {
+      throw Exception('Box not open');
+    }
+    return Hive.box<YarnSalesOrder>(_boxName).listenable();
   }
 
   Map<String, List<YarnSalesOrder>> getInvoicesByCustomer() {

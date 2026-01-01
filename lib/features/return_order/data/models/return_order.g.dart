@@ -30,13 +30,14 @@ class ReturnOrderAdapter extends TypeAdapter<ReturnOrder> {
       returnReason: fields[10] as String?,
       deliveryDate: fields[11] as DateTime?,
       items: (fields[12] as List).cast<ReturnOrderItem>(),
+      notes: fields[13] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, ReturnOrder obj) {
     writer
-      ..writeByte(13)
+      ..writeByte(14)
       ..writeByte(0)
       ..write(obj.sn)
       ..writeByte(1)
@@ -62,7 +63,9 @@ class ReturnOrderAdapter extends TypeAdapter<ReturnOrder> {
       ..writeByte(11)
       ..write(obj.deliveryDate)
       ..writeByte(12)
-      ..write(obj.items);
+      ..write(obj.items)
+      ..writeByte(13)
+      ..write(obj.notes);
   }
 
   @override

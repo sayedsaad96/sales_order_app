@@ -42,51 +42,89 @@ class _PriceListPageState extends State<PriceListPage> {
   }
 
   Future<void> _fetchPriceLists() async {
+    final cacheFile = await _getCacheFile();
+
     try {
-      final response = await http.get(Uri.parse(_sheetUrl));
+      final response = await http
+          .get(Uri.parse(_sheetUrl))
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final decodedBody = utf8.decode(response.bodyBytes);
-        final List<List<dynamic>> rows = const CsvToListConverter().convert(
-          decodedBody,
-        );
-
-        final List<PriceListItem> loadedItems = [];
-
-        // Skip header row (index 0)
-        for (int i = 1; i < rows.length; i++) {
-          final row = rows[i];
-          if (row.length >= 2) {
-            final title = row[0].toString().trim();
-            final url = row[1].toString().trim();
-
-            if (title.isNotEmpty && url.isNotEmpty) {
-              loadedItems.add(PriceListItem(title: title, url: url));
-            }
-          }
-        }
-
-        if (mounted) {
-          setState(() {
-            _priceLists = loadedItems;
-            _isLoading = false;
-          });
-        }
+        await cacheFile.writeAsString(decodedBody); // Cache it
+        _parseAndLoad(decodedBody);
       } else {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-            _errorMessage = 'Failed to load price lists';
-          });
-        }
+        // Server error, try cache
+        await _loadFromCache(cacheFile, 'Server error: ${response.statusCode}');
       }
     } catch (e) {
+      // Network error, try cache
+      await _loadFromCache(cacheFile, 'No internet connection');
+    }
+  }
+
+  Future<File> _getCacheFile() async {
+    final dir = await getApplicationDocumentsDirectory();
+    return File('${dir.path}/price_list_cache.csv');
+  }
+
+  Future<void> _loadFromCache(File file, String errorMsg) async {
+    if (await file.exists()) {
+      try {
+        final content = await file.readAsString();
+        _parseAndLoad(content);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('عرض نسخة محفوظة offline ($errorMsg)')),
+          );
+        }
+      } catch (e) {
+        _showError(errorMsg);
+      }
+    } else {
+      _showError(errorMsg);
+    }
+  }
+
+  void _parseAndLoad(String csvContent) {
+    try {
+      final List<List<dynamic>> rows = const CsvToListConverter().convert(
+        csvContent,
+      );
+
+      final List<PriceListItem> loadedItems = [];
+
+      // Skip header row (index 0)
+      for (int i = 1; i < rows.length; i++) {
+        final row = rows[i];
+        if (row.length >= 2) {
+          final title = row[0].toString().trim();
+          final url = row[1].toString().trim();
+
+          if (title.isNotEmpty && url.isNotEmpty) {
+            loadedItems.add(PriceListItem(title: title, url: url));
+          }
+        }
+      }
+
       if (mounted) {
         setState(() {
+          _priceLists = loadedItems;
           _isLoading = false;
-          _errorMessage = 'Check internet connection';
+          _errorMessage = null; // Clear error if loaded successfully
         });
       }
+    } catch (e) {
+      _showError('Error parsing data');
+    }
+  }
+
+  void _showError(String msg) {
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = msg;
+      });
     }
   }
 
@@ -101,7 +139,7 @@ class _PriceListPageState extends State<PriceListPage> {
             tooltip: 'Menu',
           ),
         ),
-        title: const Text('قوائم الأسعار'),
+        title: const Text('Price Lists'),
         centerTitle: true,
         actions: [
           IconButton(

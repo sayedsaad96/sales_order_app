@@ -17,6 +17,7 @@ import 'package:annex_sales_order/features/return_order/data/models/return_order
 import 'package:annex_sales_order/features/return_order/data/datasources/return_order_local_data_source.dart';
 import 'package:annex_sales_order/features/sales_order/data/models/fabrics_cm_sales_order.dart';
 import 'package:annex_sales_order/features/sales_order/data/datasources/fabrics_cm_invoice_local_data_source.dart';
+import 'package:annex_sales_order/core/services/update_notification_service.dart';
 
 void main() async {
   runZonedGuarded<Future<void>>(
@@ -59,7 +60,11 @@ void main() async {
         // Initialize Return Order data source
         await ReturnOrderLocalDataSource().init();
         // Initialize Fabrics & CM data source
+        // Initialize Fabrics & CM data source
         await FabricsCmInvoiceLocalDataSource().init();
+
+        // Initialize Notification Service (Background checks)
+        await UpdateNotificationService().init();
       } catch (e, stack) {
         debugPrint('Initialization Error: $e\n$stack');
         // Consider showing a fallback UI here if critical init fails

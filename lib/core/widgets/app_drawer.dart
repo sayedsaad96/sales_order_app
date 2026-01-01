@@ -50,21 +50,6 @@ class AppDrawer extends StatelessWidget {
                 _buildSectionHeader('Main Menu'),
                 _buildModernMenuItem(
                   context,
-                  icon: CupertinoIcons.doc_text,
-                  title: 'Price Lists',
-                  subtitle: 'View pricing information',
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const PriceListPage(),
-                      ),
-                    );
-                  },
-                ),
-                _buildModernMenuItem(
-                  context,
                   icon: CupertinoIcons.square_list,
                   title: 'Essential Sales Order',
                   subtitle: 'Create essential orders',
@@ -158,6 +143,21 @@ class AppDrawer extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (context) => const AboutPage(),
+                      ),
+                    );
+                  },
+                ),
+                _buildModernMenuItem(
+                  context,
+                  icon: CupertinoIcons.doc_text,
+                  title: 'Price Lists',
+                  subtitle: 'View pricing information',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PriceListPage(),
                       ),
                     );
                   },

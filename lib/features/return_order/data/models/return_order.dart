@@ -43,6 +43,9 @@ class ReturnOrder extends HiveObject {
   @HiveField(12)
   List<ReturnOrderItem> items;
 
+  @HiveField(13)
+  String? notes;
+
   ReturnOrder({
     this.sn,
     this.category,
@@ -57,6 +60,7 @@ class ReturnOrder extends HiveObject {
     this.returnReason,
     this.deliveryDate,
     this.items = const [],
+    this.notes,
   });
   
   double get totalQuantity => items.fold(0, (sum, item) => sum + item.quantity);

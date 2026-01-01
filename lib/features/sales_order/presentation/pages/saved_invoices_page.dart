@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:flutter/foundation.dart';
 import 'package:annex_sales_order/features/sales_order/data/datasources/invoice_local_data_source.dart';
 import 'package:annex_sales_order/features/sales_order/data/models/sales_order.dart';
 import 'package:annex_sales_order/features/sales_order/presentation/pages/sales_order_page.dart';
@@ -26,6 +28,8 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
   List<String> _sortedCustomers = [];
   List<String> _filteredCustomers = [];
 
+  ValueListenable<Box<SalesOrder>>? _boxListenable;
+
   @override
   void initState() {
     super.initState();
@@ -43,17 +47,30 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
         },
       );
     });
+    
+    _setupBoxListener();
     _loadInvoices();
+  }
+
+  void _setupBoxListener() {
+    try {
+      _boxListenable = _invoiceDataSource.getInvoicesListenable();
+      _boxListenable?.addListener(_loadInvoices);
+    } catch (e) {
+      debugPrint('Failed to setup listener: $e');
+    }
   }
 
   @override
   void dispose() {
+    _boxListenable?.removeListener(_loadInvoices);
     _searchController.dispose();
     PerformanceUtils.cancelDebounce();
     super.dispose();
   }
 
   void _loadInvoices() {
+    if (!mounted) return;
     try {
       setState(() {
         _isLoading = true;

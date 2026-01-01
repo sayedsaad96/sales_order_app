@@ -218,7 +218,7 @@ class _AnalysisBarChartState extends State<AnalysisBarChart> {
                 borderData: FlBorderData(show: false),
                 barTouchData: BarTouchData(
                   touchTooltipData: BarTouchTooltipData(
-                    tooltipRoundedRadius: 8,
+
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
                       String type;
                       if (rodIndex == 0) {

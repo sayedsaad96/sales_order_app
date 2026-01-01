@@ -3,6 +3,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:csv/csv.dart';
 import 'dart:convert';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 
 import 'package:annex_sales_order/core/widgets/pdf_viewer_page.dart';
 import 'package:annex_sales_order/core/widgets/app_drawer.dart';
@@ -38,13 +40,50 @@ class _AboutPageState extends State<AboutPage> {
   }
 
   Future<void> _fetchPdfList() async {
+    final cacheFile = await _getCacheFile();
+
     try {
-      final response = await http.get(Uri.parse(_sheetUrl));
+      final response = await http.get(Uri.parse(_sheetUrl)).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final decodedBody = utf8.decode(response.bodyBytes);
+        await cacheFile.writeAsString(decodedBody); // Cache
+        _parseAndLoad(decodedBody);
+      } else {
+        await _loadFromCache(cacheFile, 'Server error: ${response.statusCode}');
+      }
+    } catch (e) {
+      await _loadFromCache(cacheFile, 'No internet connection');
+    }
+  }
+
+  Future<File> _getCacheFile() async {
+    final dir = await getApplicationDocumentsDirectory();
+    return File('${dir.path}/about_docs_cache.csv');
+  }
+
+  Future<void> _loadFromCache(File file, String errorMsg) async {
+    if (await file.exists()) {
+      try {
+        final content = await file.readAsString();
+        _parseAndLoad(content);
+        if (mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('عرض نسخة محفوظة offline ($errorMsg)')),
+          );
+        }
+      } catch (e) {
+        _showError(errorMsg);
+      }
+    } else {
+      _showError(errorMsg);
+    }
+  }
+
+  void _parseAndLoad(String csvContent) {
+    try {
         final List<List<dynamic>> rows = const CsvToListConverter().convert(
-          decodedBody,
+          csvContent,
         );
 
         final List<PdfDocumentItem> loadedDocs = [];
@@ -66,23 +105,20 @@ class _AboutPageState extends State<AboutPage> {
           setState(() {
             _pdfDocuments = loadedDocs;
             _isLoading = false;
+            _errorMessage = null;
           });
         }
-      } else {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-            _errorMessage = 'Failed to load documents';
-          });
-        }
-      }
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = 'Check internet connection';
-        });
-      }
+      _showError('Error parsing data');
+    }
+  }
+
+  void _showError(String msg) {
+     if (mounted) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = msg;
+      });
     }
   }
 

@@ -40,6 +40,7 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
   final _routeFromController = TextEditingController();
   final _routeToController = TextEditingController();
   final _returnReasonController = TextEditingController();
+  final _notesController = TextEditingController();
   DateTime? _deliveryDate;
 
   // Items
@@ -79,6 +80,7 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
     _routeFromController.text = order.routeFrom ?? '';
     _routeToController.text = order.routeTo ?? '';
     _returnReasonController.text = order.returnReason ?? '';
+    _notesController.text = order.notes ?? '';
     _deliveryDate = order.deliveryDate;
     if (order.items.isNotEmpty) {
       _items.addAll(order.items);
@@ -109,6 +111,7 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
     _routeFromController.dispose();
     _routeToController.dispose();
     _returnReasonController.dispose();
+    _notesController.dispose();
     _totalQuantityNotifier.dispose();
     super.dispose();
   }
@@ -301,6 +304,7 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
       ..routeFrom = _routeFromController.text
       ..routeTo = _routeToController.text
       ..returnReason = _returnReasonController.text
+      ..notes = _notesController.text
       ..deliveryDate = _deliveryDate
       ..items = List.from(_items);
 
@@ -450,6 +454,15 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
                                 ),
                               ],
                             ),
+                          ),
+                          const SizedBox(height: 20),
+
+                          // Notes Section
+                          _buildTextField(
+                            'ملاحظات',
+                            _notesController,
+                            isRequired: false,
+                            maxLines: 3,
                           ),
                           const SizedBox(height: 30),
 
@@ -684,10 +697,12 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
     TextEditingController controller, {
     bool readOnly = false,
     bool isRequired = true,
+    int maxLines = 1,
   }) {
     return TextFormField(
       controller: controller,
       readOnly: readOnly,
+      maxLines: maxLines,
       decoration: InputDecoration(
         labelText: label,
         border: const OutlineInputBorder(),
