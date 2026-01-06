@@ -202,8 +202,8 @@ class _CustomerInfoSectionState extends State<CustomerInfoSection> {
       initialValue: [
         'كاش',
         'تحويل بنكي',
-        'اجل اسبوعين ',
-        'اجل 3 اسابيع ',
+        'اجل اسبوعين',
+        'اجل 3 اسابيع',
         'اجل شهر',
         'اجل شهرين',
         'اجل 3 شهور',
@@ -212,8 +212,8 @@ class _CustomerInfoSectionState extends State<CustomerInfoSection> {
       items: [
         'كاش',
         'تحويل بنكي',
-        'اجل اسبوعين ',
-        'اجل 3 اسابيع ',
+        'اجل اسبوعين',
+        'اجل 3 اسابيع',
         'اجل شهر',
         'اجل شهرين',
         'اجل 3 شهور',

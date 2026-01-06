@@ -8,6 +8,7 @@ import 'package:annex_sales_order/features/analysis/presentation/widgets/analysi
 import 'package:annex_sales_order/features/analysis/presentation/widgets/analysis_pie_chart.dart';
 import 'package:annex_sales_order/features/analysis/presentation/widgets/analysis_bar_chart.dart';
 import 'package:annex_sales_order/features/analysis/presentation/widgets/analysis_customer_table.dart';
+import 'package:annex_sales_order/features/analysis/presentation/widgets/analysis_payment_method_chart.dart';
 
 class SalesAnalysisPage extends StatefulWidget {
   const SalesAnalysisPage({super.key});
@@ -115,66 +116,69 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
                 _refreshData(force: true);
                 await _metricsFuture;
               },
-              child: NestedScrollView(
-                headerSliverBuilder: (context, innerBoxIsScrolled) => [
-                  SliverAppBar(
-                    leading: Builder(
-                      builder: (context) => IconButton(
-                        icon: const Icon(CupertinoIcons.list_dash),
-                        onPressed: () => Scaffold.of(context).openDrawer(),
-                        tooltip: 'Menu',
+              child: ScrollConfiguration(
+                behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+                child: NestedScrollView(
+                  headerSliverBuilder: (context, innerBoxIsScrolled) => [
+                    SliverAppBar(
+                      leading: Builder(
+                        builder: (context) => IconButton(
+                          icon: const Icon(CupertinoIcons.list_dash),
+                          onPressed: () => Scaffold.of(context).openDrawer(),
+                          tooltip: 'Menu',
+                        ),
                       ),
-                    ),
-                    expandedHeight: 120,
-                    floating: true,
-                    pinned: true,
-                    title: const Text(
-                      'تحليل المبيعات',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    centerTitle: true,
-                    actions: [
-                      IconButton(
-                        icon: const Icon(CupertinoIcons.refresh),
-                        onPressed: () => _refreshData(force: true),
-                        tooltip: 'تحديث البيانات',
+                      expandedHeight: 120,
+                      floating: true,
+                      pinned: true,
+                      title: const Text(
+                        'تحليل المبيعات',
+                        style: TextStyle(fontWeight: FontWeight.bold),
                       ),
-                    ],
-                    flexibleSpace: FlexibleSpaceBar(
-                      background: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              theme.primaryColor,
-                              theme.primaryColor.withValues(alpha: 0.7),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+                      centerTitle: true,
+                      actions: [
+                        IconButton(
+                          icon: const Icon(CupertinoIcons.refresh),
+                          onPressed: () => _refreshData(force: true),
+                          tooltip: 'تحديث البيانات',
+                        ),
+                      ],
+                      flexibleSpace: FlexibleSpaceBar(
+                        background: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                theme.primaryColor,
+                                theme.primaryColor.withValues(alpha: 0.7),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    bottom: const TabBar(
-                      tabs: [
-                        Tab(text: 'إحصائياتي '),
-                        Tab(text: 'إحصائيات العملاء'),
-                      ],
-                      indicatorColor: Colors.white,
-                      indicatorWeight: 4,
-                      labelStyle: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.white30,
+                      bottom: const TabBar(
+                        tabs: [
+                          Tab(text: 'إحصائياتي '),
+                          Tab(text: 'إحصائيات العملاء'),
+                        ],
+                        indicatorColor: Colors.white,
+                        indicatorWeight: 4,
+                        labelStyle: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.white30,
+                        ),
+                        unselectedLabelStyle: TextStyle(fontSize: 14),
                       ),
-                      unselectedLabelStyle: TextStyle(fontSize: 14),
                     ),
-                  ),
-                ],
-                body: TabBarView(
-                  children: [
-                    _buildRepTab(metrics, theme, isDark),
-                    _buildCustomerTab(metrics, theme, isDark),
                   ],
+                  body: TabBarView(
+                    children: [
+                      _buildRepTab(metrics, theme, isDark),
+                      _buildCustomerTab(metrics, theme, isDark),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -231,7 +235,7 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
             children: [
               AnalysisSummaryCards(metrics: metrics, constraints: constraints),
               const SizedBox(height: 30),
-              if (useHorizontalLayout)
+              if (useHorizontalLayout) ...[
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -257,23 +261,38 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
                       ),
                     ),
                   ],
-                )
-              else
-                Column(
-                  children: [
-                    AnalysisGlassCard(
-                      title: 'توزيع القيمة حسب النوع',
-                      isDark: isDark,
-                      child: AnalysisPieChart(metrics: metrics, isDark: isDark),
-                    ),
-                    const SizedBox(height: 20),
-                    AnalysisGlassCard(
-                      title: 'عدد الفواتير ',
-                      isDark: isDark,
-                      child: AnalysisBarChart(metrics: metrics, isDark: isDark),
-                    ),
-                  ],
                 ),
+                const SizedBox(height: 20),
+                AnalysisGlassCard(
+                  title: 'توزيع طرق السداد (إجمالي)',
+                  isDark: isDark,
+                  child: AnalysisPaymentMethodChart(
+                    paymentMethods: metrics.ordersByPaymentMethod,
+                    isDark: isDark,
+                  ),
+                ),
+              ] else ...[
+                AnalysisGlassCard(
+                  title: 'توزيع القيمة حسب النوع',
+                  isDark: isDark,
+                  child: AnalysisPieChart(metrics: metrics, isDark: isDark),
+                ),
+                const SizedBox(height: 20),
+                AnalysisGlassCard(
+                  title: 'عدد الفواتير ',
+                  isDark: isDark,
+                  child: AnalysisBarChart(metrics: metrics, isDark: isDark),
+                ),
+                const SizedBox(height: 20),
+                AnalysisGlassCard(
+                   title: 'توزيع طرق السداد',
+                   isDark: isDark,
+                   child: AnalysisPaymentMethodChart(
+                     paymentMethods: metrics.ordersByPaymentMethod,
+                     isDark: isDark,
+                   ),
+                ),
+              ],
             ],
           ),
         );
@@ -340,7 +359,7 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
                       constraints: constraints,
                     ),
                     const SizedBox(height: 30),
-                    if (useHorizontalLayout)
+                    if (useHorizontalLayout) ...[
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -366,8 +385,17 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
                             ),
                           ),
                         ],
-                      )
-                    else
+                      ),
+                      const SizedBox(height: 20),
+                      AnalysisGlassCard(
+                        title: 'طرق سداد للعميل',
+                        isDark: isDark,
+                        child: AnalysisPaymentMethodChart(
+                          paymentMethods: custMetrics.getPaymentMethodsForCustomer(_selectedCustomer!),
+                          isDark: isDark,
+                        ),
+                      ),
+                    ] else ...[
                       Column(
                         children: [
                           AnalysisGlassCard(
@@ -387,8 +415,18 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
                               isDark: isDark,
                             ),
                           ),
+                          const SizedBox(height: 20),
+                          AnalysisGlassCard(
+                            title: 'طرق سداد للعميل',
+                            isDark: isDark,
+                            child: AnalysisPaymentMethodChart(
+                              paymentMethods: custMetrics.getPaymentMethodsForCustomer(_selectedCustomer!),
+                              isDark: isDark,
+                            ),
+                          ),
                         ],
                       ),
+                    ],
                   ],
                 ),
               );

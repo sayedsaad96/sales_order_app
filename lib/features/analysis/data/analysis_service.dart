@@ -39,6 +39,9 @@ class AnalysisMetrics {
   final int rawYarnCount;
   final int rawFabricCount;
 
+  final Map<String, int> ordersByPaymentMethod;
+  final Map<String, int> customerOrdersByPaymentMethod; // Inner map: {Customer: {Method: Count}} -> Simplified storage
+
   AnalysisMetrics({
     required this.salesByRep,
     required this.ordersByRep,
@@ -65,7 +68,21 @@ class AnalysisMetrics {
     required this.rawGeneralCount,
     required this.rawYarnCount,
     required this.rawFabricCount,
+    required this.ordersByPaymentMethod,
+    required this.customerOrdersByPaymentMethod,
   });
+
+  Map<String, int> getPaymentMethodsForCustomer(String customerName) {
+    final result = <String, int>{};
+    final prefix = '$customerName|';
+    for (var entry in customerOrdersByPaymentMethod.entries) {
+      if (entry.key.startsWith(prefix)) {
+        final method = entry.key.substring(prefix.length);
+        result[method] = entry.value;
+      }
+    }
+    return result;
+  }
 }
 
 class AnalysisData {
@@ -93,6 +110,35 @@ class AnalysisService {
 
   static String _formatDate(DateTime date) => 
       "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+
+  static String _normalizePaymentMethod(String? method) {
+    if (method == null) return 'غير محدد';
+    
+    final trimmed = method.trim();
+    if (trimmed.isEmpty) return 'غير محدد';
+
+    final mapping = {
+      // English to Arabic mapping
+      'Cash': 'كاش',
+      'Bank transfer': 'تحويل بنكي',
+      'Credit': 'اجل شهر',
+      'Cheque': 'تحويل بنكي',
+      'Other': 'كاش',
+      
+      // Short Arabic to Full Arabic mapping
+      'شهر': 'اجل شهر',
+      'اسبوعين': 'اجل اسبوعين',
+      '3 اسابيع': 'اجل 3 اسابيع',
+      'شهرين': 'اجل شهرين',
+      '3 شهور': 'اجل 3 شهور',
+
+      // Fix trailing space versions
+      'اجل اسبوعين ': 'اجل اسبوعين',
+      'اجل 3 اسابيع ': 'اجل 3 اسابيع',
+    };
+
+    return mapping[trimmed] ?? trimmed;
+  }
 
   static Future<AnalysisMetrics> getMetrics({
     String? salesRepName, 
@@ -178,6 +224,11 @@ class AnalysisService {
     int totalFabricOrders = 0;
     int totalReturns = 0;
 
+    final ordersByPaymentMethod = <String, int>{};
+    final customerOrdersByPaymentMethod = <String, int>{}; // We'll store as "Customer|Method" for simplicity or similar
+    // Actually, a better way for the model is to have a structured way or just filter when needed.
+    // Given the request is "analysis in each customer", storing as "Customer|Method" count is okay.
+
     final salesRepName = data.salesRepFilter;
     final customerName = data.customerFilter;
 
@@ -211,6 +262,11 @@ class AnalysisService {
       totalGeneralSales += val;
       totalOrders++;
       totalGeneralOrders++;
+
+      final method = _normalizePaymentMethod(order.paymentMethod);
+      ordersByPaymentMethod[method] = (ordersByPaymentMethod[method] ?? 0) + 1;
+      final custMethodKey = '$customer|$method';
+      customerOrdersByPaymentMethod[custMethodKey] = (customerOrdersByPaymentMethod[custMethodKey] ?? 0) + 1;
     }
 
     // Process Yarn Sales
@@ -243,6 +299,11 @@ class AnalysisService {
       totalYarnSales += val;
       totalOrders++;
       totalYarnOrders++;
+
+      final method = _normalizePaymentMethod(order.paymentMethod);
+      ordersByPaymentMethod[method] = (ordersByPaymentMethod[method] ?? 0) + 1;
+      final custMethodKey = '$customer|$method';
+      customerOrdersByPaymentMethod[custMethodKey] = (customerOrdersByPaymentMethod[custMethodKey] ?? 0) + 1;
     }
 
     // Process Fabric Sales
@@ -275,6 +336,11 @@ class AnalysisService {
       totalFabricSales += val;
       totalOrders++;
       totalFabricOrders++;
+
+      final method = _normalizePaymentMethod(order.paymentMethod);
+      ordersByPaymentMethod[method] = (ordersByPaymentMethod[method] ?? 0) + 1;
+      final custMethodKey = '$customer|$method';
+      customerOrdersByPaymentMethod[custMethodKey] = (customerOrdersByPaymentMethod[custMethodKey] ?? 0) + 1;
     }
 
     // Process Returns
@@ -319,6 +385,8 @@ class AnalysisService {
       rawGeneralCount: data.sales.length,
       rawYarnCount: data.yarnSales.length,
       rawFabricCount: data.fabricSales.length,
+      ordersByPaymentMethod: ordersByPaymentMethod,
+      customerOrdersByPaymentMethod: customerOrdersByPaymentMethod,
     );
   }
 

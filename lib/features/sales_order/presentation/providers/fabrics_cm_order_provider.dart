@@ -9,11 +9,26 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
 class FabricsCmOrderProvider extends ChangeNotifier {
+  FabricsCmOrderProvider({this.existingOrder}) {
+    if (existingOrder != null) {
+      _loadExistingOrder(existingOrder!);
+    } else {
+      resetForm();
+    }
+    
+    // Global Price Listeners
+    globalYarnPriceController.addListener(notifyListeners);
+    globalLycraPriceController.addListener(notifyListeners);
+    globalMfgPriceController.addListener(notifyListeners);
+  }
+
+  FabricsCmSalesOrder? existingOrder;
+
   // Header Controllers
   final snController = TextEditingController();
   final customerNameController = TextEditingController();
   final salesResponsibleController = TextEditingController();
-  final paymentMethodController = TextEditingController(); // used as dropdown in UI typically, but keeping string here
+  final paymentMethodController = TextEditingController(); 
   final notesController = TextEditingController();
   
   // Header State
@@ -37,36 +52,57 @@ class FabricsCmOrderProvider extends ChangeNotifier {
   final List<TextEditingController> stitchLengthControllers = [];
 
   final List<TextEditingController> spinningCompanyControllers = [];
-  final List<TextEditingController> priceControllers = [];
 
-  double get totalValue {
+  final TextEditingController globalYarnPriceController = TextEditingController(text: '0.0');
+  final TextEditingController globalLycraPriceController = TextEditingController(text: '0.0');
+  final TextEditingController globalMfgPriceController = TextEditingController(text: '0.0');
+
+  double get baseTotal {
     double total = 0;
+    bool isFabric = orderTypes['قماش'] ?? false;
+    bool isCm = orderTypes['CM'] ?? false;
+    
+    double globalYarnPrice = double.tryParse(globalYarnPriceController.text) ?? 0.0;
+    double globalLycraPrice = double.tryParse(globalLycraPriceController.text) ?? 0.0;
+    double globalMfgPrice = double.tryParse(globalMfgPriceController.text) ?? 0.0;
+
     for (int i = 0; i < quantityControllers.length; i++) {
         final qty = double.tryParse(quantityControllers[i].text) ?? 0;
-        final price = double.tryParse(priceControllers[i].text) ?? 0;
-        total += qty * price;
+        final lycraPercent = double.tryParse(lycraPercentControllers[i].text) ?? 0;
+
+        if (isFabric) {
+            double lycraDecimal = lycraPercent / 100;
+            double yarnQty = qty * (1 - lycraDecimal);
+            double lycraQty = qty * lycraDecimal;
+            double yarnValue = yarnQty * globalYarnPrice;
+            double lycraValue = lycraQty * globalLycraPrice;
+            total += yarnValue + lycraValue + (globalMfgPrice * qty);
+        } else if (isCm) {
+            double lycraDecimal = lycraPercent / 100;
+            double lycraQty = qty * lycraDecimal;
+            double lycraValue = lycraQty * globalLycraPrice;
+            total += lycraValue + (globalMfgPrice * qty);
+        } else {
+            total += qty * globalMfgPrice;
+        }
     }
     return total;
   }
 
+  double get wasteTotal {
+    bool isFabric = orderTypes['قماش'] ?? false;
+    if (!isFabric) return 0.0;
+    return baseTotal * 0.02;
+  }
+
+  double get totalValue => baseTotal + wasteTotal;
+
   bool _isSaving = false;
   bool get isSaving => _isSaving;
 
-  final FabricsCmSalesOrder? existingOrder;
-
-  FabricsCmOrderProvider({this.existingOrder}) {
-    _init();
-  }
-
-  void _init() {
-    if (existingOrder != null) {
-      _loadExistingOrder(existingOrder!);
-    } else {
-      resetForm();
-    }
-  }
 
   void _loadExistingOrder(FabricsCmSalesOrder order) {
+    existingOrder = order;
     snController.text = order.sn ?? '';
     customerNameController.text = order.customerName ?? '';
     paymentMethodController.text = order.paymentMethod ?? '';
@@ -75,52 +111,31 @@ class FabricsCmOrderProvider extends ChangeNotifier {
     
     orderDate = order.orderDate;
     deliveryDate = order.deliveryDate;
-    orderType = order.orderType;
+    
+    globalYarnPriceController.text = order.yarnPrice.toString();
+    globalLycraPriceController.text = order.lycraPrice.toString();
+    globalMfgPriceController.text = order.manufacturingPrice.toString();
+
     paymentMethod = _mapPaymentMethod(order.paymentMethod);
     selectedBranch = order.branch;
 
     // Reset types
-    orderTypes = {'قماش': false, 'CM': false};
-    if (order.orderTypesList.isNotEmpty) {
-      for (var t in order.orderTypesList) {
-        if (orderTypes.containsKey(t)) {
-            orderTypes[t] = true;
-        }
+    orderTypes.clear();
+    orderTypes['قماش'] = false;
+    orderTypes['CM'] = false;
+    for (var t in order.orderTypesList) {
+      if (orderTypes.containsKey(t)) {
+          orderTypes[t] = true;
       }
-    } else if (order.orderType != null) {
-       // Legacy fallback
+    }
+    
+    // Legacy fallback if list is empty
+    if (order.orderTypesList.isEmpty && order.orderType != null) {
        if (order.orderType!.contains('قماش')) orderTypes['قماش'] = true;
        if (order.orderType!.contains('CM')) orderTypes['CM'] = true;
     }
 
-    // Clear dynamic lists before loading
-    for (var c in quantityControllers) { c.dispose(); }
-
-    for (var c in lycraNumControllers) { c.dispose(); }
-    for (var c in lycraPercentControllers) { c.dispose(); }
-    for (var c in fabricTypeControllers) { c.dispose(); }
-    for (var c in yarnCountControllers) { c.dispose(); }
-    for (var c in yarnTypeControllers) { c.dispose(); }
-    for (var c in gaugeControllers) { c.dispose(); }
-    for (var c in widthControllers) { c.dispose(); }
-    for (var c in stitchLengthControllers) { c.dispose(); }
-
-    for (var c in spinningCompanyControllers) { c.dispose(); }
-    for (var c in priceControllers) { c.dispose(); }
-
-    quantityControllers.clear();
-
-    lycraNumControllers.clear();
-    lycraPercentControllers.clear();
-    fabricTypeControllers.clear();
-    yarnCountControllers.clear();
-    yarnTypeControllers.clear();
-    gaugeControllers.clear();
-    widthControllers.clear();
-    stitchLengthControllers.clear();
-
-    spinningCompanyControllers.clear();
-    priceControllers.clear();
+    _disposeAllItemControllers();
 
     for (var item in order.items) {
       addItem(
@@ -136,7 +151,6 @@ class FabricsCmOrderProvider extends ChangeNotifier {
         stitchLen: item.stitchLength,
 
         spinCo: item.spinningCompany,
-        price: item.price,
       );
     }
     
@@ -149,6 +163,10 @@ class FabricsCmOrderProvider extends ChangeNotifier {
     paymentMethodController.clear();
     notesController.clear();
     
+    globalYarnPriceController.text = '0.0';
+    globalLycraPriceController.text = '0.0';
+    globalMfgPriceController.text = '0.0';
+    
     orderDate = DateTime.now();
     deliveryDate = null;
     orderType = null;
@@ -156,34 +174,7 @@ class FabricsCmOrderProvider extends ChangeNotifier {
     selectedBranch = 'المحلة';
     orderTypes = {'قماش': true, 'CM': false};
 
-    // Clear dynamic lists
-    for (var c in quantityControllers) { c.dispose(); }
-
-    for (var c in lycraNumControllers) { c.dispose(); }
-    for (var c in lycraPercentControllers) { c.dispose(); }
-    for (var c in fabricTypeControllers) { c.dispose(); }
-    for (var c in yarnCountControllers) { c.dispose(); }
-    for (var c in yarnTypeControllers) { c.dispose(); }
-    for (var c in gaugeControllers) { c.dispose(); }
-    for (var c in widthControllers) { c.dispose(); }
-    for (var c in stitchLengthControllers) { c.dispose(); }
-
-    for (var c in spinningCompanyControllers) { c.dispose(); }
-    for (var c in priceControllers) { c.dispose(); }
-
-    quantityControllers.clear();
-
-    lycraNumControllers.clear();
-    lycraPercentControllers.clear();
-    fabricTypeControllers.clear();
-    yarnCountControllers.clear();
-    yarnTypeControllers.clear();
-    gaugeControllers.clear();
-    widthControllers.clear();
-    stitchLengthControllers.clear();
-
-    spinningCompanyControllers.clear();
-    priceControllers.clear();
+    _disposeAllItemControllers();
 
     _loadCurrentUser();
     addItem(); // Add one initial empty row
@@ -215,7 +206,6 @@ class FabricsCmOrderProvider extends ChangeNotifier {
     double? stitchLen,
 
     String? spinCo,
-    double? price,
   }) {
     final qc = TextEditingController(text: quantity?.toString() ?? '');
 
@@ -229,11 +219,10 @@ class FabricsCmOrderProvider extends ChangeNotifier {
     final slc = TextEditingController(text: stitchLen?.toString() ?? '');
 
     final scc = TextEditingController(text: spinCo ?? '');
-    final pc = TextEditingController(text: price?.toString() ?? '');
 
     void listener() => notifyListeners();
     qc.addListener(listener);
-    pc.addListener(listener);
+    lpc.addListener(listener); // Lycra % also affects total
 
     quantityControllers.add(qc);
 
@@ -247,7 +236,6 @@ class FabricsCmOrderProvider extends ChangeNotifier {
     stitchLengthControllers.add(slc);
 
     spinningCompanyControllers.add(scc);
-    priceControllers.add(pc);
 
     notifyListeners();
   }
@@ -266,7 +254,6 @@ class FabricsCmOrderProvider extends ChangeNotifier {
       stitchLengthControllers[index].dispose();
 
       spinningCompanyControllers[index].dispose();
-      priceControllers[index].dispose();
 
       quantityControllers.removeAt(index);
 
@@ -280,7 +267,6 @@ class FabricsCmOrderProvider extends ChangeNotifier {
       stitchLengthControllers.removeAt(index);
 
       spinningCompanyControllers.removeAt(index);
-      priceControllers.removeAt(index);
 
       notifyListeners();
     }
@@ -328,10 +314,8 @@ class FabricsCmOrderProvider extends ChangeNotifier {
     final List<FabricsCmLineItem> items = [];
     for (int i = 0; i < quantityControllers.length; i++) {
         final qty = double.tryParse(quantityControllers[i].text) ?? 0;
-        final price = double.tryParse(priceControllers[i].text) ?? 0;
-        
         // Basic validation: skip empty rows where key fields are missing
-        if (qty > 0 || price > 0) {
+        if (qty > 0) {
            items.add(FabricsCmLineItem(
              quantity: qty,
 
@@ -345,7 +329,6 @@ class FabricsCmOrderProvider extends ChangeNotifier {
              stitchLength: double.tryParse(stitchLengthControllers[i].text) ?? 0,
 
              spinningCompany: spinningCompanyControllers[i].text,
-             price: price,
            ));
         }
     }
@@ -364,6 +347,9 @@ class FabricsCmOrderProvider extends ChangeNotifier {
       orderDate: orderDate,
       notes: notesController.text,
       items: items,
+      yarnPrice: double.tryParse(globalYarnPriceController.text) ?? 0.0,
+      lycraPrice: double.tryParse(globalLycraPriceController.text) ?? 0.0,
+      manufacturingPrice: double.tryParse(globalMfgPriceController.text) ?? 0.0,
     );
   }
 
@@ -375,7 +361,12 @@ class FabricsCmOrderProvider extends ChangeNotifier {
   }
 
   Future<bool> saveOrder(BuildContext context, GlobalKey<FormState> formKey) async {
-    if (!formKey.currentState!.validate()) return false;
+    if (!formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('يرجى ملء جميع الحقول المطلوبة بشكل صحيح')),
+      );
+      return false;
+    }
     
     // Check if at least one item
     bool hasItems = false;
@@ -411,6 +402,9 @@ class FabricsCmOrderProvider extends ChangeNotifier {
           existingOrder!.orderDate = newOrderData.orderDate;
           existingOrder!.notes = newOrderData.notes;
           existingOrder!.items = newOrderData.items;
+          existingOrder!.yarnPrice = newOrderData.yarnPrice;
+          existingOrder!.lycraPrice = newOrderData.lycraPrice;
+          existingOrder!.manufacturingPrice = newOrderData.manufacturingPrice;
           
           await existingOrder!.save();
       } else {
@@ -433,7 +427,12 @@ class FabricsCmOrderProvider extends ChangeNotifier {
   }
 
   Future<void> generatePdf(BuildContext context, GlobalKey<FormState> formKey) async {
-      if (!formKey.currentState!.validate()) return;
+      if (!formKey.currentState!.validate()) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('يرجى ملء جميع الحقول المطلوبة بشكل صحيح قبل إنشاء PDF')),
+        );
+        return;
+      }
       
       showDialog(
         context: context,
@@ -485,6 +484,9 @@ class FabricsCmOrderProvider extends ChangeNotifier {
            existingOrder!.orderDate = newOrderData.orderDate;
            existingOrder!.items = newOrderData.items;
            existingOrder!.notes = newOrderData.notes;
+           existingOrder!.yarnPrice = newOrderData.yarnPrice;
+           existingOrder!.lycraPrice = newOrderData.lycraPrice;
+           existingOrder!.manufacturingPrice = newOrderData.manufacturingPrice;
            await existingOrder!.save();
         } else {
            await FabricsCmInvoiceLocalDataSource().saveInvoice(newOrderData);
@@ -541,8 +543,17 @@ class FabricsCmOrderProvider extends ChangeNotifier {
     paymentMethodController.dispose();
     notesController.dispose();
     
-    for (var c in quantityControllers) { c.dispose(); }
+    globalYarnPriceController.dispose();
+    globalLycraPriceController.dispose();
+    globalMfgPriceController.dispose();
 
+    _disposeAllItemControllers();
+    
+    super.dispose();
+  }
+
+  void _disposeAllItemControllers() {
+    for (var c in quantityControllers) { c.dispose(); }
     for (var c in lycraNumControllers) { c.dispose(); }
     for (var c in lycraPercentControllers) { c.dispose(); }
     for (var c in fabricTypeControllers) { c.dispose(); }
@@ -551,10 +562,17 @@ class FabricsCmOrderProvider extends ChangeNotifier {
     for (var c in gaugeControllers) { c.dispose(); }
     for (var c in widthControllers) { c.dispose(); }
     for (var c in stitchLengthControllers) { c.dispose(); }
-
     for (var c in spinningCompanyControllers) { c.dispose(); }
-    for (var c in priceControllers) { c.dispose(); }
-    
-    super.dispose();
+
+    quantityControllers.clear();
+    lycraNumControllers.clear();
+    lycraPercentControllers.clear();
+    fabricTypeControllers.clear();
+    yarnCountControllers.clear();
+    yarnTypeControllers.clear();
+    gaugeControllers.clear();
+    widthControllers.clear();
+    stitchLengthControllers.clear();
+    spinningCompanyControllers.clear();
   }
 }

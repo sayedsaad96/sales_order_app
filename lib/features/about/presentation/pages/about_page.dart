@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 
 import 'package:annex_sales_order/core/widgets/pdf_viewer_page.dart';
+import 'package:annex_sales_order/core/services/update_notification_service.dart';
 import 'package:annex_sales_order/core/widgets/app_drawer.dart';
 import 'package:annex_sales_order/features/about/presentation/pages/bank_accounts_page.dart';
 
@@ -49,6 +50,7 @@ class _AboutPageState extends State<AboutPage> {
         final decodedBody = utf8.decode(response.bodyBytes);
         await cacheFile.writeAsString(decodedBody); // Cache
         _parseAndLoad(decodedBody);
+        UpdateNotificationService().silentlyUpdateMetadata();
       } else {
         await _loadFromCache(cacheFile, 'Server error: ${response.statusCode}');
       }

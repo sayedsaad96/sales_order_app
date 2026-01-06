@@ -211,6 +211,7 @@ class _FabricsCmOrderPageState extends State<FabricsCmOrderPage> {
                       child: _buildTextField(
                         provider.customerNameController,
                         'اسم العميل',
+                        isRequired: true,
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -243,17 +244,36 @@ class _FabricsCmOrderPageState extends State<FabricsCmOrderPage> {
     String label, {
     bool readOnly = false,
     int maxLines = 1,
-    bool isRequired = true,
+    bool isRequired = false,
+    bool isNumeric = false,
   }) {
-    return TextFormField(
-      controller: controller,
-      readOnly: readOnly,
-      maxLines: maxLines,
-      decoration: InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
+    return Focus(
+      onFocusChange: (hasFocus) {
+        if (isNumeric && !hasFocus && controller.text.isEmpty) {
+          controller.text = '0.0';
+        }
+      },
+      child: TextFormField(
+        controller: controller,
+        readOnly: readOnly,
+        maxLines: maxLines,
+        keyboardType: isNumeric ? const TextInputType.numberWithOptions(decimal: true) : null,
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+        ),
+        onTap: () {
+          if (isNumeric && (controller.text == '0.0' || controller.text == '0')) {
+            controller.clear();
+          }
+        },
+        validator: (val) {
+          if (isRequired && (val?.trim().isEmpty ?? true)) {
+            return 'مطلوب';
+          }
+          return null;
+        },
       ),
-      validator: (val) => isRequired && (val?.isEmpty ?? true) ? 'مطلوب' : null,
     );
   }
 
@@ -263,8 +283,8 @@ class _FabricsCmOrderPageState extends State<FabricsCmOrderPage> {
           [
             'كاش',
             'تحويل بنكي',
-            'اجل اسبوعين ',
-            'اجل 3 اسابيع ',
+            'اجل اسبوعين',
+            'اجل 3 اسابيع',
             'اجل شهر',
             'اجل شهرين',
             'اجل 3 شهور',
@@ -278,8 +298,8 @@ class _FabricsCmOrderPageState extends State<FabricsCmOrderPage> {
       items: [
         'كاش',
         'تحويل بنكي',
-        'اجل اسبوعين ',
-        'اجل 3 اسابيع ',
+        'اجل اسبوعين',
+        'اجل 3 اسابيع',
         'اجل شهر',
         'اجل شهرين',
         'اجل 3 شهور',
@@ -342,13 +362,15 @@ class _FabricsCmOrderPageState extends State<FabricsCmOrderPage> {
                     ),
                     if (provider.quantityControllers.length > 1)
                       IconButton(
-                        icon: const Icon(CupertinoIcons.delete, color: Colors.red),
+                        icon: const Icon(
+                          CupertinoIcons.delete,
+                          color: Colors.red,
+                        ),
                         onPressed: () => provider.removeItem(index),
                       ),
                   ],
                 ),
                 const Divider(),
-                // Row 1: Qty, Price, Total (Auto calc)
                 Row(
                   children: [
                     Expanded(
@@ -356,19 +378,12 @@ class _FabricsCmOrderPageState extends State<FabricsCmOrderPage> {
                         provider.quantityControllers[index],
                         'الكمية (كجم)',
                         isRequired: true,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _buildTextField(
-                        provider.priceControllers[index],
-                        'السعر',
-                        isRequired: true,
+                        isNumeric: true,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 8), // Qty, Price, Total (Auto calc)
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
                   child: Text(
@@ -391,42 +406,38 @@ class _FabricsCmOrderPageState extends State<FabricsCmOrderPage> {
                       _buildTextField(
                         provider.yarnCountControllers[index],
                         'نمرة الغزل',
-                        isRequired: true,
                       ),
                       _buildTextField(
                         provider.lycraNumControllers[index],
                         'نمرة الليكرا',
-                        isRequired: true,
                       ),
                       _buildTextField(
                         provider.lycraPercentControllers[index],
                         'نسبة الليكرا',
-                        isRequired: true,
+                        isNumeric: true,
                       ),
                       _buildTextField(
                         provider.fabricTypeControllers[index],
                         'نوع القماش',
-                        isRequired: true,
                       ),
                       _buildTextField(
                         provider.widthControllers[index],
                         'البوصة',
-                        isRequired: true,
+                        isNumeric: true,
                       ),
                       _buildTextField(
                         provider.gaugeControllers[index],
                         'الجوج',
-                        isRequired: true,
+                        isNumeric: true,
                       ),
                       _buildTextField(
                         provider.stitchLengthControllers[index],
                         'طول الغرزة',
-                        isRequired: true,
+                        isNumeric: true,
                       ),
                       _buildTextField(
                         provider.spinningCompanyControllers[index],
                         'شركة الغزل',
-                        isRequired: true,
                       ),
                     ];
 
@@ -497,23 +508,92 @@ class _FabricsCmOrderPageState extends State<FabricsCmOrderPage> {
           ),
           const SizedBox(height: 20),
           Card(
+            elevation: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    ' التكلفة',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildTextField(
+                          provider.globalYarnPriceController,
+                          'سعر الغزل',
+                          isRequired: true,
+                          isNumeric: true,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _buildTextField(
+                          provider.globalLycraPriceController,
+                          'سعر الليكرا',
+                          isRequired: true,
+                          isNumeric: true,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _buildTextField(
+                          provider.globalMfgPriceController,
+                          'المصنعية',
+                          isRequired: true,
+                          isNumeric: true,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Card(
             color: Theme.of(context).colorScheme.secondaryContainer,
             child: Padding(
               padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Column(
                 children: [
-                  const Text(
-                    'الإجمالي الكلي:',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('إجمالي السعر:'),
+                      Text(provider.baseTotal.toStringAsFixed(2)),
+                    ],
                   ),
-                  Text(
-                    provider.totalValue.toStringAsFixed(2),
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
+                  if (provider.wasteTotal > 0) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('الهالك (2%):'),
+                        Text(provider.wasteTotal.toStringAsFixed(2)),
+                      ],
                     ),
+                  ],
+                  const Divider(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'الإجمالي النهائي:',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        provider.totalValue.toStringAsFixed(2),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

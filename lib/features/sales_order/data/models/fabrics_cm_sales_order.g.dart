@@ -28,13 +28,16 @@ class FabricsCmSalesOrderAdapter extends TypeAdapter<FabricsCmSalesOrder> {
       notes: fields[8] as String?,
       branch: fields[9] as String?,
       orderTypesList: (fields[10] as List).cast<String>(),
+      yarnPrice: fields[11] as double?,
+      lycraPrice: fields[12] as double?,
+      manufacturingPrice: fields[13] as double?,
     );
   }
 
   @override
   void write(BinaryWriter writer, FabricsCmSalesOrder obj) {
     writer
-      ..writeByte(11)
+      ..writeByte(14)
       ..writeByte(0)
       ..write(obj.sn)
       ..writeByte(1)
@@ -56,7 +59,13 @@ class FabricsCmSalesOrderAdapter extends TypeAdapter<FabricsCmSalesOrder> {
       ..writeByte(9)
       ..write(obj.branch)
       ..writeByte(10)
-      ..write(obj.orderTypesList);
+      ..write(obj.orderTypesList)
+      ..writeByte(11)
+      ..write(obj.yarnPrice)
+      ..writeByte(12)
+      ..write(obj.lycraPrice)
+      ..writeByte(13)
+      ..write(obj.manufacturingPrice);
   }
 
   @override
@@ -82,23 +91,22 @@ class FabricsCmLineItemAdapter extends TypeAdapter<FabricsCmLineItem> {
     };
     return FabricsCmLineItem(
       quantity: fields[0] as double,
-      lycraNumber: fields[2] as String,
-      lycraPercentage: fields[3] as double,
-      fabricType: fields[4] as String,
-      yarnCount: fields[5] as String,
-      yarnType: fields[6] as String,
-      gauge: fields[7] as int,
-      widthInches: fields[8] as double,
-      stitchLength: fields[9] as double,
-      spinningCompany: fields[11] as String,
-      price: fields[12] as double,
+      lycraNumber: fields[2] as String?,
+      lycraPercentage: fields[3] as double?,
+      fabricType: fields[4] as String?,
+      yarnCount: fields[5] as String?,
+      yarnType: fields[6] as String?,
+      gauge: fields[7] as int?,
+      widthInches: fields[8] as double?,
+      stitchLength: fields[9] as double?,
+      spinningCompany: fields[11] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, FabricsCmLineItem obj) {
     writer
-      ..writeByte(11)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.quantity)
       ..writeByte(2)
@@ -118,9 +126,7 @@ class FabricsCmLineItemAdapter extends TypeAdapter<FabricsCmLineItem> {
       ..writeByte(9)
       ..write(obj.stitchLength)
       ..writeByte(11)
-      ..write(obj.spinningCompany)
-      ..writeByte(12)
-      ..write(obj.price);
+      ..write(obj.spinningCompany);
   }
 
   @override

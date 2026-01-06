@@ -16,6 +16,8 @@ import 'package:annex_sales_order/features/splash/presentation/pages/splash_scre
 import 'package:annex_sales_order/features/return_order/data/models/return_order.dart';
 import 'package:annex_sales_order/features/return_order/data/datasources/return_order_local_data_source.dart';
 import 'package:annex_sales_order/features/sales_order/data/models/fabrics_cm_sales_order.dart';
+import 'package:annex_sales_order/features/sales_order/data/models/quotation.dart'; // Quotation Model
+import 'package:annex_sales_order/features/sales_order/data/datasources/quotation_local_data_source.dart';
 import 'package:annex_sales_order/features/sales_order/data/datasources/fabrics_cm_invoice_local_data_source.dart';
 import 'package:annex_sales_order/core/services/update_notification_service.dart';
 
@@ -51,6 +53,10 @@ void main() async {
         Hive.registerAdapter(FabricsCmSalesOrderAdapter());
         Hive.registerAdapter(FabricsCmLineItemAdapter());
 
+        // Register Quotation adapters
+        Hive.registerAdapter(QuotationAdapter());
+        Hive.registerAdapter(QuotationItemAdapter());
+
         final userDataSource = UserLocalDataSource();
         await userDataSource.init();
         await InvoiceLocalDataSource().init();
@@ -60,8 +66,10 @@ void main() async {
         // Initialize Return Order data source
         await ReturnOrderLocalDataSource().init();
         // Initialize Fabrics & CM data source
-        // Initialize Fabrics & CM data source
         await FabricsCmInvoiceLocalDataSource().init();
+        
+        // Initialize Quotation data source
+        await QuotationLocalDataSource().init();
 
         // Initialize Notification Service (Background checks)
         await UpdateNotificationService().init();

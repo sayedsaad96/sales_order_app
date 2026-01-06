@@ -105,20 +105,18 @@ class FabricsCmPdfGenerator {
               border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
               defaultVerticalAlignment: pw.TableCellVerticalAlignment.middle,
               columnWidths: const {
-                0: pw.FixedColumnWidth(55), // السعر
-                1: pw.FixedColumnWidth(100), // اسم شركة الغزل
-                2: pw.FixedColumnWidth(85), // طول الغرزه
-                3: pw.FixedColumnWidth(40), // الجوج
-                4: pw.FixedColumnWidth(45), // البوصه
-                5: pw.FlexColumnWidth(3), // مواصفة القماش
-                6: pw.FixedColumnWidth(55), // الكميه (كجم)
+                0: pw.FixedColumnWidth(100), // اسم شركة الغزل
+                1: pw.FixedColumnWidth(85), // طول الغرزه
+                2: pw.FixedColumnWidth(40), // الجوج
+                3: pw.FixedColumnWidth(45), // البوصه
+                4: pw.FlexColumnWidth(3), // مواصفة القماش
+                5: pw.FixedColumnWidth(55), // الكميه (كجم)
               },
               children: [
                 // Header
                 pw.TableRow(
                   decoration: pw.BoxDecoration(color: primaryColor),
                   children: [
-                    _buildTableHeader('السعر'),
                     _buildTableHeader('اسم شركة الغزل', '(مصنعيات فقط)'),
                     _buildTableHeader('طول الغرزه', '(وزن المتر مربع قبل الصباغه)'),
                     _buildTableHeader('الجوج'),
@@ -137,17 +135,16 @@ class FabricsCmPdfGenerator {
                       color: isEven ? PdfColors.white : accentColor,
                     ),
                     children: [
-                       _buildTableCell(numberFormat.format(item.price)),
-                       _buildTableCell(item.spinningCompany),
-                       _buildTableCell(numberFormat.format(item.stitchLength)),
-                       _buildTableCell(item.gauge.toString()),
-                       _buildTableCell(numberFormat.format(item.widthInches)),
+                       _buildTableCell(item.spinningCompany ?? ''),
+                       _buildTableCell(numberFormat.format(item.stitchLength ?? 0.0)),
+                       _buildTableCell((item.gauge ?? 0).toString()),
+                       _buildTableCell(numberFormat.format(item.widthInches ?? 0.0)),
                        _buildTableCell(
-                         'نوع الغزل: ${item.yarnType}\n'
-                         'نمرة الغزل: ${item.yarnCount}\n'
-                         'نوع القماش: ${item.fabricType}\n'
-                         'نسبة الليكرا: ${item.lycraPercentage}%\n'
-                         'نمرة الليكرا: ${item.lycraNumber}'
+                         'نوع الغزل: ${item.yarnType ?? ''}\n'
+                         'نمرة الغزل: ${item.yarnCount ?? ''}\n'
+                         'نوع القماش: ${item.fabricType ?? ''}\n'
+                         'نسبة الليكرا: ${item.lycraPercentage ?? 0.0}%\n'
+                         'نمرة الليكرا: ${item.lycraNumber ?? ''}'
                        ),
                        _buildTableCell(numberFormat.format(item.quantity)),
                     ],
@@ -157,29 +154,64 @@ class FabricsCmPdfGenerator {
             ),
 
             pw.SizedBox(height: 10),
+            
+            // Global pricing params summary before total
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.end,
+              children: [
+                pw.Text(
+                   'سعر الغزل: ${numberFormat.format(order.yarnPrice)} | '
+                   'سعر الليكرا: ${numberFormat.format(order.lycraPrice)} | '
+                   'المصنعية/CM: ${numberFormat.format(order.manufacturingPrice)}',
+                   style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+                   textDirection: pw.TextDirection.rtl,
+                ),
+              ],
+            ),
+            pw.SizedBox(height: 5),
 
-            // Footer
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.end,
               children: [
                 pw.Container(
-                  padding: const pw.EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 10,
-                  ),
+                  padding: const pw.EdgeInsets.all(10),
                   color: lightGrey,
-                  child: pw.Row(
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.end,
                     children: [
-                      pw.Text(
-                        'الإجمالي الكلي: ',
-                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                      pw.Row(
+                        mainAxisSize: pw.MainAxisSize.min,
+                        children: [
+                          pw.Text('إجمالي السعر: '),
+                          pw.Text(numberFormat.format(order.baseTotal)),
+                        ],
                       ),
-                      pw.Text(
-                        numberFormat.format(order.totalValue),
-                        style: pw.TextStyle(
-                          fontWeight: pw.FontWeight.bold,
-                          color: primaryColor,
+                      if (order.wasteTotal > 0) ...[
+                        pw.SizedBox(height: 4),
+                        pw.Row(
+                          mainAxisSize: pw.MainAxisSize.min,
+                          children: [
+                            pw.Text('الهالك (2%): '),
+                            pw.Text(numberFormat.format(order.wasteTotal)),
+                          ],
                         ),
+                      ],
+                      pw.Divider(color: primaryColor),
+                      pw.Row(
+                        mainAxisSize: pw.MainAxisSize.min,
+                        children: [
+                          pw.Text(
+                            'الإجمالي النهائي: ',
+                            style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                          ),
+                          pw.Text(
+                            numberFormat.format(order.totalValue),
+                            style: pw.TextStyle(
+                              fontWeight: pw.FontWeight.bold,
+                              color: primaryColor,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

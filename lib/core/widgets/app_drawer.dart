@@ -11,6 +11,7 @@ import 'package:annex_sales_order/features/about/presentation/pages/about_page.d
 import 'package:annex_sales_order/features/analysis/presentation/pages/sales_analysis_page.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:annex_sales_order/features/sales_order/presentation/pages/saved_quotations_page.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -92,6 +93,21 @@ class AppDrawer extends StatelessWidget {
                       MaterialPageRoute(
                         builder: (context) =>
                             const SalesOrderContainerPage(initialIndex: 2),
+                      ),
+                    );
+                  },
+                ),
+                _buildModernMenuItem(
+                  context,
+                  icon: CupertinoIcons.doc_text,
+                  title: 'Quotations',
+                  subtitle: 'Create & view quotations',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SavedQuotationsPage(),
                       ),
                     );
                   },

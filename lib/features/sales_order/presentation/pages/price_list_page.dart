@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 
 import 'package:share_plus/share_plus.dart';
 import 'package:annex_sales_order/core/services/document_repository.dart';
+import 'package:annex_sales_order/core/services/update_notification_service.dart';
 import 'package:annex_sales_order/core/widgets/pdf_viewer_page.dart';
 import 'package:annex_sales_order/core/widgets/app_drawer.dart';
 
@@ -53,6 +54,7 @@ class _PriceListPageState extends State<PriceListPage> {
         final decodedBody = utf8.decode(response.bodyBytes);
         await cacheFile.writeAsString(decodedBody); // Cache it
         _parseAndLoad(decodedBody);
+        UpdateNotificationService().silentlyUpdateMetadata();
       } else {
         // Server error, try cache
         await _loadFromCache(cacheFile, 'Server error: ${response.statusCode}');

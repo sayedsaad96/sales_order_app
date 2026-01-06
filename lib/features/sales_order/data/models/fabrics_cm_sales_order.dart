@@ -28,6 +28,13 @@ class FabricsCmSalesOrder extends HiveObject {
   @HiveField(10)
   List<String> orderTypesList; // Replaces orderType string logically
 
+  @HiveField(11)
+  double? yarnPrice;
+  @HiveField(12)
+  double? lycraPrice;
+  @HiveField(13)
+  double? manufacturingPrice;
+
   FabricsCmSalesOrder({
     this.sn,
     this.customerName,
@@ -40,9 +47,36 @@ class FabricsCmSalesOrder extends HiveObject {
     this.notes,
     this.branch,
     this.orderTypesList = const [],
+    this.yarnPrice,
+    this.lycraPrice,
+    this.manufacturingPrice,
   });
 
-  double get totalValue => items.fold(0, (sum, item) => sum + item.value);
+  double get baseTotal {
+    bool isFabric = orderTypesList.contains('قماش');
+    bool isCm = orderTypesList.contains('CM');
+    return items.fold(0.0, (sum, item) => sum + item.calculateBaseValue(
+      isFabric, 
+      isCm, 
+      globalYarnPrice: yarnPrice ?? 0.0,
+      globalLycraPrice: lycraPrice ?? 0.0,
+      globalMfgPrice: manufacturingPrice ?? 0.0,
+    ));
+  }
+
+  double get wasteTotal {
+    bool isFabric = orderTypesList.contains('قماش');
+    bool isCm = orderTypesList.contains('CM');
+    return items.fold(0.0, (sum, item) => sum + item.calculateWaste(
+      isFabric, 
+      isCm, 
+      globalYarnPrice: yarnPrice ?? 0.0,
+      globalLycraPrice: lycraPrice ?? 0.0,
+      globalMfgPrice: manufacturingPrice ?? 0.0,
+    ));
+  }
+
+  double get totalValue => baseTotal + wasteTotal;
 }
 
 @HiveType(typeId: 9)
@@ -51,42 +85,88 @@ class FabricsCmLineItem extends HiveObject {
   double quantity;
 
   @HiveField(2)
-  String lycraNumber;
+  String? lycraNumber;
   @HiveField(3)
-  double lycraPercentage;
+  double? lycraPercentage;
   @HiveField(4)
-  String fabricType;
+  String? fabricType;
   @HiveField(5)
-  String yarnCount;
+  String? yarnCount;
   @HiveField(6)
-  String yarnType;
+  String? yarnType;
   @HiveField(7)
-  int gauge;
+  int? gauge;
   @HiveField(8)
-  double widthInches;
+  double? widthInches;
   @HiveField(9)
-  double stitchLength;
+  double? stitchLength;
 
   @HiveField(11)
-  String spinningCompany;
-  @HiveField(12)
-  double price;
+  String? spinningCompany;
 
   FabricsCmLineItem({
     this.quantity = 0.0,
-
-    this.lycraNumber = '',
+    this.lycraNumber,
     this.lycraPercentage = 0.0,
-    this.fabricType = '',
-    this.yarnCount = '',
-    this.yarnType = '',
+    this.fabricType,
+    this.yarnCount,
+    this.yarnType,
     this.gauge = 0,
     this.widthInches = 0.0,
     this.stitchLength = 0.0,
-
-    this.spinningCompany = '',
-    this.price = 0.0,
+    this.spinningCompany,
   });
 
-  double get value => quantity * price;
+  double calculateBaseValue(
+    bool isFabric,
+    bool isCm, {
+    double globalYarnPrice = 0.0,
+    double globalLycraPrice = 0.0,
+    double globalMfgPrice = 0.0,
+  }) {
+    if (isFabric) {
+      double lycraDecimal = (lycraPercentage ?? 0.0) / 100;
+      double yarnQty = quantity * (1 - lycraDecimal);
+      double lycraQty = quantity * lycraDecimal;
+      return (yarnQty * globalYarnPrice) + (lycraQty * globalLycraPrice) + (globalMfgPrice * quantity);
+    } else if (isCm) {
+      double lycraDecimal = (lycraPercentage ?? 0.0) / 100;
+      return (quantity * lycraDecimal * globalLycraPrice) + (globalMfgPrice * quantity);
+    }
+    return quantity * globalMfgPrice;
+  }
+
+  double calculateWaste(
+    bool isFabric,
+    bool isCm, {
+    double globalYarnPrice = 0.0,
+    double globalLycraPrice = 0.0,
+    double globalMfgPrice = 0.0,
+  }) {
+    if (isFabric) {
+      return calculateBaseValue(isFabric, isCm,
+              globalYarnPrice: globalYarnPrice,
+              globalLycraPrice: globalLycraPrice,
+              globalMfgPrice: globalMfgPrice) *
+          0.02;
+    }
+    return 0.0;
+  }
+
+  double calculateValue(
+    bool isFabric,
+    bool isCm, {
+    double globalYarnPrice = 0.0,
+    double globalLycraPrice = 0.0,
+    double globalMfgPrice = 0.0,
+  }) {
+    return calculateBaseValue(isFabric, isCm,
+            globalYarnPrice: globalYarnPrice,
+            globalLycraPrice: globalLycraPrice,
+            globalMfgPrice: globalMfgPrice) +
+        calculateWaste(isFabric, isCm,
+            globalYarnPrice: globalYarnPrice,
+            globalLycraPrice: globalLycraPrice,
+            globalMfgPrice: globalMfgPrice);
+  }
 }
