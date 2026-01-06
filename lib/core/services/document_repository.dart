@@ -1,12 +1,17 @@
-
+import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 
 class DocumentRepository {
-  // No fixed TTL. We check for updates every time (with optimize HEAD request).
+  // Check for updates once every 24 hours
+  static const Duration _cacheTtl = Duration(hours: 24);
+  Map<String, int> _metadata = {};
+  bool _metadataLoaded = false;
 
   Future<File> getPdf(String url, String filename) async {
+    await _ensureMetadataLoaded();
+
     final downloadUrl = _convertDriveUrl(url);
     final docsDir = await getApplicationDocumentsDirectory();
     final file = File('${docsDir.path}/$filename');
@@ -22,26 +27,37 @@ class DocumentRepository {
         try { await file.delete(); } catch (_) {}
         shouldDownload = true;
       } else {
-        // 2. Online Check (Fail-safe)
-        try {
-          // Short timeout for check. If it fails, assume local is good.
-          final remoteSize = await _getRemoteFileSize(downloadUrl);
-          
-          if (remoteSize != null) {
-            final localSize = await file.length();
-            if (remoteSize == localSize) {
-              shouldDownload = false; // Up to date
+        // 2. Check TTL
+        final lastChecked = _metadata[filename];
+        final now = DateTime.now().millisecondsSinceEpoch;
+        
+        if (lastChecked != null && (now - lastChecked) < _cacheTtl.inMilliseconds) {
+           // Within TTL, skip network check
+           shouldDownload = false;
+        } else {
+           // 3. Online Check (Fail-safe)
+          try {
+            // Short timeout for check. If it fails, assume local is good.
+            final remoteSize = await _getRemoteFileSize(downloadUrl);
+            
+            if (remoteSize != null) {
+              final localSize = await file.length();
+              if (remoteSize == localSize) {
+                // Up to date
+                _updateMetadata(filename); // Reset TTL
+                shouldDownload = false; 
+              } else {
+                shouldDownload = true; // Changed
+              }
             } else {
-              shouldDownload = true; // Changed
+              // Null means: Offline, or 403/429, or unknown size.
+              // In all cases, prefer existing local file.
+              shouldDownload = false;
             }
-          } else {
-            // Null means: Offline, or 403/429, or unknown size.
-            // In all cases, prefer existing local file.
+          } catch (e) {
+            // Network error? Offline? Use local cache.
             shouldDownload = false;
           }
-        } catch (e) {
-          // Network error? Offline? Use local cache.
-          shouldDownload = false;
         }
       }
     }
@@ -49,6 +65,7 @@ class DocumentRepository {
     if (shouldDownload) {
         try {
           await _downloadFile(downloadUrl, file);
+          await _updateMetadata(filename);
         } catch (e) {
              // download failed.
              // If we have a valid local file, return it.
@@ -62,6 +79,38 @@ class DocumentRepository {
     return file;
   }
   
+  Future<void> _ensureMetadataLoaded() async {
+    if (_metadataLoaded) return;
+    
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/pdf_cache_metadata.json');
+      if (await file.exists()) {
+        final content = await file.readAsString();
+        final Map<String, dynamic> json = jsonDecode(content);
+        _metadata = json.map((key, value) => MapEntry(key, value as int));
+      }
+    } catch (_) {
+      // Ignore load errors, start fresh
+    }
+    _metadataLoaded = true;
+  }
+
+  Future<void> _updateMetadata(String filename) async {
+    _metadata[filename] = DateTime.now().millisecondsSinceEpoch;
+    await _saveMetadata();
+  }
+
+  Future<void> _saveMetadata() async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/pdf_cache_metadata.json');
+      await file.writeAsString(jsonEncode(_metadata));
+    } catch (_) {
+      // Ignore save errors
+    }
+  }
+
   Future<void> _downloadFile(String url, File targetFile) async {
      // Download to a temporary file first (atomic write)
      // This prevents corrupting the existing cache file if download fails midway.

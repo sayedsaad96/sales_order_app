@@ -120,10 +120,11 @@ class AnalysisService {
     final mapping = {
       // English to Arabic mapping
       'Cash': 'كاش',
-      'Bank transfer': 'تحويل بنكي',
+      'Bank transfer': 'كاش',
       'Credit': 'اجل شهر',
-      'Cheque': 'تحويل بنكي',
+      'Cheque': 'كاش',
       'Other': 'كاش',
+      'تحويل بنكي': 'كاش',
       
       // Short Arabic to Full Arabic mapping
       'شهر': 'اجل شهر',

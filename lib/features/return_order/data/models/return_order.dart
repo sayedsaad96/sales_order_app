@@ -63,6 +63,40 @@ class ReturnOrder extends HiveObject {
     this.notes,
   });
   
+  Map<String, dynamic> toJson() => {
+    'sn': sn,
+    'category': category,
+    'branch': branch,
+    'customerName': customerName,
+    'returnDate': returnDate.toIso8601String(),
+    'region': region,
+    'returnResponsible': returnResponsible,
+    'deliveryCostPayer': deliveryCostPayer,
+    'routeFrom': routeFrom,
+    'routeTo': routeTo,
+    'returnReason': returnReason,
+    'deliveryDate': deliveryDate?.toIso8601String(),
+    'items': items.map((e) => e.toJson()).toList(),
+    'notes': notes,
+  };
+
+  factory ReturnOrder.fromJson(Map<String, dynamic> json) => ReturnOrder(
+    sn: json['sn'],
+    category: json['category'],
+    branch: json['branch'],
+    customerName: json['customerName'],
+    returnDate: DateTime.parse(json['returnDate']),
+    region: json['region'],
+    returnResponsible: json['returnResponsible'],
+    deliveryCostPayer: json['deliveryCostPayer'] ?? 'الشركة',
+    routeFrom: json['routeFrom'],
+    routeTo: json['routeTo'],
+    returnReason: json['returnReason'],
+    deliveryDate: json['deliveryDate'] != null ? DateTime.parse(json['deliveryDate']) : null,
+    items: (json['items'] as List?)?.map((e) => ReturnOrderItem.fromJson(e)).toList() ?? [],
+    notes: json['notes'],
+  );
+
   double get totalQuantity => items.fold(0, (sum, item) => sum + item.quantity);
 }
 
@@ -82,4 +116,16 @@ class ReturnOrderItem extends HiveObject {
     this.quantity = 0.0,
     this.unit = '',
   });
+
+  Map<String, dynamic> toJson() => {
+    'item': item,
+    'quantity': quantity,
+    'unit': unit,
+  };
+
+  factory ReturnOrderItem.fromJson(Map<String, dynamic> json) => ReturnOrderItem(
+    item: json['item'] ?? '',
+    quantity: (json['quantity'] as num).toDouble(),
+    unit: json['unit'] ?? '',
+  );
 }

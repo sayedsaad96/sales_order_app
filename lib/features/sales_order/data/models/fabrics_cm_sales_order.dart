@@ -52,6 +52,40 @@ class FabricsCmSalesOrder extends HiveObject {
     this.manufacturingPrice,
   });
 
+  Map<String, dynamic> toJson() => {
+    'sn': sn,
+    'customerName': customerName,
+    'salesResponsible': salesResponsible,
+    'paymentMethod': paymentMethod,
+    'deliveryDate': deliveryDate?.toIso8601String(),
+    'orderType': orderType,
+    'items': items.map((e) => e.toJson()).toList(),
+    'orderDate': orderDate.toIso8601String(),
+    'notes': notes,
+    'branch': branch,
+    'orderTypesList': orderTypesList,
+    'yarnPrice': yarnPrice,
+    'lycraPrice': lycraPrice,
+    'manufacturingPrice': manufacturingPrice,
+  };
+
+  factory FabricsCmSalesOrder.fromJson(Map<String, dynamic> json) => FabricsCmSalesOrder(
+    sn: json['sn'],
+    customerName: json['customerName'],
+    salesResponsible: json['salesResponsible'],
+    paymentMethod: json['paymentMethod'],
+    deliveryDate: json['deliveryDate'] != null ? DateTime.parse(json['deliveryDate']) : null,
+    orderType: json['orderType'],
+    items: (json['items'] as List?)?.map((e) => FabricsCmLineItem.fromJson(e)).toList() ?? [],
+    orderDate: DateTime.parse(json['orderDate']),
+    notes: json['notes'],
+    branch: json['branch'],
+    orderTypesList: List<String>.from(json['orderTypesList'] ?? []),
+    yarnPrice: (json['yarnPrice'] as num?)?.toDouble(),
+    lycraPrice: (json['lycraPrice'] as num?)?.toDouble(),
+    manufacturingPrice: (json['manufacturingPrice'] as num?)?.toDouble(),
+  );
+
   double get baseTotal {
     bool isFabric = orderTypesList.contains('قماش');
     bool isCm = orderTypesList.contains('CM');
@@ -116,6 +150,32 @@ class FabricsCmLineItem extends HiveObject {
     this.stitchLength = 0.0,
     this.spinningCompany,
   });
+
+  Map<String, dynamic> toJson() => {
+    'quantity': quantity,
+    'lycraNumber': lycraNumber,
+    'lycraPercentage': lycraPercentage,
+    'fabricType': fabricType,
+    'yarnCount': yarnCount,
+    'yarnType': yarnType,
+    'gauge': gauge,
+    'widthInches': widthInches,
+    'stitchLength': stitchLength,
+    'spinningCompany': spinningCompany,
+  };
+
+  factory FabricsCmLineItem.fromJson(Map<String, dynamic> json) => FabricsCmLineItem(
+    quantity: (json['quantity'] as num).toDouble(),
+    lycraNumber: json['lycraNumber'],
+    lycraPercentage: (json['lycraPercentage'] as num?)?.toDouble(),
+    fabricType: json['fabricType'],
+    yarnCount: json['yarnCount'],
+    yarnType: json['yarnType'],
+    gauge: json['gauge'],
+    widthInches: (json['widthInches'] as num?)?.toDouble(),
+    stitchLength: (json['stitchLength'] as num?)?.toDouble(),
+    spinningCompany: json['spinningCompany'],
+  );
 
   double calculateBaseValue(
     bool isFabric,

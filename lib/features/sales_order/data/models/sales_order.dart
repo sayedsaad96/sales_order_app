@@ -50,6 +50,40 @@ class SalesOrder extends HiveObject {
     this.notes,
   });
 
+  Map<String, dynamic> toJson() => {
+    'sn': sn,
+    'branch': branch,
+    'orderTypes': orderTypes,
+    'customerName': customerName,
+    'region': region,
+    'deliveryIncluded': deliveryIncluded,
+    'deliveryDate': deliveryDate?.toIso8601String(),
+    'orderDate': orderDate.toIso8601String(),
+    'salesResponsible': salesResponsible,
+    'paymentMethod': paymentMethod,
+    'deliveryPlace': deliveryPlace,
+    'items': items.map((e) => e.toJson()).toList(),
+    'category': category,
+    'notes': notes,
+  };
+
+  factory SalesOrder.fromJson(Map<String, dynamic> json) => SalesOrder(
+    sn: json['sn'],
+    branch: json['branch'],
+    orderTypes: List<String>.from(json['orderTypes'] ?? []),
+    customerName: json['customerName'],
+    region: json['region'],
+    deliveryIncluded: json['deliveryIncluded'] ?? false,
+    deliveryDate: json['deliveryDate'] != null ? DateTime.parse(json['deliveryDate']) : null,
+    orderDate: DateTime.parse(json['orderDate']),
+    salesResponsible: json['salesResponsible'],
+    paymentMethod: json['paymentMethod'],
+    deliveryPlace: json['deliveryPlace'],
+    items: (json['items'] as List?)?.map((e) => SalesOrderItem.fromJson(e)).toList() ?? [],
+    category: json['category'],
+    notes: json['notes'],
+  );
+
   double get totalValue => items.fold(0, (sum, item) => sum + item.value);
 }
 
@@ -74,6 +108,22 @@ class SalesOrderItem extends HiveObject {
     this.price = 0.0,
     this.category,
   });
+
+  Map<String, dynamic> toJson() => {
+    'itemName': itemName,
+    'quantity': quantity,
+    'unit': unit,
+    'price': price,
+    'category': category,
+  };
+
+  factory SalesOrderItem.fromJson(Map<String, dynamic> json) => SalesOrderItem(
+    itemName: json['itemName'] ?? '',
+    quantity: json['quantity'] ?? 0,
+    unit: json['unit'] ?? '',
+    price: (json['price'] ?? 0.0).toDouble(),
+    category: json['category'],
+  );
 
   double get value => quantity * price;
 }

@@ -15,6 +15,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _mobileController = TextEditingController();
+  final _emailController = TextEditingController();
   final _userDataSource = UserLocalDataSource();
 
   @override
@@ -28,6 +29,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     if (user != null) {
       _nameController.text = user.fullName;
       _mobileController.text = user.mobileNumber;
+      _emailController.text = user.email ?? '';
     }
   }
 
@@ -37,6 +39,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         final user = UserModel(
           fullName: _nameController.text,
           mobileNumber: _mobileController.text,
+          email: _emailController.text.isNotEmpty ? _emailController.text : null,
         );
         await _userDataSource.saveUser(user);
 
@@ -60,6 +63,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   void dispose() {
     _nameController.dispose();
     _mobileController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
@@ -119,6 +123,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         }
                         return null;
                       },
+                    ),
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      controller: _emailController,
+                      decoration: const InputDecoration(
+                        labelText: 'البريد الإلكتروني (اختياري)',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(CupertinoIcons.mail),
+                      ),
+                      keyboardType: TextInputType.emailAddress,
                     ),
                     const SizedBox(height: 30),
                     SizedBox(

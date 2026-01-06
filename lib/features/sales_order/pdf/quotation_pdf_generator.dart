@@ -4,6 +4,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:intl/intl.dart' as intl;
 import 'package:annex_sales_order/features/sales_order/data/models/quotation.dart';
+import 'package:annex_sales_order/features/user/data/datasources/user_local_data_source.dart';
 
 class QuotationPdfGenerator {
   static Future<pw.Document> generate(Quotation quotation) async {
@@ -338,6 +339,12 @@ class QuotationPdfGenerator {
   }
 
   static pw.Widget _buildProfessionalFooter(pw.Context context, PdfColor color) {
+    // Fetch user details locally
+    // Since Pdf widgets build synchronously, we rely on the synchronous getUser from Hive
+    // Note: Hive box must be open, which is ensured by app initialization.
+    final user = UserLocalDataSource().getUser();
+    final email = (user?.email != null && user!.email!.isNotEmpty) ? user.email! : 'sales@annexeg.com';
+
     return pw.Container(
         margin: const pw.EdgeInsets.only(top: 20),
         child: pw.Column(
@@ -349,7 +356,7 @@ class QuotationPdfGenerator {
                      children: [
                           pw.Text('Annex Group', style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: color)),
                           pw.Text('Page ${context.pageNumber} of ${context.pagesCount}', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey500)),
-                          pw.Text('sales@annexeg.com', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+                          pw.Text(email, style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
                      ]
                  )
             ]

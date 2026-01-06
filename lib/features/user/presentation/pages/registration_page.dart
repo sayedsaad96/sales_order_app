@@ -15,6 +15,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _mobileController = TextEditingController();
+  final _emailController = TextEditingController();
   final _userDataSource = UserLocalDataSource();
 
   Future<void> _register() async {
@@ -23,6 +24,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
         final user = UserModel(
           fullName: _nameController.text,
           mobileNumber: _mobileController.text,
+          email: _emailController.text.isNotEmpty ? _emailController.text : null,
         );
         await _userDataSource.saveUser(user);
 
@@ -45,6 +47,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
   void dispose() {
     _nameController.dispose();
     _mobileController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
@@ -101,6 +104,16 @@ class _RegistrationPageState extends State<RegistrationPage> {
                         }
                         return null;
                       },
+                    ),
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      controller: _emailController,
+                      decoration: const InputDecoration(
+                        labelText: 'البريد الإلكتروني (اختياري)',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(CupertinoIcons.mail),
+                      ),
+                      keyboardType: TextInputType.emailAddress,
                     ),
                     const SizedBox(height: 30),
                     SizedBox(

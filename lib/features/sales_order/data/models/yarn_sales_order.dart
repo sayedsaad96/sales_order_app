@@ -62,6 +62,48 @@ class YarnSalesOrder extends HiveObject {
     this.orderTypes = const [],
   });
 
+  Map<String, dynamic> toJson() => {
+    'sn': sn,
+    'branch': branch,
+    'deliveryResponsibility': deliveryResponsibility,
+    'customerName': customerName,
+    'contactName': contactName,
+    'region': region,
+    'deliveryDate': deliveryDate?.toIso8601String(),
+    'orderDate': orderDate.toIso8601String(),
+    'deliveryPlace': deliveryPlace,
+    'editQuantity': editQuantity,
+    'mobileNumber': mobileNumber,
+    'specifiedQuantity': specifiedQuantity,
+    'paymentMethod': paymentMethod,
+    'salesResponsible': salesResponsible,
+    'items': items.map((e) => e.toJson()).toList(),
+    'installments': installments.map((e) => e.toJson()).toList(),
+    'notes': notes,
+    'orderTypes': orderTypes,
+  };
+
+  factory YarnSalesOrder.fromJson(Map<String, dynamic> json) => YarnSalesOrder(
+    sn: json['sn'],
+    branch: json['branch'],
+    deliveryResponsibility: json['deliveryResponsibility'] ?? 'العميل',
+    customerName: json['customerName'],
+    contactName: json['contactName'],
+    region: json['region'],
+    deliveryDate: json['deliveryDate'] != null ? DateTime.parse(json['deliveryDate']) : null,
+    orderDate: DateTime.parse(json['orderDate']),
+    deliveryPlace: json['deliveryPlace'],
+    editQuantity: json['editQuantity'],
+    mobileNumber: json['mobileNumber'],
+    specifiedQuantity: json['specifiedQuantity'] ?? false,
+    paymentMethod: json['paymentMethod'],
+    salesResponsible: json['salesResponsible'],
+    items: (json['items'] as List?)?.map((e) => YarnSalesOrderItem.fromJson(e)).toList() ?? [],
+    installments: (json['installments'] as List?)?.map((e) => YarnInstallment.fromJson(e)).toList() ?? [],
+    notes: json['notes'],
+    orderTypes: List<String>.from(json['orderTypes'] ?? []),
+  );
+
   double get totalValue => items.fold(0, (sum, item) => sum + item.value);
 }
 
@@ -83,6 +125,20 @@ class YarnSalesOrderItem extends HiveObject {
     this.price = 0.0,
   });
 
+  Map<String, dynamic> toJson() => {
+    'description': description,
+    'quantity': quantity,
+    'unit': unit,
+    'price': price,
+  };
+
+  factory YarnSalesOrderItem.fromJson(Map<String, dynamic> json) => YarnSalesOrderItem(
+    description: json['description'] ?? '',
+    quantity: (json['quantity'] as num).toDouble(),
+    unit: json['unit'] ?? 'KG',
+    price: (json['price'] as num).toDouble(),
+  );
+
   double get value => quantity * price;
 }
 
@@ -97,4 +153,14 @@ class YarnInstallment extends HiveObject {
     this.duration = '',
     this.value = '',
   });
+
+  Map<String, dynamic> toJson() => {
+    'duration': duration,
+    'value': value,
+  };
+
+  factory YarnInstallment.fromJson(Map<String, dynamic> json) => YarnInstallment(
+    duration: json['duration'] ?? '',
+    value: json['value'] ?? '',
+  );
 }

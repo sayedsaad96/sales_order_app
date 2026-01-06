@@ -46,7 +46,6 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
 
   final Map<String, bool> _orderTypes = {
     'غزل': true,
-    'قماش': false,
   };
 
   // Dynamic lists
@@ -88,7 +87,6 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
 
       _orderTypes.clear();
       _orderTypes['غزل'] = order.orderTypes.contains('غزل');
-      _orderTypes['قماش'] = order.orderTypes.contains('قماش');
 
       for (var item in order.items) {
         _addItem(
@@ -414,7 +412,7 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
       _orderDate = DateTime.now();
       _deliveryDate = null;
 
-      _orderTypes.updateAll((key, value) => key == 'غزل');
+      _orderTypes['غزل'] = true;
 
       for (var c in _descriptionControllers) { c.dispose(); }
       for (var c in _quantityControllers) { c.dispose(); }

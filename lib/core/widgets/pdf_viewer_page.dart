@@ -31,6 +31,7 @@ class PdfViewerPage extends StatelessWidget {
         ),
       ),
       body: PdfPreview(
+        key: ValueKey('$title$assetPath'),
         build: (format) async {
           try {
             if (assetPath.startsWith('http')) {
