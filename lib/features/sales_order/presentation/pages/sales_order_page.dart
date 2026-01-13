@@ -14,6 +14,8 @@ import 'package:annex_sales_order/core/utils/responsive_constants.dart';
 import 'package:annex_sales_order/features/sales_order/presentation/widgets/customer_info_section.dart';
 import 'package:annex_sales_order/features/sales_order/presentation/widgets/sales_order_item_row.dart';
 import 'package:annex_sales_order/features/sales_order/presentation/utils/sales_order_helpers.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:annex_sales_order/core/services/settings_service.dart';
 import 'package:annex_sales_order/core/widgets/app_drawer.dart';
 
 class SalesOrderPage extends StatefulWidget {
@@ -454,23 +456,58 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
         final pdf = await PdfSalesOrderGenerator.generate(order);
         final bytes = await pdf.save();
 
-        Directory? directory;
-        if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-          directory = await getDownloadsDirectory();
-        }
-        directory ??= await getApplicationDocumentsDirectory();
+        final settingsService = SettingsService();
+        final strategy = settingsService.getInvoiceSaveStrategy();
+        final defaultPath = settingsService.getDefaultSavePath();
 
+        String? finalPath;
         final safeName = (order.customerName ?? 'Client').replaceAll(RegExp(r'[^\w\s\u0600-\u06FF]'), '');
         final fileName = '${safeName}_${order.sn}.pdf';
-        final file = File('${directory.path}/$fileName');
-        await file.writeAsBytes(bytes);
+
+        if (strategy == InvoiceSaveStrategy.auto && defaultPath != null) {
+          // Auto-save logic
+          final customerDir = Directory('$defaultPath/$safeName');
+          if (!await customerDir.exists()) {
+            await customerDir.create(recursive: true);
+          }
+          finalPath = '${customerDir.path}/$fileName';
+          final file = File(finalPath);
+          await file.writeAsBytes(bytes);
+        } else {
+          // "Always Ask" or fallback logic
+          if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+            // On desktop, use save file picker if strategy is "ask"
+            finalPath = await FilePicker.platform.saveFile(
+              dialogTitle: 'حفظ الفاتورة',
+              fileName: fileName,
+              type: FileType.custom,
+              allowedExtensions: ['pdf'],
+            );
+            
+            if (finalPath != null) {
+              final file = File(finalPath);
+              await file.writeAsBytes(bytes);
+            } else {
+              // User cancelled
+              if (mounted) Navigator.of(context).pop();
+              return;
+            }
+          } else {
+            // Fallback for mobile if needed, though mostly desktop-focused req
+            Directory? directory = await getExternalStorageDirectory();
+            directory ??= await getApplicationDocumentsDirectory();
+            finalPath = '${directory.path}/$fileName';
+            final file = File(finalPath);
+            await file.writeAsBytes(bytes);
+          }
+        }
 
         // Dismiss loading indicator
         if (mounted) {
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('تم حفظ الملف: ${file.path}'),
+              content: Text('تم حفظ الملف: $finalPath'),
               duration: const Duration(seconds: 8),
               action: SnackBarAction(
                 label: 'مشاركة',

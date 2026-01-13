@@ -533,11 +533,16 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
                 ),
         ),
         drawer: const AppDrawer(),
-        body: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : _selectedCustomer == null
-                ? _buildCustomerFolders()
-                : _buildInvoiceList(),
+        body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _selectedCustomer == null
+                  ? _buildCustomerFolders()
+                  : _buildInvoiceList(),
+        ),
+        ),
       ),
     );
   }

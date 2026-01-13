@@ -544,13 +544,18 @@ class _SavedFabricsCmInvoicesPageState
                   ),
           ),
           drawer: const AppDrawer(),
-          body: _isLoading
+          body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _selectedCustomer == null
-              ? _buildCustomerFolders()
-              : _buildInvoiceList(),
+                  ? _buildCustomerFolders()
+                  : _buildInvoiceList(),
         ),
       ),
-    );
-  }
+    ),
+  ),
+);
+}
 }

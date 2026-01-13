@@ -6,6 +6,12 @@ import 'package:intl/intl.dart';
 import 'package:annex_sales_order/features/sales_order/presentation/providers/quotation_provider.dart';
 import 'package:annex_sales_order/features/sales_order/data/models/quotation.dart';
 import 'package:annex_sales_order/features/sales_order/presentation/widgets/quotation_item_dialog.dart';
+import 'package:annex_sales_order/core/services/settings_service.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:annex_sales_order/features/sales_order/pdf/quotation_pdf_generator.dart';
+import 'package:printing/printing.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 
 class CreateQuotationPage extends StatelessWidget {
   final Quotation? existingQuotation;
@@ -33,7 +39,13 @@ class _CreateQuotationView extends StatelessWidget {
         title: Text(provider.customerController.text.isEmpty ? 'إنشاء عرض سعر' : 'تعديل عرض سعر'),
         actions: [
             IconButton(
+                icon: const Icon(CupertinoIcons.doc_text_fill),
+                tooltip: 'إنشاء PDF',
+                onPressed: () => _generatePdf(context, provider),
+            ),
+            IconButton(
                 icon: const Icon(CupertinoIcons.floppy_disk),
+                tooltip: 'حفظ',
                 onPressed: () async {
                     await provider.saveQuotation();
                     if (context.mounted) {
@@ -62,12 +74,17 @@ class _CreateQuotationView extends StatelessWidget {
                           _buildHeaderSection(context, provider, isWide),
                           const SizedBox(height: 10),
                           const Divider(),
-                          const SizedBox(height: 10),
                         ],
                       ),
                     ),
                   ),
                   _buildSliverItemsSection(context, provider, isWide),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: _buildFooterFields(provider, isWide),
+                    ),
+                  ),
                   const SliverToBoxAdapter(child: SizedBox(height: 100)), // Space for FAB
                 ],
               ),
@@ -97,40 +114,51 @@ class _CreateQuotationView extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('إجمالي البنود:'),
-                  Text(provider.totalBasePrice.toStringAsFixed(2), style: const TextStyle(fontSize: 14)),
-                ],
-              ),
-              if (provider.totalWaste > 0) ...[
-                const SizedBox(height: 4),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('إجمالي الهالك (2%):'),
-                    Text(provider.totalWaste.toStringAsFixed(2), style: const TextStyle(fontSize: 14, color: Colors.orange)),
-                  ],
+              Align(
+                alignment: Alignment.center,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1000),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('إجمالي البنود:'),
+                          Text('${provider.items.length}', style: const TextStyle(fontSize: 14)),
+                        ],
+                      ),
+                      if (provider.totalWaste > 0) ...[
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('إجمالي الهالك (2%):'),
+                            Text(provider.totalWaste.toStringAsFixed(2), style: const TextStyle(fontSize: 14, color: Colors.orange)),
+                          ],
+                        ),
+                      ],
+                      const Divider(),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'الإجمالي الكلي:',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                          Text(
+                            '${provider.totalValue.toStringAsFixed(2)} EGP',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ],
-              const Divider(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'الإجمالي الكلي:',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  Text(
-                    '${provider.totalValue.toStringAsFixed(2)} EGP',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                ],
               ),
             ],
           ),
@@ -185,31 +213,47 @@ class _CreateQuotationView extends StatelessWidget {
                               controller: provider.customerController,
                               decoration: const InputDecoration(labelText: 'اسم العميل', border: OutlineInputBorder()),
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 12),
                           TextField(
                               controller: provider.snController,
                               decoration: const InputDecoration(labelText: 'رقم عرض السعر', border: OutlineInputBorder()),
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 12),
                           _buildDateTile(context, 'التاريخ', provider.orderDate, (date) => provider.updateDate(date)),
                           const SizedBox(height: 10),
                           _buildDateTile(context, 'صالح حتى', provider.validUntil, (date) => provider.setValidity(date)),
                       ],
-                      const SizedBox(height: 16),
-                      TextField(
-                          controller: provider.termsController,
-                          decoration: const InputDecoration(labelText: 'الشروط والأحكام', border: OutlineInputBorder()),
-                          maxLines: 3,
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                          controller: provider.notesController,
-                          decoration: const InputDecoration(labelText: 'ملاحظات', border: OutlineInputBorder()),
-                          maxLines: 2,
-                      ),
                   ],
               ),
           ),
+      );
+  }
+
+  Widget _buildFooterFields(QuotationProvider provider, bool isWide) {
+      return Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+                const Text('الشروط والملاحظات', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 16),
+                TextField(
+                    controller: provider.termsController,
+                    decoration: const InputDecoration(labelText: 'الشروط والأحكام', border: OutlineInputBorder(), alignLabelWithHint: true),
+                    maxLines: isWide ? 3 : 5,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                    controller: provider.notesController,
+                    decoration: const InputDecoration(labelText: 'ملاحظات', border: OutlineInputBorder(), alignLabelWithHint: true),
+                    maxLines: 2,
+                ),
+            ],
+          ),
+        ),
       );
   }
 
@@ -410,7 +454,7 @@ class _CreateQuotationView extends StatelessWidget {
   }
   
   String getHeaderForItem(QuotationItem item) {
-      if (item.type == 'standard') return item.itemName ?? 'بند عام';
+      if (item.type == 'standard') return item.itemName ?? 'مستلزمات';
       if (item.type == 'yarn') return item.description ?? 'غزل';
       if (item.type == 'fabric') return '${item.fabricType ?? "قماش"} - ${item.yarnType ?? ""} ${item.yarnCount ?? ""}';
       return 'بند غير معروف';
@@ -454,7 +498,7 @@ class _CreateQuotationView extends StatelessWidget {
                       ),
                       ListTile(
                           leading: const Icon(CupertinoIcons.doc_text),
-                          title: const Text('بند عام (Standard)'),
+                          title: const Text('مستلزمات (Essential)'),
                           onTap: () {
                               Navigator.pop(context);
                               _openItemDialog(context, provider, 'standard');
@@ -479,5 +523,133 @@ class _CreateQuotationView extends StatelessWidget {
               provider.addItem(result);
           }
       }
+  }
+
+  Future<void> _generatePdf(BuildContext context, QuotationProvider provider) async {
+    if (provider.customerController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('يرجى إدخال اسم العميل أولاً')),
+      );
+      return;
+    }
+
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Column(
+                children: [
+                  Image.asset(
+                    'assets/images/logo.png',
+                    height: 80,
+                    width: 80,
+                    errorBuilder: (context, error, stackTrace) => const Icon(CupertinoIcons.doc_text_fill, size: 80, color: Colors.blue),
+                  ),
+                  const SizedBox(height: 15),
+                  const Text('جارٍ إعداد ملف PDF...'),
+                  const SizedBox(height: 15),
+                  const CircularProgressIndicator(),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    try {
+      await provider.saveQuotation(); // Ensure latest data is saved
+      
+      final quotation = Quotation(
+        sn: provider.snController.text,
+        customerName: provider.customerController.text,
+        date: provider.orderDate,
+        items: List.from(provider.items),
+        notes: provider.notesController.text,
+        validUntil: provider.validUntil,
+        termsAndConditions: provider.termsController.text,
+      );
+
+      final pdf = await QuotationPdfGenerator.generate(quotation);
+      final bytes = await pdf.save();
+
+      if (!context.mounted) return;
+      Navigator.pop(context); // Dismiss loading
+
+      final settingsService = SettingsService();
+      final strategy = settingsService.getInvoiceSaveStrategy();
+      final defaultPath = settingsService.getDefaultSavePath();
+
+      String? finalPath;
+      final safeName = (quotation.customerName ?? 'Client').replaceAll(RegExp(r'[^\w\s\u0600-\u06FF]'), '');
+      final fileName = '${safeName}_Quotation_${quotation.sn}.pdf';
+
+      if (strategy == InvoiceSaveStrategy.auto && defaultPath != null) {
+        final customerDir = Directory('$defaultPath/$safeName');
+        if (!await customerDir.exists()) {
+          await customerDir.create(recursive: true);
+        }
+        finalPath = '${customerDir.path}/$fileName';
+        final file = File(finalPath);
+        await file.writeAsBytes(bytes);
+      } else {
+        if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+          finalPath = await FilePicker.platform.saveFile(
+            dialogTitle: 'حفظ عرض السعر',
+            fileName: fileName,
+            type: FileType.custom,
+            allowedExtensions: ['pdf'],
+          );
+          
+          if (finalPath != null) {
+            final file = File(finalPath);
+            await file.writeAsBytes(bytes);
+          } else {
+            return;
+          }
+        } else {
+          Directory? directory = await getExternalStorageDirectory();
+          directory ??= await getApplicationDocumentsDirectory();
+          finalPath = '${directory.path}/$fileName';
+          final file = File(finalPath);
+          await file.writeAsBytes(bytes);
+        }
+      }
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('تم حفظ الملف: $finalPath'),
+            duration: const Duration(seconds: 8),
+            action: SnackBarAction(
+              label: 'مشاركة',
+              textColor: Colors.yellowAccent,
+              onPressed: () {
+                Printing.sharePdf(bytes: bytes, filename: fileName);
+              },
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.pop(context); // Dismiss loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('حدث خطأ أثناء إنشاء PDF: $e')),
+        );
+      }
+    }
   }
 }

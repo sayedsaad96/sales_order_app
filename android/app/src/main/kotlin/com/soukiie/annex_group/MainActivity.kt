@@ -1,4 +1,4 @@
-package com.example.sales_order_app
+package com.soukiie.annex_group
 
 import io.flutter.embedding.android.FlutterActivity
 

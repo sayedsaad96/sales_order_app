@@ -62,127 +62,146 @@ class _SalesAnalysisPageState extends State<SalesAnalysisPage> {
       length: 2,
       child: Scaffold(
         drawer: const AppDrawer(),
-        body: FutureBuilder<AnalysisMetrics>(
-          future: _metricsFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Image.asset('assets/images/logo.png', width: 100),
-                    SizedBox(height: 20),
-                    CircularProgressIndicator(),
-                  ],
-                ),
+        appBar: AppBar(
+          leading: Builder(
+            builder: (context) {
+              final scaffold = Scaffold.of(context);
+              final canPop = Navigator.of(context).canPop();
+              
+              if (canPop) {
+                return IconButton(
+                  icon: const Icon(CupertinoIcons.back),
+                  onPressed: () => Navigator.of(context).pop(),
+                );
+              }
+              return IconButton(
+                icon: const Icon(CupertinoIcons.list_dash),
+                onPressed: () => scaffold.openDrawer(),
+                tooltip: 'Menu',
               );
-            }
-            if (snapshot.hasError) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        CupertinoIcons.exclamationmark_triangle,
-                        size: 60,
-                        color: Colors.red,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'حدث خطأ أثناء تحميل البيانات:\n${snapshot.error}',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () => _refreshData(force: true),
-                        child: const Text('إعادة المحاولة'),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }
-            if (!snapshot.hasData || snapshot.data!.totalOrders == 0) {
-              return _buildEmptyState(snapshot.data);
-            }
-
-            final metrics = snapshot.data!;
-
-            return RefreshIndicator(
-              onRefresh: () async {
-                _refreshData(force: true);
-                await _metricsFuture;
-              },
-              child: ScrollConfiguration(
-                behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
-                child: NestedScrollView(
-                  headerSliverBuilder: (context, innerBoxIsScrolled) => [
-                    SliverAppBar(
-                      leading: Builder(
-                        builder: (context) => IconButton(
-                          icon: const Icon(CupertinoIcons.list_dash),
-                          onPressed: () => Scaffold.of(context).openDrawer(),
-                          tooltip: 'Menu',
-                        ),
-                      ),
-                      expandedHeight: 120,
-                      floating: true,
-                      pinned: true,
-                      title: const Text(
-                        'تحليل المبيعات',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      centerTitle: true,
-                      actions: [
-                        IconButton(
-                          icon: const Icon(CupertinoIcons.refresh),
-                          onPressed: () => _refreshData(force: true),
-                          tooltip: 'تحديث البيانات',
-                        ),
-                      ],
-                      flexibleSpace: FlexibleSpaceBar(
-                        background: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                theme.primaryColor,
-                                theme.primaryColor.withValues(alpha: 0.7),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                          ),
-                        ),
-                      ),
-                      bottom: const TabBar(
-                        tabs: [
-                          Tab(text: 'إحصائياتي '),
-                          Tab(text: 'إحصائيات العملاء'),
-                        ],
-                        indicatorColor: Colors.white,
-                        indicatorWeight: 4,
-                        labelStyle: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: Colors.white30,
-                        ),
-                        unselectedLabelStyle: TextStyle(fontSize: 14),
-                      ),
-                    ),
+            },
+          ),
+          title: const Text(
+            'تحليل المبيعات',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          centerTitle: true,
+          actions: [
+            IconButton(
+              icon: const Icon(CupertinoIcons.refresh),
+              onPressed: () => _refreshData(force: true),
+              tooltip: 'تحديث البيانات',
+            ),
+          ],
+          flexibleSpace: FlexibleSpaceBar(
+            background: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    theme.primaryColor,
+                    theme.primaryColor.withValues(alpha: 0.7),
                   ],
-                  body: TabBarView(
-                    children: [
-                      _buildRepTab(metrics, theme, isDark),
-                      _buildCustomerTab(metrics, theme, isDark),
-                    ],
-                  ),
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
               ),
-            );
-          },
+            ),
+          ),
+        ),
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: Column(
+              children: [
+                Expanded(
+                  child: FutureBuilder<AnalysisMetrics>(
+                    future: _metricsFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset('assets/images/logo.png', width: 100),
+                              const SizedBox(height: 20),
+                              const CircularProgressIndicator(),
+                            ],
+                          ),
+                        );
+                      }
+                      if (snapshot.hasError) {
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(20.0),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  CupertinoIcons.exclamationmark_triangle,
+                                  size: 60,
+                                  color: Colors.red,
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'حدث خطأ أثناء تحميل البيانات:\n${snapshot.error}',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(color: Colors.red),
+                                ),
+                                const SizedBox(height: 16),
+                                ElevatedButton(
+                                  onPressed: () => _refreshData(force: true),
+                                  child: const Text('إعادة المحاولة'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+                      if (!snapshot.hasData || snapshot.data!.totalOrders == 0) {
+                        return _buildEmptyState(snapshot.data);
+                      }
+
+                      final metrics = snapshot.data!;
+
+                      return RefreshIndicator(
+                        onRefresh: () async {
+                          _refreshData(force: true);
+                          await _metricsFuture;
+                        },
+                        child: Column(
+                          children: [
+                             TabBar(
+                                tabs: const [
+                                  Tab(text: 'إحصائياتي '),
+                                  Tab(text: 'إحصائيات العملاء'),
+                                ],
+                                indicatorColor: theme.primaryColor,
+                                indicatorWeight: 4,
+                                labelColor: theme.primaryColor,
+                                unselectedLabelColor: Colors.grey,
+                                labelStyle: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                                unselectedLabelStyle: const TextStyle(fontSize: 14),
+                              ),
+                              Expanded(
+                                child: TabBarView(
+                                  children: [
+                                    _buildRepTab(metrics, theme, isDark),
+                                    _buildCustomerTab(metrics, theme, isDark),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

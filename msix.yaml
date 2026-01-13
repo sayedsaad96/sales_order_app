@@ -1,0 +1,18 @@
+msix_config:
+  display_name: Annex Group
+  publisher_display_name: Sayed Saad
+  identity_name: com.soukiie.annex-group
+  publisher: CN=AnnexGroup
+  msix_version: 1.0.4.4
+
+  logo_path: assets/images/logo.png
+  start_menu_icon_path: assets/images/logo.png
+  tile_icon_path: assets/images/logo.png
+
+  architecture: x64
+  capabilities: internetClient
+
+  certificate_path: certs/AnnexGroup.pfx
+  certificate_password: annex123
+
+  install_certificate: false

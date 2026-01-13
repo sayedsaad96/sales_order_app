@@ -1,18 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:annex_sales_order/core/providers/theme_provider.dart';
 import 'package:annex_sales_order/features/sales_order/presentation/pages/price_list_page.dart';
 import 'package:annex_sales_order/features/sales_order/presentation/pages/sales_order_container_page.dart';
 import 'package:annex_sales_order/features/return_order/presentation/pages/return_order_page.dart';
 
-import 'package:annex_sales_order/features/user/presentation/pages/edit_profile_page.dart';
 import 'package:annex_sales_order/features/about/presentation/pages/about_page.dart';
 import 'package:annex_sales_order/features/analysis/presentation/pages/sales_analysis_page.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:annex_sales_order/features/sales_order/presentation/pages/saved_quotations_page.dart';
-import 'package:annex_sales_order/features/settings/presentation/pages/backup_page.dart';
+import 'package:annex_sales_order/features/settings/presentation/pages/settings_page.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -186,39 +183,17 @@ class AppDrawer extends StatelessWidget {
                 _buildSectionHeader('Settings'),
                 _buildModernMenuItem(
                   context,
-                  icon: CupertinoIcons.person,
-                  title: 'Edit Profile',
-                  subtitle: 'Update your information',
+                  icon: CupertinoIcons.settings,
+                  title: 'Settings',
+                  subtitle: 'App and invoice save settings',
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const EditProfilePage(),
+                        builder: (context) => const SettingsPage(),
                       ),
                     );
-                  },
-                ),
-                _buildModernMenuItem(
-                  context,
-                  icon: CupertinoIcons.cloud_upload,
-                  title: 'Backup & Restore',
-                  subtitle: 'Manage data backup',
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const BackupPage(),
-                      ),
-                    );
-                  },
-                ),
-
-                // Dark Mode Toggle
-                Consumer<ThemeProvider>(
-                  builder: (context, themeProvider, child) {
-                    return _buildModernThemeToggle(context, themeProvider);
                   },
                 ),
 
@@ -310,39 +285,6 @@ class AppDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildModernThemeToggle(
-    BuildContext context,
-    ThemeProvider themeProvider,
-  ) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      child: ListTile(
-        shape: const StadiumBorder(),
-        onTap: () => themeProvider.toggleTheme(),
-        leading: Icon(
-          themeProvider.isDarkMode ? CupertinoIcons.moon_fill : CupertinoIcons.sun_max_fill,
-          color: theme.colorScheme.onSurfaceVariant,
-        ),
-        title: Text(
-          themeProvider.isDarkMode ? 'Dark Mode' : 'Light Mode',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        subtitle: Text(
-          'Toggle theme',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        trailing: CupertinoSwitch(
-          value: themeProvider.isDarkMode,
-          onChanged: (value) => themeProvider.toggleTheme(),
-        ),
-      ),
-    );
-  }
 
   Widget _buildModernSocialFooter(BuildContext context, bool isDark) {
     return Padding(

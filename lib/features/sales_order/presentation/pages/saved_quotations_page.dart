@@ -8,9 +8,10 @@ import 'package:annex_sales_order/features/sales_order/presentation/pages/create
 import 'package:annex_sales_order/features/sales_order/pdf/quotation_pdf_generator.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:annex_sales_order/core/services/settings_service.dart';
+import 'package:printing/printing.dart';
 
 class SavedQuotationsPage extends StatefulWidget {
   const SavedQuotationsPage({super.key});
@@ -126,14 +127,39 @@ class _SavedQuotationsPageState extends State<SavedQuotationsPage> {
            final pdf = await QuotationPdfGenerator.generate(quotation);
            final bytes = await pdf.save();
            
-           // Sanitize customer name for filename (remove invalid chars)
-           String sanitizedName = (quotation.customerName ?? "draft")
-               .replaceAll(RegExp(r'[\\/:*?"<>|]'), '_')
-               .trim();
-           String fileName = '$sanitizedName.pdf';
+           final settingsService = SettingsService();
+           final strategy = settingsService.getInvoiceSaveStrategy();
+           final defaultPath = settingsService.getDefaultSavePath();
 
-           if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
-               // Desktop: Save As
+           String? finalPath;
+           final safeName = (quotation.customerName ?? 'Client').replaceAll(RegExp(r'[^\w\s\u0600-\u06FF]'), '');
+           final fileName = '${safeName}_Quotation_${quotation.sn}.pdf';
+
+           if (!kIsWeb && strategy == InvoiceSaveStrategy.auto && defaultPath != null) {
+              final customerDir = Directory('$defaultPath/$safeName');
+              if (!await customerDir.exists()) {
+                await customerDir.create(recursive: true);
+              }
+              finalPath = '${customerDir.path}/$fileName';
+              final file = File(finalPath);
+              await file.writeAsBytes(bytes);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('تم حفظ الملف: $finalPath'),
+                    duration: const Duration(seconds: 8),
+                    action: SnackBarAction(
+                      label: 'مشاركة',
+                      textColor: Colors.yellowAccent,
+                      onPressed: () {
+                        Printing.sharePdf(bytes: bytes, filename: fileName);
+                      },
+                    ),
+                  ),
+                );
+              }
+           } else if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+               // Desktop: Save As or Always Ask
                final result = await FilePicker.platform.saveFile(
                    dialogTitle: 'حفظ عرض السعر',
                    fileName: fileName,
@@ -145,17 +171,24 @@ class _SavedQuotationsPageState extends State<SavedQuotationsPage> {
                    final file = File(result);
                    await file.writeAsBytes(bytes);
                    if (mounted) {
-                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم حفظ الملف بنجاح')));
+                       ScaffoldMessenger.of(context).showSnackBar(
+                         SnackBar(
+                           content: Text('تم حفظ الملف بنجاح'),
+                           action: SnackBarAction(
+                             label: 'مشاركة',
+                             onPressed: () => Printing.sharePdf(bytes: bytes, filename: fileName),
+                           ),
+                         ),
+                       );
                    }
                }
            } else {
-               // Mobile: Share
+               // Mobile or Web fallback: Share
                final dir = await getTemporaryDirectory();
                final file = File('${dir.path}/$fileName');
                await file.writeAsBytes(bytes);
                
-               // ignore: deprecated_member_use
-               await Share.shareXFiles([XFile(file.path)], text: 'عرض سعر - ${quotation.customerName}');
+               await Printing.sharePdf(bytes: bytes, filename: fileName);
            }
        } catch (e) {
            if (mounted) {

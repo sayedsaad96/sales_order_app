@@ -13,6 +13,8 @@ import 'package:annex_sales_order/features/sales_order/pdf/yarn_pdf_generator.da
 import 'package:annex_sales_order/features/sales_order/presentation/widgets/yarn_installment_widget.dart';
 import 'package:annex_sales_order/features/sales_order/presentation/widgets/yarn_specific_widgets.dart';
 import 'package:annex_sales_order/features/sales_order/presentation/pages/saved_yarn_invoices_page.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:annex_sales_order/core/services/settings_service.dart';
 
 class YarnSalesOrderPage extends StatefulWidget {
   final YarnSalesOrder? existingOrder;
@@ -354,23 +356,52 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
         final pdf = await YarnPdfGenerator.generate(newOrderData);
         final bytes = await pdf.save();
 
-        Directory? directory;
-        if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-          directory = await getDownloadsDirectory();
-        }
-        directory ??= await getApplicationDocumentsDirectory();
+        final settingsService = SettingsService();
+        final strategy = settingsService.getInvoiceSaveStrategy();
+        final defaultPath = settingsService.getDefaultSavePath();
 
+        String? finalPath;
         final safeName = (newOrderData.customerName ?? 'Client').replaceAll(RegExp(r'[^\w\s\u0600-\u06FF]'), '');
         final fileName = '${safeName}_${newOrderData.sn}.pdf';
-        
-        final file = File('${directory.path}/$fileName');
-        await file.writeAsBytes(bytes);
+
+        if (strategy == InvoiceSaveStrategy.auto && defaultPath != null) {
+          final customerDir = Directory('$defaultPath/$safeName');
+          if (!await customerDir.exists()) {
+            await customerDir.create(recursive: true);
+          }
+          finalPath = '${customerDir.path}/$fileName';
+          final file = File(finalPath);
+          await file.writeAsBytes(bytes);
+        } else {
+          if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+            finalPath = await FilePicker.platform.saveFile(
+              dialogTitle: 'حفظ الفاتورة',
+              fileName: fileName,
+              type: FileType.custom,
+              allowedExtensions: ['pdf'],
+            );
+            
+            if (finalPath != null) {
+              final file = File(finalPath);
+              await file.writeAsBytes(bytes);
+            } else {
+              if (mounted) Navigator.of(context).pop();
+              return;
+            }
+          } else {
+            Directory? directory = await getExternalStorageDirectory();
+            directory ??= await getApplicationDocumentsDirectory();
+            finalPath = '${directory.path}/$fileName';
+            final file = File(finalPath);
+            await file.writeAsBytes(bytes);
+          }
+        }
 
         if (mounted) {
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('تم حفظ الملف: ${file.path}'),
+              content: Text('تم حفظ الملف: $finalPath'),
               duration: const Duration(seconds: 8),
               action: SnackBarAction(
                 label: 'مشاركة',

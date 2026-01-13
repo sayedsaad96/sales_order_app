@@ -12,6 +12,8 @@ import 'package:annex_sales_order/features/user/data/datasources/user_local_data
 import 'package:annex_sales_order/features/return_order/presentation/pages/saved_return_orders_page.dart';
 import 'package:annex_sales_order/core/utils/responsive_constants.dart';
 import 'package:annex_sales_order/features/return_order/presentation/widgets/return_order_item_row.dart';
+import 'package:annex_sales_order/core/services/settings_service.dart';
+import 'package:file_picker/file_picker.dart';
 
 class ReturnOrderPage extends StatefulWidget {
   final ReturnOrder? existingOrder;
@@ -241,26 +243,52 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
       final returnOrder = _buildReturnOrderFromForm();
       final bytes = await ReturnOrderPdfGenerator.generate(returnOrder);
 
-      // Save file
-      Directory? directory;
-      if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-        directory = await getDownloadsDirectory();
-      }
-      directory ??= await getApplicationDocumentsDirectory();
+      final settingsService = SettingsService();
+      final strategy = settingsService.getInvoiceSaveStrategy();
+      final defaultPath = settingsService.getDefaultSavePath();
 
-      final safeName = (returnOrder.customerName ?? 'Client').replaceAll(
-        RegExp(r'[^\w\s\u0600-\u06FF]'),
-        '',
-      );
+      String? finalPath;
+      final safeName = (returnOrder.customerName ?? 'Client').replaceAll(RegExp(r'[^\w\s\u0600-\u06FF]'), '');
       final fileName = '${safeName}_${returnOrder.sn}.pdf';
-      final file = File('${directory.path}/$fileName');
-      await file.writeAsBytes(bytes);
+
+      if (strategy == InvoiceSaveStrategy.auto && defaultPath != null) {
+        final customerDir = Directory('$defaultPath/$safeName');
+        if (!await customerDir.exists()) {
+          await customerDir.create(recursive: true);
+        }
+        finalPath = '${customerDir.path}/$fileName';
+        final file = File(finalPath);
+        await file.writeAsBytes(bytes);
+      } else {
+        if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+          finalPath = await FilePicker.platform.saveFile(
+            dialogTitle: 'حفظ المرتجع',
+            fileName: fileName,
+            type: FileType.custom,
+            allowedExtensions: ['pdf'],
+          );
+          
+          if (finalPath != null) {
+            final file = File(finalPath);
+            await file.writeAsBytes(bytes);
+          } else {
+            if (mounted) Navigator.of(context).pop();
+            return;
+          }
+        } else {
+          Directory? directory = await getExternalStorageDirectory();
+          directory ??= await getApplicationDocumentsDirectory();
+          finalPath = '${directory.path}/$fileName';
+          final file = File(finalPath);
+          await file.writeAsBytes(bytes);
+        }
+      }
 
       if (mounted) {
         Navigator.of(context).pop(); // Dismiss dialog
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('تم حفظ الملف: ${file.path}'),
+            content: Text('تم حفظ الملف: $finalPath'),
             duration: const Duration(seconds: 8),
             action: SnackBarAction(
               label: 'مشاركة',

@@ -94,7 +94,7 @@ class QuotationPdfGenerator {
                 0: pw.FixedColumnWidth(60), // Total
                 1: pw.FixedColumnWidth(50), // Price
                 2: pw.FixedColumnWidth(50), // Qty
-                3: pw.FixedColumnWidth(40), // Unit
+                3: pw.FixedColumnWidth(50), // Unit
                 4: pw.FlexColumnWidth(3),   // Description
                 5: pw.FixedColumnWidth(25), // #
               },
@@ -188,8 +188,8 @@ class QuotationPdfGenerator {
                       pw.Row(
                         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                         children: [
-                          pw.Text(numberFormat.format(quotation.baseTotal)),
                           pw.Text('إجمالي البنود:'),
+                          pw.Text('${quotation.items.length}'),
                         ],
                       ),
                       if (quotation.wasteTotal > 0) ...[
@@ -197,8 +197,8 @@ class QuotationPdfGenerator {
                         pw.Row(
                           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                           children: [
-                            pw.Text(numberFormat.format(quotation.wasteTotal)),
                             pw.Text('الهالك (2%):'),
+                            pw.Text(numberFormat.format(quotation.wasteTotal)),
                           ],
                         ),
                       ],
@@ -213,16 +213,16 @@ class QuotationPdfGenerator {
                           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                           children: [
                             pw.Text(
+                              'الإجمالي:',
+                              style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white),
+                            ),
+                            pw.Text(
                               '${numberFormat.format(quotation.totalValue)} EGP',
                               style: pw.TextStyle(
                                 fontWeight: pw.FontWeight.bold,
                                 color: PdfColors.white,
                                 fontSize: 12
                               ),
-                            ),
-                            pw.Text(
-                              'الإجمالي:',
-                              style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white),
                             ),
                           ],
                         ),
@@ -252,28 +252,6 @@ class QuotationPdfGenerator {
                   )
               ),
             ],
-
-            // Signature Section
-            pw.SizedBox(height: 40),
-            pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                    pw.Column(
-                        children: [
-                            pw.Text('توقيع العميل', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
-                            pw.SizedBox(height: 40),
-                            pw.Container(width: 120, decoration: const pw.BoxDecoration(border: pw.Border(bottom: pw.BorderSide(color: PdfColors.grey400, width: 1)))),
-                        ]
-                    ),
-                    pw.Column(
-                        children: [
-                            pw.Text('ختم وتوقيع الشركة', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
-                            pw.SizedBox(height: 40),
-                            pw.Container(width: 120, decoration: const pw.BoxDecoration(border: pw.Border(bottom: pw.BorderSide(color: PdfColors.grey400, width: 1)))),
-                        ]
-                    ),
-                ]
-            ),
             
             pw.SizedBox(height: 30),
             pw.Divider(color: PdfColors.grey300),

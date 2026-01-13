@@ -7,6 +7,8 @@ import '../../pdf/fabrics_cm_pdf_generator.dart';
 import 'package:printing/printing.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import 'package:file_picker/file_picker.dart';
+import '../../../../core/services/settings_service.dart';
 
 class FabricsCmOrderProvider extends ChangeNotifier {
   FabricsCmOrderProvider({this.existingOrder}) {
@@ -500,22 +502,50 @@ class FabricsCmOrderProvider extends ChangeNotifier {
         if (!context.mounted) return;
         Navigator.of(context).pop(); // Dismiss loading
 
-        // Save logic similar to other pages
-        Directory? directory;
-        if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-          directory = await getDownloadsDirectory();
-        }
-        directory ??= await getApplicationDocumentsDirectory();
+        final settingsService = SettingsService();
+        final strategy = settingsService.getInvoiceSaveStrategy();
+        final defaultPath = settingsService.getDefaultSavePath();
 
+        String? finalPath;
         final safeName = (newOrderData.customerName ?? 'Client').replaceAll(RegExp(r'[^\w\s\u0600-\u06FF]'), '');
         final fileName = '${safeName}_${newOrderData.sn}.pdf';
-        final file = File('${directory.path}/$fileName');
-        await file.writeAsBytes(bytes);
+
+        if (strategy == InvoiceSaveStrategy.auto && defaultPath != null) {
+          final customerDir = Directory('$defaultPath/$safeName');
+          if (!await customerDir.exists()) {
+            await customerDir.create(recursive: true);
+          }
+          finalPath = '${customerDir.path}/$fileName';
+          final file = File(finalPath);
+          await file.writeAsBytes(bytes);
+        } else {
+          if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+            finalPath = await FilePicker.platform.saveFile(
+              dialogTitle: 'حفظ الفاتورة',
+              fileName: fileName,
+              type: FileType.custom,
+              allowedExtensions: ['pdf'],
+            );
+            
+            if (finalPath != null) {
+              final file = File(finalPath);
+              await file.writeAsBytes(bytes);
+            } else {
+              return;
+            }
+          } else {
+            Directory? directory = await getExternalStorageDirectory();
+            directory ??= await getApplicationDocumentsDirectory();
+            finalPath = '${directory.path}/$fileName';
+            final file = File(finalPath);
+            await file.writeAsBytes(bytes);
+          }
+        }
 
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('تم حفظ الملف: ${file.path}'),
+              content: Text('تم حفظ الملف: $finalPath'),
               duration: const Duration(seconds: 8),
               action: SnackBarAction(
                 label: 'مشاركة',
