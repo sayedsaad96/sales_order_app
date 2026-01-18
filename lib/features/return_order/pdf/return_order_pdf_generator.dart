@@ -150,21 +150,25 @@ class ReturnOrderPdfGenerator {
                   ],
                 ),
                 // Rows
-                ...order.items.asMap().entries.map((e) {
-                  final index = e.key;
-                  final item = e.value;
-                  final isEven = index % 2 == 0;
-                  return pw.TableRow(
-                    decoration: pw.BoxDecoration(
-                      color: isEven ? PdfColors.white : accentColor,
-                    ),
-                    children: [
-                      _buildTableCell(item.unit),
-                      _buildTableCell(numberFormat.format(item.quantity)),
-                      _buildTableCell(item.item, align: pw.TextAlign.right),
-                    ],
-                  );
-                }),
+                  ...order.items.asMap().entries.map((e) {
+                    final index = e.key;
+                    final item = e.value;
+                    final isEven = index % 2 == 0;
+                    return pw.TableRow(
+                      decoration: pw.BoxDecoration(
+                        color: isEven ? PdfColors.white : accentColor,
+                      ),
+                      children: [
+                        _buildTableCell(item.unit),
+                        _buildEditableTableCell(
+                          numberFormat.format(item.quantity),
+                          'quantity_$index',
+                          backgroundColor: isEven ? PdfColors.white : accentColor,
+                        ),
+                        _buildTableCell(item.item, align: pw.TextAlign.right),
+                      ],
+                    );
+                  }),
               ],
             ),
 
@@ -206,14 +210,20 @@ class ReturnOrderPdfGenerator {
                                   fontSize: 14,
                                 ),
                               ),
-                              pw.Text(
-                                numberFormat.format(order.totalQuantity),
-                                style: pw.TextStyle(
-                                  color: PdfColors.white,
-                                  fontWeight: pw.FontWeight.bold,
-                                  fontSize: 14,
+                                pw.Container(
+                                  width: 60,
+                                  child: pw.TextField(
+                                    name: 'total_quantity',
+                                    value: numberFormat.format(order.totalQuantity),
+                                    textStyle: pw.TextStyle(
+                                      color: PdfColors.white,
+                                      fontWeight: pw.FontWeight.bold,
+                                      fontSize: 14,
+                                      font: pw.Font.helvetica(),
+                                    ),
+                                    backgroundColor: primaryColor,
+                                  ),
                                 ),
-                              ),
                             ],
                           ),
                         ),
@@ -502,6 +512,26 @@ class ReturnOrderPdfGenerator {
         textAlign: align,
         textDirection: pw.TextDirection.rtl,
         style: const pw.TextStyle(fontSize: 10),
+      ),
+    );
+  }
+
+
+  static pw.Widget _buildEditableTableCell(
+    String initialValue,
+    String fieldName, {
+    PdfColor? backgroundColor,
+  }) {
+    return pw.Container(
+      padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+      child: pw.TextField(
+        name: fieldName,
+        value: initialValue,
+        textStyle: pw.TextStyle(
+          font: pw.Font.helvetica(),
+          fontSize: 10,
+        ),
+        backgroundColor: backgroundColor ?? PdfColors.white,
       ),
     );
   }

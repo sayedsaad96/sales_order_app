@@ -49,7 +49,7 @@ class AppDrawer extends StatelessWidget {
                 _buildSectionHeader('Main Menu'),
                 _buildModernMenuItem(
                   context,
-                  icon: CupertinoIcons.square_list,
+                  icon: Icons.ac_unit_outlined,
                   title: 'Essential Sales Order',
                   subtitle: 'Create essential orders',
                   onTap: () {
@@ -81,7 +81,7 @@ class AppDrawer extends StatelessWidget {
                 ),
                 _buildModernMenuItem(
                   context,
-                  icon: CupertinoIcons.tag,
+                  icon: CupertinoIcons.scissors,
                   title: 'Fabrics & CM Order',
                   subtitle: 'Create fabrics & CM orders',
                   onTap: () {

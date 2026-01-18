@@ -8,6 +8,7 @@ import 'package:intl/intl.dart' as intl;
 import 'package:annex_sales_order/features/sales_order/data/models/fabrics_cm_sales_order.dart';
 import 'package:annex_sales_order/features/sales_order/presentation/pages/saved_fabrics_cm_invoices_page.dart';
 import 'package:annex_sales_order/features/sales_order/presentation/widgets/fabrics_specific_widgets.dart';
+import 'package:annex_sales_order/features/sales_order/presentation/utils/sales_order_helpers.dart';
 
 class FabricsCmOrderPage extends StatefulWidget {
   final FabricsCmSalesOrder? existingOrder;
@@ -257,13 +258,16 @@ class _FabricsCmOrderPageState extends State<FabricsCmOrderPage> {
         controller: controller,
         readOnly: readOnly,
         maxLines: maxLines,
-        keyboardType: isNumeric ? const TextInputType.numberWithOptions(decimal: true) : null,
+        keyboardType: isNumeric
+            ? const TextInputType.numberWithOptions(decimal: true)
+            : null,
         decoration: InputDecoration(
           labelText: label,
           border: const OutlineInputBorder(),
         ),
         onTap: () {
-          if (isNumeric && (controller.text == '0.0' || controller.text == '0')) {
+          if (isNumeric &&
+              (controller.text == '0.0' || controller.text == '0')) {
             controller.clear();
           }
         },
@@ -497,14 +501,41 @@ class _FabricsCmOrderPageState extends State<FabricsCmOrderPage> {
     return SliverToBoxAdapter(
       child: Column(
         children: [
-          ElevatedButton.icon(
-            icon: const Icon(CupertinoIcons.add),
-            label: const Text('إضافة بند جديد'),
-            onPressed: provider.addItem,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-              foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton.icon(
+                icon: const Icon(CupertinoIcons.add),
+                label: const Text('إضافة بند '),
+                onPressed: provider.addItem,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer,
+                  foregroundColor: Theme.of(
+                    context,
+                  ).colorScheme.onPrimaryContainer,
+                ),
+              ),
+              ElevatedButton.icon(
+                icon: const Icon(CupertinoIcons.plus_square_on_square),
+                label: const Text('إضافة جماعية'),
+                onPressed: () async {
+                  final count = await showBulkAddDialog(context);
+                  if (count != null) {
+                    provider.addItem(count: count);
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer,
+                  foregroundColor: Theme.of(
+                    context,
+                  ).colorScheme.onPrimaryContainer,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 20),
           Card(
@@ -583,7 +614,10 @@ class _FabricsCmOrderPageState extends State<FabricsCmOrderPage> {
                     children: [
                       const Text(
                         'الإجمالي النهائي:',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       Text(
                         provider.totalValue.toStringAsFixed(2),

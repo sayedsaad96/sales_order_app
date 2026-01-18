@@ -3,7 +3,7 @@ msix_config:
   publisher_display_name: Sayed Saad
   identity_name: com.soukiie.annex-group
   publisher: CN=AnnexGroup
-  msix_version: 1.0.4.4
+  msix_version: 1.0.6.0
 
   logo_path: assets/images/logo.png
   start_menu_icon_path: assets/images/logo.png

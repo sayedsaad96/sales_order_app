@@ -163,15 +163,17 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
     );
   }
 
-  void _addItem({String? description, double? quantity, String? unit, double? price}) {
+  void _addItem({String? description, double? quantity, String? unit, double? price, int count = 1}) {
     setState(() {
-      _descriptionControllers.add(TextEditingController(text: description ?? ''));
-      _quantityControllers.add(TextEditingController(text: quantity?.toString() ?? ''));
-      _unitControllers.add(TextEditingController(text: unit ?? 'KG'));
-      _priceControllers.add(TextEditingController(text: price?.toString() ?? ''));
-      
-      _quantityControllers.last.addListener(_calculateTotal);
-      _priceControllers.last.addListener(_calculateTotal);
+      for (int i = 0; i < count; i++) {
+        _descriptionControllers.add(TextEditingController(text: description ?? ''));
+        _quantityControllers.add(TextEditingController(text: quantity?.toString() ?? ''));
+        _unitControllers.add(TextEditingController(text: unit ?? 'KG'));
+        _priceControllers.add(TextEditingController(text: price?.toString() ?? ''));
+        
+        _quantityControllers.last.addListener(_calculateTotal);
+        _priceControllers.last.addListener(_calculateTotal);
+      }
     });
   }
 

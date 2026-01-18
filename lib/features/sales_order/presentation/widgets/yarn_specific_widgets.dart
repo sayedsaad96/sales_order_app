@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:annex_sales_order/features/sales_order/presentation/widgets/carton_calculator_dialog.dart';
+import 'package:annex_sales_order/features/sales_order/presentation/utils/sales_order_helpers.dart';
 
 class YarnOrderHeader extends StatelessWidget {
   final TextEditingController snController;
@@ -516,7 +517,14 @@ class YarnItemsTable extends StatelessWidget {
   final List<TextEditingController> unitControllers;
   final List<TextEditingController> priceControllers;
   final ValueNotifier<double> totalValueNotifier;
-  final VoidCallback onAddItem;
+  final Function({
+    String? description,
+    double? quantity,
+    String? unit,
+    double? price,
+    int count,
+  })
+  onAddItem;
   final Function(int) onRemoveItem;
   final bool isMobile;
 
@@ -544,14 +552,33 @@ class YarnItemsTable extends StatelessWidget {
             else
               _buildDesktopTable(context),
             const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: onAddItem,
-              icon: const Icon(CupertinoIcons.add),
-              label: const Text('إضافة صنف'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.teal,
-                foregroundColor: Colors.white,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () => onAddItem(),
+                  icon: const Icon(CupertinoIcons.add),
+                  label: const Text('إضافة صنف'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    final count = await showBulkAddDialog(context);
+                    if (count != null) {
+                      onAddItem(count: count);
+                    }
+                  },
+                  icon: const Icon(CupertinoIcons.plus_square_on_square),
+                  label: const Text('إضافة جماعية'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 20),
             _buildTotalSection(context),

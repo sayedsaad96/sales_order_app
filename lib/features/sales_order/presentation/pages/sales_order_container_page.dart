@@ -72,7 +72,7 @@ class _SalesOrderContainerPageState extends State<SalesOrderContainerPage> {
           children: [
             _buildNavItem(
               index: 0,
-              icon: CupertinoIcons.square_list_fill,
+              icon: Icons.ac_unit_outlined,
               label: 'مستلزمات',
               activeColor: Colors.blue.shade600,
               activeBg: Colors.blue.shade50,
@@ -86,7 +86,7 @@ class _SalesOrderContainerPageState extends State<SalesOrderContainerPage> {
             ),
             _buildNavItem(
               index: 2,
-              icon: CupertinoIcons.tag_fill,
+              icon: CupertinoIcons.scissors,
               label: 'قماش',
               activeColor: Colors.purple.shade600,
               activeBg: Colors.purple.shade50,

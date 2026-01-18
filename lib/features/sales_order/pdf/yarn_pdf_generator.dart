@@ -2,20 +2,18 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:intl/intl.dart' as intl;
+import 'package:printing/printing.dart';
 import '../data/models/yarn_sales_order.dart';
 
 class YarnPdfGenerator {
   static Future<pw.Document> generate(YarnSalesOrder order) async {
     final pdf = pw.Document();
 
-    // Load Font
     pw.Font arabicFont;
     pw.Font arabicFontBold;
     try {
-      final fontData = await rootBundle.load("assets/fonts/Cairo-Regular.ttf");
-      arabicFont = pw.Font.ttf(fontData);
-      final fontDataBold = await rootBundle.load("assets/fonts/Cairo-Bold.ttf");
-      arabicFontBold = pw.Font.ttf(fontDataBold);
+      arabicFont = await PdfGoogleFonts.cairoRegular();
+      arabicFontBold = await PdfGoogleFonts.cairoBold();
     } catch (e) {
       arabicFont = pw.Font.courier();
       arabicFontBold = pw.Font.courierBold();
@@ -37,7 +35,7 @@ class YarnPdfGenerator {
     const lightGrey = PdfColor.fromInt(0xFFEEEEEE);
 
     final theme = pw.ThemeData.withFont(base: arabicFont, bold: arabicFontBold);
-    final numberFormat = intl.NumberFormat('#,###.##');
+    final numberFormat = intl.NumberFormat('#,###.##', 'en_US');
 
     pdf.addPage(
       pw.MultiPage(
@@ -135,7 +133,8 @@ class YarnPdfGenerator {
                   1: pw.FlexColumnWidth(1), // Price
                   2: pw.FlexColumnWidth(1), // Unit
                   3: pw.FlexColumnWidth(1), // Qty
-                  4: pw.FlexColumnWidth(4), // Description
+                  4: pw.FlexColumnWidth(3), // Description
+                  5: pw.FlexColumnWidth(2), // Comment
                 },
                 children: [
                   // Header
@@ -147,6 +146,7 @@ class YarnPdfGenerator {
                       _buildTableHeader('الوحدة'),
                       _buildTableHeader('الكمية'),
                       _buildTableHeader('الصنف', align: pw.TextAlign.right),
+                      _buildTableHeader('تعليق'),
                     ],
                   ),
                   // Rows
@@ -154,18 +154,33 @@ class YarnPdfGenerator {
                     final index = e.key;
                     final item = e.value;
                     final isEven = index % 2 == 0;
+                    final rowColor = isEven ? PdfColors.white : PdfColors.grey50;
                     return pw.TableRow(
                       decoration: pw.BoxDecoration(
-                        color: isEven ? PdfColors.white : accentColor,
+                        color: rowColor,
                       ),
                       children: [
-                        _buildTableCell(numberFormat.format(item.value)),
-                        _buildTableCell(numberFormat.format(item.price)),
+                        _buildEditableTableCell(
+                          numberFormat.format(item.value),
+                          'value_$index',
+                          backgroundColor: rowColor,
+                        ),
+                        _buildEditableTableCell(
+                          numberFormat.format(item.price),
+                          'price_$index',
+                          backgroundColor: rowColor,
+                        ),
                         _buildTableCell(item.unit),
-                        _buildTableCell(numberFormat.format(item.quantity)),
-                        _buildTableCell(
-                          item.description,
-                          align: pw.TextAlign.right,
+                        _buildEditableTableCell(
+                          numberFormat.format(item.quantity),
+                          'quantity_$index',
+                          backgroundColor: rowColor,
+                        ),
+                        _buildTableCell(item.description, align: pw.TextAlign.right),
+                        _buildEditableTableCell(
+                          '',
+                          'comment_$index',
+                          backgroundColor: rowColor,
                         ),
                       ],
                     );
@@ -194,7 +209,7 @@ class YarnPdfGenerator {
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
                         children: [
                           pw.Text(
-                            'ملاحظات:',
+                            _fixArabic('ملاحظات:'),
                             style: pw.TextStyle(
                               fontWeight: pw.FontWeight.bold,
                               fontSize: 10,
@@ -203,8 +218,9 @@ class YarnPdfGenerator {
                           ),
                           pw.SizedBox(height: 4),
                           pw.Text(
-                            order.notes!,
+                            _fixArabic(order.notes!),
                             style: const pw.TextStyle(fontSize: 10),
+                            textDirection: pw.TextDirection.rtl,
                           ),
                         ],
                       ),
@@ -243,12 +259,18 @@ class YarnPdfGenerator {
                                   fontSize: 14,
                                 ),
                               ),
-                              pw.Text(
-                                numberFormat.format(order.totalValue),
-                                style: pw.TextStyle(
-                                  color: PdfColors.white,
-                                  fontWeight: pw.FontWeight.bold,
-                                  fontSize: 14,
+                              pw.Container(
+                                width: 85,
+                                child: pw.TextField(
+                                  name: 'total_value',
+                                  value: numberFormat.format(order.totalValue),
+                                  textStyle: pw.TextStyle(
+                                    color: PdfColors.white,
+                                    fontWeight: pw.FontWeight.bold,
+                                    fontSize: 14,
+                                    font: pw.Font.helvetica(),
+                                  ),
+                                  backgroundColor: primaryColor,
                                 ),
                               ),
                             ],
@@ -379,13 +401,33 @@ class YarnPdfGenerator {
                       color: accentColor,
                       borderRadius: pw.BorderRadius.circular(4),
                     ),
-                    child: pw.Text(
-                      'S/N: ${order.sn ?? "---"}',
-                      style: pw.TextStyle(
-                        fontSize: 10,
-                        fontWeight: pw.FontWeight.bold,
-                        color: primaryColor,
-                      ),
+                    child: pw.Row(
+                      mainAxisSize: pw.MainAxisSize.min,
+                      children: [
+                        pw.Container(
+                          width: 60,
+                          height: 12,
+                          child: pw.TextField(
+                            name: 'sn',
+                            value: order.sn ?? "---",
+                            textStyle: pw.TextStyle(
+                              fontSize: 10,
+                              fontWeight: pw.FontWeight.bold,
+                              color: primaryColor,
+                              font: pw.Font.helvetica(),
+                            ),
+                            backgroundColor: PdfColors.white,
+                          ),
+                        ),
+                        pw.Text(
+                          'S/N: ',
+                          style: pw.TextStyle(
+                            fontSize: 10,
+                            fontWeight: pw.FontWeight.bold,
+                            color: primaryColor,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -590,6 +632,26 @@ class YarnPdfGenerator {
     );
   }
 
+  static pw.Widget _buildEditableTableCell(
+    String initialValue,
+    String fieldName, {
+    PdfColor? backgroundColor,
+  }) {
+    return pw.Container(
+      padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+      child: pw.TextField(
+        name: fieldName,
+        value: initialValue,
+        textStyle: pw.TextStyle(
+          font: pw.Font.helvetica(),
+          fontSize: 10,
+        ),
+        backgroundColor: backgroundColor ?? PdfColors.white,
+      ),
+    );
+  }
+
+
   static pw.Widget _buildInstallmentRow(
     int number,
     String duration,
@@ -640,6 +702,7 @@ class YarnPdfGenerator {
   }
 
   static String _fixArabic(String text) {
-    return text; 
+    return text;
   }
+
 }

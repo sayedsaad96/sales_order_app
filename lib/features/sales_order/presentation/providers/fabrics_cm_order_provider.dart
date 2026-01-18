@@ -208,36 +208,39 @@ class FabricsCmOrderProvider extends ChangeNotifier {
     double? stitchLen,
 
     String? spinCo,
+    int count = 1,
   }) {
-    final qc = TextEditingController(text: quantity?.toString() ?? '');
+    for (int i = 0; i < count; i++) {
+      final qc = TextEditingController(text: quantity?.toString() ?? '');
 
-    final lnc = TextEditingController(text: lycraNum ?? '');
-    final lpc = TextEditingController(text: lycraPercent?.toString() ?? '');
-    final ftc = TextEditingController(text: fabricType ?? '');
-    final ycc = TextEditingController(text: yarnCount ?? '');
-    final ytc = TextEditingController(text: yarnType ?? '');
-    final gc = TextEditingController(text: gauge?.toString() ?? '');
-    final wc = TextEditingController(text: width?.toString() ?? '');
-    final slc = TextEditingController(text: stitchLen?.toString() ?? '');
+      final lnc = TextEditingController(text: lycraNum ?? '');
+      final lpc = TextEditingController(text: lycraPercent?.toString() ?? '');
+      final ftc = TextEditingController(text: fabricType ?? '');
+      final ycc = TextEditingController(text: yarnCount ?? '');
+      final ytc = TextEditingController(text: yarnType ?? '');
+      final gc = TextEditingController(text: gauge?.toString() ?? '');
+      final wc = TextEditingController(text: width?.toString() ?? '');
+      final slc = TextEditingController(text: stitchLen?.toString() ?? '');
 
-    final scc = TextEditingController(text: spinCo ?? '');
+      final scc = TextEditingController(text: spinCo ?? '');
 
-    void listener() => notifyListeners();
-    qc.addListener(listener);
-    lpc.addListener(listener); // Lycra % also affects total
+      void listener() => notifyListeners();
+      qc.addListener(listener);
+      lpc.addListener(listener); // Lycra % also affects total
 
-    quantityControllers.add(qc);
+      quantityControllers.add(qc);
 
-    lycraNumControllers.add(lnc);
-    lycraPercentControllers.add(lpc);
-    fabricTypeControllers.add(ftc);
-    yarnCountControllers.add(ycc);
-    yarnTypeControllers.add(ytc);
-    gaugeControllers.add(gc);
-    widthControllers.add(wc);
-    stitchLengthControllers.add(slc);
+      lycraNumControllers.add(lnc);
+      lycraPercentControllers.add(lpc);
+      fabricTypeControllers.add(ftc);
+      yarnCountControllers.add(ycc);
+      yarnTypeControllers.add(ytc);
+      gaugeControllers.add(gc);
+      widthControllers.add(wc);
+      stitchLengthControllers.add(slc);
 
-    spinningCompanyControllers.add(scc);
+      spinningCompanyControllers.add(scc);
+    }
 
     notifyListeners();
   }

@@ -203,26 +203,28 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
     }
   }
 
-  void _addItem(int sectionIndex) {
+  void _addItem(int sectionIndex, {int count = 1}) {
     final section = _sections[sectionIndex];
-    double? defaultPrice;
-    if (section.items.isNotEmpty && section.items.first.price > 0) {
-      defaultPrice = section.items.first.price;
+    for (int i = 0; i < count; i++) {
+      double? defaultPrice;
+      if (section.items.isNotEmpty && section.items.first.price > 0) {
+        defaultPrice = section.items.first.price;
+      }
+      section.items.add(
+        SalesOrderItem(
+          price: defaultPrice ?? 0,
+          unit: section.defaultUnitController.text,
+        ),
+      );
+      section.itemControllers.add(
+        ItemControllers(
+          price: (defaultPrice != null && defaultPrice > 0)
+              ? defaultPrice.toString()
+              : '',
+          unit: section.defaultUnitController.text,
+        ),
+      );
     }
-    section.items.add(
-      SalesOrderItem(
-        price: defaultPrice ?? 0,
-        unit: section.defaultUnitController.text,
-      ),
-    );
-    section.itemControllers.add(
-      ItemControllers(
-        price: (defaultPrice != null && defaultPrice > 0)
-            ? defaultPrice.toString()
-            : '',
-        unit: section.defaultUnitController.text,
-      ),
-    );
     // Trigger rebuild only after adding item
     if (mounted) {
       setState(() {});
@@ -1140,10 +1142,25 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
             ),
             padding: const EdgeInsets.all(8.0),
             margin: const EdgeInsets.only(bottom: 20),
-            child: TextButton.icon(
-              onPressed: () => _addItem(sectionIndex),
-              icon: const Icon(CupertinoIcons.add),
-              label: const Text('إضافة صنف'),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                TextButton.icon(
+                  onPressed: () => _addItem(sectionIndex),
+                  icon: const Icon(CupertinoIcons.add),
+                  label: const Text('إضافة صنف'),
+                ),
+                TextButton.icon(
+                  onPressed: () async {
+                    final count = await showBulkAddDialog(context);
+                    if (count != null) {
+                      _addItem(sectionIndex, count: count);
+                    }
+                  },
+                  icon: const Icon(CupertinoIcons.plus_square_on_square),
+                  label: const Text('إضافة جماعية'),
+                ),
+              ],
             ),
           ),
         ),

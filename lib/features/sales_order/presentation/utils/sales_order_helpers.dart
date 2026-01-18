@@ -49,3 +49,45 @@ class OrderSection {
     }
   }
 }
+
+Future<int?> showBulkAddDialog(BuildContext context) async {
+  final controller = TextEditingController(text: '5');
+  return showDialog<int>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('إضافة أصناف متعددة', textAlign: TextAlign.right),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('أدخل عدد الأصناف التي تريد إضافتها:', textAlign: TextAlign.right),
+          const SizedBox(height: 10),
+          TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            autofocus: true,
+            textAlign: TextAlign.center,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('إلغاء'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            final count = int.tryParse(controller.text);
+            if (count != null && count > 0) {
+              Navigator.pop(context, count);
+            }
+          },
+          child: const Text('إضافة'),
+        ),
+      ],
+    ),
+  );
+}
+

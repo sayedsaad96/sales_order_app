@@ -24,7 +24,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
         final user = UserModel(
           fullName: _nameController.text,
           mobileNumber: _mobileController.text,
-          email: _emailController.text.isNotEmpty ? _emailController.text : null,
+          email: _emailController.text.isNotEmpty
+              ? _emailController.text
+              : null,
         );
         await _userDataSource.saveUser(user);
 
@@ -66,8 +68,17 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    Container(
+                      height: 100,
+                      decoration: const BoxDecoration(
+                        image: DecorationImage(
+                          image: AssetImage('assets/images/annex_logo.png'),
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
                     Text(
-                      'مرحباً بك في تطبيق طلبات البيع',
+                      'مرحباً بك في أنكس جروب',
                       style: Theme.of(context).textTheme.headlineSmall,
                       textAlign: TextAlign.center,
                     ),
@@ -126,6 +137,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
                           style: TextStyle(fontSize: 18),
                         ),
                       ),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'All rights reserved © Annex Group 2026\n Developed by Sayed Saad',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                   ],
                 ),
