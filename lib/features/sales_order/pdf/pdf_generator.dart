@@ -155,6 +155,7 @@ class PdfSalesOrderGenerator {
                       ),
                       bottom: pw.BorderSide(color: PdfColors.grey300, width: 1),
                     ),
+                    defaultVerticalAlignment: pw.TableCellVerticalAlignment.middle,
                     columnWidths: const {
                       0: pw.FlexColumnWidth(2), // Total (Value)
                       1: pw.FlexColumnWidth(1.5), // Price
@@ -172,7 +173,7 @@ class PdfSalesOrderGenerator {
                           _buildTableHeader('السعر'),
                           _buildTableHeader('الوحدة'),
                           _buildTableHeader('الكمية'),
-                          _buildTableHeader('الصنف', align: pw.TextAlign.right),
+                          _buildTableHeader('الصنف', align: pw.TextAlign.center),
                           _buildTableHeader('تعليق'),
                         ],
                       ),
@@ -203,7 +204,7 @@ class PdfSalesOrderGenerator {
                               'quantity_${groupIndex}_$index',
                               backgroundColor: rowColor,
                             ),
-                            _buildTableCell(item.itemName, align: pw.TextAlign.right),
+                            _buildTableCell(item.itemName, align: pw.TextAlign.center),
                             _buildEditableTableCell(
                               '',
                               'comment_${groupIndex}_$index',

@@ -134,6 +134,7 @@ class ReturnOrderPdfGenerator {
                 ),
                 bottom: pw.BorderSide(color: PdfColors.grey300, width: 1),
               ),
+              defaultVerticalAlignment: pw.TableCellVerticalAlignment.middle,
               columnWidths: const {
                 0: pw.FlexColumnWidth(1), // Unit
                 1: pw.FlexColumnWidth(1), // Qty
@@ -146,7 +147,7 @@ class ReturnOrderPdfGenerator {
                   children: [
                     _buildTableHeader('الوحدة'),
                     _buildTableHeader('الكمية'),
-                    _buildTableHeader('الصنف', align: pw.TextAlign.right),
+                    _buildTableHeader('الصنف', align: pw.TextAlign.center),
                   ],
                 ),
                 // Rows
@@ -165,7 +166,7 @@ class ReturnOrderPdfGenerator {
                           'quantity_$index',
                           backgroundColor: isEven ? PdfColors.white : accentColor,
                         ),
-                        _buildTableCell(item.item, align: pw.TextAlign.right),
+                        _buildTableCell(item.item, align: pw.TextAlign.center),
                       ],
                     );
                   }),

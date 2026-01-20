@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:annex_sales_order/features/user/data/datasources/user_local_data_source.dart';
 import 'package:annex_sales_order/features/sales_order/presentation/pages/sales_order_container_page.dart';
 import 'package:annex_sales_order/features/user/presentation/pages/registration_page.dart';
+import 'package:annex_sales_order/core/services/app_version_service.dart';
+import 'package:annex_sales_order/core/widgets/update_dialog.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -45,7 +47,39 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _navigateToNextScreen() async {
-    await Future.delayed(const Duration(seconds: 3));
+    // Start minimum delay
+    final minDelay = Future.delayed(const Duration(seconds: 3));
+    
+    // Check for updates
+    VersionCheckResult? updateInfo;
+    try {
+      updateInfo = await AppVersionService().checkVersion();
+    } catch (e) {
+      debugPrint("Version check failed: $e");
+    }
+
+    await minDelay;
+    if (!mounted) return;
+
+    // Show update dialog if needed
+    final info = updateInfo;
+    if (info != null) {
+      await showDialog(
+        context: context,
+        barrierDismissible: !info.forceUpdate,
+        builder: (context) => UpdateDialog(
+          message: info.message,
+          storeUrl: info.storeUrl,
+          forceUpdate: info.forceUpdate,
+        ),
+      );
+
+      if (info.forceUpdate) {
+        // If forced update, do not proceed to app
+        return;
+      }
+    }
+
     if (!mounted) return;
 
     final userDataSource = UserLocalDataSource();

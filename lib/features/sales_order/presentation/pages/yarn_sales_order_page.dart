@@ -366,36 +366,45 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
         final safeName = (newOrderData.customerName ?? 'Client').replaceAll(RegExp(r'[^\w\s\u0600-\u06FF]'), '');
         final fileName = '${safeName}_${newOrderData.sn}.pdf';
 
-        if (strategy == InvoiceSaveStrategy.auto && defaultPath != null) {
-          final customerDir = Directory('$defaultPath/$safeName');
-          if (!await customerDir.exists()) {
-            await customerDir.create(recursive: true);
+        if (Platform.isAndroid || Platform.isIOS) {
+          // Mobile: Share directly
+          if (mounted) {
+            Navigator.of(context).pop();
+            await Printing.sharePdf(bytes: bytes, filename: fileName);
           }
-          finalPath = '${customerDir.path}/$fileName';
-          final file = File(finalPath);
-          await file.writeAsBytes(bytes);
         } else {
-          if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-            finalPath = await FilePicker.platform.saveFile(
-              dialogTitle: 'حفظ الفاتورة',
-              fileName: fileName,
-              type: FileType.custom,
-              allowedExtensions: ['pdf'],
-            );
-            
-            if (finalPath != null) {
-              final file = File(finalPath);
-              await file.writeAsBytes(bytes);
-            } else {
-              if (mounted) Navigator.of(context).pop();
-              return;
+          // Desktop: Follow settings strategy
+          if (strategy == InvoiceSaveStrategy.auto && defaultPath != null) {
+            final customerDir = Directory('$defaultPath/$safeName');
+            if (!await customerDir.exists()) {
+              await customerDir.create(recursive: true);
             }
-          } else {
-            Directory? directory = await getExternalStorageDirectory();
-            directory ??= await getApplicationDocumentsDirectory();
-            finalPath = '${directory.path}/$fileName';
+            finalPath = '${customerDir.path}/$fileName';
             final file = File(finalPath);
             await file.writeAsBytes(bytes);
+          } else {
+            if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+              finalPath = await FilePicker.platform.saveFile(
+                dialogTitle: 'حفظ الفاتورة',
+                fileName: fileName,
+                type: FileType.custom,
+                allowedExtensions: ['pdf'],
+              );
+
+              if (finalPath != null) {
+                final file = File(finalPath);
+                await file.writeAsBytes(bytes);
+              } else {
+                if (mounted) Navigator.of(context).pop();
+                return;
+              }
+            } else {
+              Directory? directory = await getExternalStorageDirectory();
+              directory ??= await getApplicationDocumentsDirectory();
+              finalPath = '${directory.path}/$fileName';
+              final file = File(finalPath);
+              await file.writeAsBytes(bytes);
+            }
           }
         }
 
@@ -404,7 +413,9 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('تم حفظ الملف: $finalPath'),
-              duration: const Duration(seconds: 8),
+              duration: (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
+                  ? const Duration(seconds: 5)
+                  : const Duration(days: 365),
               action: SnackBarAction(
                 label: 'مشاركة',
                 textColor: Colors.yellowAccent,

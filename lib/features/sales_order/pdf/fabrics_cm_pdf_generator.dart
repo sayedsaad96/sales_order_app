@@ -30,7 +30,6 @@ class FabricsCmPdfGenerator {
 
     const primaryColor = PdfColor.fromInt(0xFF3F51B5); // Indigo
     const accentColor = PdfColor.fromInt(0xFFF3E5F5); // Light Purple
-    const lightGrey = PdfColor.fromInt(0xFFEEEEEE);
 
     final theme = pw.ThemeData.withFont(base: arabicFont, bold: arabicFontBold);
     final numberFormat = intl.NumberFormat('#,###.##', 'en_US');
@@ -128,7 +127,7 @@ class FabricsCmPdfGenerator {
                   final index = entry.key;
                   final item = entry.value;
                   final isEven = index % 2 == 0;
-                  final rowColor = isEven ? PdfColors.white : PdfColors.grey50;
+                  final rowColor = isEven ? PdfColors.white : PdfColors.grey100;
                   return pw.TableRow(
                     decoration: pw.BoxDecoration(
                       color: rowColor,
@@ -158,64 +157,48 @@ class FabricsCmPdfGenerator {
 
             pw.SizedBox(height: 10),
             
-            // Global pricing params summary before total
-            pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.end,
-              children: [
-                pw.Text(
-                   'سعر الغزل: ${numberFormat.format(order.yarnPrice)} | '
-                   'سعر الليكرا: ${numberFormat.format(order.lycraPrice)} | '
-                   'المصنعية/CM: ${numberFormat.format(order.manufacturingPrice)}',
-                   style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
-                   textDirection: pw.TextDirection.rtl,
-                ),
-              ],
+            // Global pricing params summary
+            pw.Container(
+              margin: const pw.EdgeInsets.symmetric(vertical: 10),
+              padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: pw.BoxDecoration(
+                border: pw.Border.all(color: PdfColors.grey300),
+                borderRadius: pw.BorderRadius.circular(4),
+                color: PdfColors.grey100,
+              ),
+              child: pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
+                children: [
+                  _buildPriceParamItem('سعر الغزل', order.yarnPrice ?? 0.0, numberFormat),
+                  _buildVerticalDivider(),
+                  _buildPriceParamItem('سعر الليكرا', order.lycraPrice ?? 0.0, numberFormat),
+                  _buildVerticalDivider(),
+                  _buildPriceParamItem('المصنعية', order.manufacturingPrice ?? 0.0, numberFormat),
+                ],
+              ),
             ),
-            pw.SizedBox(height: 5),
 
+            // Totals Section
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.end,
               children: [
                 pw.Container(
+                  width: 200,
                   padding: const pw.EdgeInsets.all(10),
-                  color: lightGrey,
+                  decoration: pw.BoxDecoration(
+                    color: PdfColors.grey100,
+                    borderRadius: pw.BorderRadius.circular(4),
+                    border: pw.Border.all(color: PdfColors.grey200),
+                  ),
                   child: pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.end,
                     children: [
-                      pw.Row(
-                        mainAxisSize: pw.MainAxisSize.min,
-                        children: [
-                          pw.Text('إجمالي السعر: '),
-                          pw.Text(numberFormat.format(order.baseTotal)),
-                        ],
-                      ),
+                      _buildTotalRow('إجمالي السعر', order.baseTotal, numberFormat),
                       if (order.wasteTotal > 0) ...[
-                        pw.SizedBox(height: 4),
-                        pw.Row(
-                          mainAxisSize: pw.MainAxisSize.min,
-                          children: [
-                            pw.Text('الهالك (2%): '),
-                            pw.Text(numberFormat.format(order.wasteTotal)),
-                          ],
-                        ),
+                        pw.SizedBox(height: 5),
+                        _buildTotalRow('الهالك (2%)', order.wasteTotal, numberFormat, color: PdfColors.red),
                       ],
-                      pw.Divider(color: primaryColor),
-                      pw.Row(
-                        mainAxisSize: pw.MainAxisSize.min,
-                        children: [
-                          pw.Text(
-                            'الإجمالي النهائي: ',
-                            style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-                          ),
-                          pw.Text(
-                            numberFormat.format(order.totalValue),
-                            style: pw.TextStyle(
-                              fontWeight: pw.FontWeight.bold,
-                              color: primaryColor,
-                            ),
-                          ),
-                        ],
-                      ),
+                      pw.Divider(color: primaryColor, thickness: 1),
+                      _buildTotalRow('الإجمالي النهائي', order.totalValue, numberFormat, isBold: true, color: primaryColor),
                     ],
                   ),
                 ),
@@ -464,8 +447,58 @@ class FabricsCmPdfGenerator {
   }
 
 
+  static pw.Widget _buildPriceParamItem(String label, double value, intl.NumberFormat format) {
+    return pw.Column(
+      mainAxisSize: pw.MainAxisSize.min,
+      children: [
+        pw.Text(
+          _fixArabic(label),
+          style: const pw.TextStyle(fontSize: 10, color: PdfColor.fromInt(0xFF757575)),
+          textDirection: pw.TextDirection.rtl,
+        ),
+        pw.Text(
+          format.format(value),
+          style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: PdfColor.fromInt(0xFF37474F)),
+        ),
+      ],
+    );
+  }
+
+  static pw.Widget _buildVerticalDivider() {
+    return pw.Container(
+      height: 20,
+      width: 1,
+      color: PdfColors.grey300,
+      margin: const pw.EdgeInsets.symmetric(horizontal: 10),
+    );
+  }
+
+  static pw.Widget _buildTotalRow(String label, double value, intl.NumberFormat format, {bool isBold = false, PdfColor? color}) {
+    return pw.Row(
+      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+      children: [
+        pw.Text(
+          _fixArabic(label),
+          style: pw.TextStyle(
+            fontSize: isBold ? 12 : 10,
+            fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal,
+            color: PdfColor.fromInt(0xFF424242),
+          ),
+          textDirection: pw.TextDirection.rtl,
+        ),
+        pw.Text(
+          format.format(value),
+          style: pw.TextStyle(
+            fontSize: isBold ? 14 : 12,
+            fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal,
+            color: color ?? PdfColors.black,
+          ),
+        ),
+      ],
+    );
+  }
+
   static String _fixArabic(String text) {
     return text;
   }
-
 }

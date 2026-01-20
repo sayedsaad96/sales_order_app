@@ -463,64 +463,79 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
         final defaultPath = settingsService.getDefaultSavePath();
 
         String? finalPath;
-        final safeName = (order.customerName ?? 'Client').replaceAll(RegExp(r'[^\w\s\u0600-\u06FF]'), '');
+        final safeName = (order.customerName ?? 'Client').replaceAll(
+          RegExp(r'[^\w\s\u0600-\u06FF]'),
+          '',
+        );
         final fileName = '${safeName}_${order.sn}.pdf';
 
-        if (strategy == InvoiceSaveStrategy.auto && defaultPath != null) {
-          // Auto-save logic
-          final customerDir = Directory('$defaultPath/$safeName');
-          if (!await customerDir.exists()) {
-            await customerDir.create(recursive: true);
+        if (Platform.isAndroid || Platform.isIOS) {
+          // Mobile: Share directly
+          if (mounted) {
+            Navigator.of(context).pop();
+            await Printing.sharePdf(bytes: bytes, filename: fileName);
           }
-          finalPath = '${customerDir.path}/$fileName';
-          final file = File(finalPath);
-          await file.writeAsBytes(bytes);
         } else {
-          // "Always Ask" or fallback logic
-          if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-            // On desktop, use save file picker if strategy is "ask"
-            finalPath = await FilePicker.platform.saveFile(
-              dialogTitle: 'حفظ الفاتورة',
-              fileName: fileName,
-              type: FileType.custom,
-              allowedExtensions: ['pdf'],
-            );
-            
-            if (finalPath != null) {
-              final file = File(finalPath);
-              await file.writeAsBytes(bytes);
-            } else {
-              // User cancelled
-              if (mounted) Navigator.of(context).pop();
-              return;
+          // Desktop: Follow settings strategy
+          if (strategy == InvoiceSaveStrategy.auto && defaultPath != null) {
+            // Auto-save logic
+            final customerDir = Directory('$defaultPath/$safeName');
+            if (!await customerDir.exists()) {
+              await customerDir.create(recursive: true);
             }
-          } else {
-            // Fallback for mobile if needed, though mostly desktop-focused req
-            Directory? directory = await getExternalStorageDirectory();
-            directory ??= await getApplicationDocumentsDirectory();
-            finalPath = '${directory.path}/$fileName';
+            finalPath = '${customerDir.path}/$fileName';
             final file = File(finalPath);
             await file.writeAsBytes(bytes);
-          }
-        }
+          } else {
+            // "Always Ask" or fallback logic
+            if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+              // On desktop, use save file picker if strategy is "ask"
+              finalPath = await FilePicker.platform.saveFile(
+                dialogTitle: 'حفظ الفاتورة',
+                fileName: fileName,
+                type: FileType.custom,
+                allowedExtensions: ['pdf'],
+              );
 
-        // Dismiss loading indicator
-        if (mounted) {
-          Navigator.of(context).pop();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('تم حفظ الملف: $finalPath'),
-              duration: const Duration(seconds: 8),
-              action: SnackBarAction(
-                label: 'مشاركة',
-                textColor: Colors.yellowAccent,
-                backgroundColor: Colors.black,
-                onPressed: () {
-                  Printing.sharePdf(bytes: bytes, filename: fileName);
-                },
+              if (finalPath != null) {
+                final file = File(finalPath);
+                await file.writeAsBytes(bytes);
+              } else {
+                // User cancelled
+                if (mounted) Navigator.of(context).pop();
+                return;
+              }
+            } else {
+              // Fallback for other platforms
+              Directory? directory = await getExternalStorageDirectory();
+              directory ??= await getApplicationDocumentsDirectory();
+              finalPath = '${directory.path}/$fileName';
+              final file = File(finalPath);
+              await file.writeAsBytes(bytes);
+            }
+          }
+
+          // Dismiss loading indicator and show success (Desktop only path)
+          if (mounted) {
+            Navigator.of(context).pop();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('تم حفظ الملف: $finalPath'),
+                duration:
+                    (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
+                    ? const Duration(seconds: 5)
+                    : const Duration(days: 365),
+                action: SnackBarAction(
+                  label: 'مشاركة',
+                  textColor: Colors.yellowAccent,
+                  backgroundColor: Colors.black,
+                  onPressed: () {
+                    Printing.sharePdf(bytes: bytes, filename: fileName);
+                  },
+                ),
               ),
-            ),
-          );
+            );
+          }
         }
       } catch (e) {
         // Dismiss loading indicator if error occurs
@@ -544,7 +559,11 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                 onPressed: widget.onMenuPressed,
                 tooltip: 'Menu',
               )
-            : null,
+            : IconButton(
+                icon: Icon(CupertinoIcons.back),
+                onPressed: () => Navigator.of(context).pop(),
+                tooltip: 'رجوع',
+              ),
         title: const Text('Annex Group'),
         centerTitle: true,
         actions: [

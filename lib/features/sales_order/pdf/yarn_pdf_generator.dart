@@ -128,6 +128,7 @@ class YarnPdfGenerator {
                   ),
                   bottom: pw.BorderSide(color: PdfColors.grey300, width: 1),
                 ),
+                defaultVerticalAlignment: pw.TableCellVerticalAlignment.middle,
                 columnWidths: const {
                   0: pw.FlexColumnWidth(1), // Total
                   1: pw.FlexColumnWidth(1), // Price
@@ -145,7 +146,7 @@ class YarnPdfGenerator {
                       _buildTableHeader('السعر'),
                       _buildTableHeader('الوحدة'),
                       _buildTableHeader('الكمية'),
-                      _buildTableHeader('الصنف', align: pw.TextAlign.right),
+                      _buildTableHeader('الصنف', align: pw.TextAlign.center),
                       _buildTableHeader('تعليق'),
                     ],
                   ),
@@ -176,7 +177,7 @@ class YarnPdfGenerator {
                           'quantity_$index',
                           backgroundColor: rowColor,
                         ),
-                        _buildTableCell(item.description, align: pw.TextAlign.right),
+                        _buildTableCell(item.description, align: pw.TextAlign.center),
                         _buildEditableTableCell(
                           '',
                           'comment_$index',

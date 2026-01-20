@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import '../../data/models/fabrics_cm_sales_order.dart';
 import '../../data/datasources/fabrics_cm_invoice_local_data_source.dart';
@@ -17,7 +16,7 @@ class FabricsCmOrderProvider extends ChangeNotifier {
     } else {
       resetForm();
     }
-    
+
     // Global Price Listeners
     globalYarnPriceController.addListener(notifyListeners);
     globalLycraPriceController.addListener(notifyListeners);
@@ -30,9 +29,9 @@ class FabricsCmOrderProvider extends ChangeNotifier {
   final snController = TextEditingController();
   final customerNameController = TextEditingController();
   final salesResponsibleController = TextEditingController();
-  final paymentMethodController = TextEditingController(); 
+  final paymentMethodController = TextEditingController();
   final notesController = TextEditingController();
-  
+
   // Header State
   DateTime orderDate = DateTime.now();
   DateTime? deliveryDate;
@@ -55,38 +54,47 @@ class FabricsCmOrderProvider extends ChangeNotifier {
 
   final List<TextEditingController> spinningCompanyControllers = [];
 
-  final TextEditingController globalYarnPriceController = TextEditingController(text: '0.0');
-  final TextEditingController globalLycraPriceController = TextEditingController(text: '0.0');
-  final TextEditingController globalMfgPriceController = TextEditingController(text: '0.0');
+  final TextEditingController globalYarnPriceController = TextEditingController(
+    text: '0.0',
+  );
+  final TextEditingController globalLycraPriceController =
+      TextEditingController(text: '0.0');
+  final TextEditingController globalMfgPriceController = TextEditingController(
+    text: '0.0',
+  );
 
   double get baseTotal {
     double total = 0;
     bool isFabric = orderTypes['قماش'] ?? false;
     bool isCm = orderTypes['CM'] ?? false;
-    
-    double globalYarnPrice = double.tryParse(globalYarnPriceController.text) ?? 0.0;
-    double globalLycraPrice = double.tryParse(globalLycraPriceController.text) ?? 0.0;
-    double globalMfgPrice = double.tryParse(globalMfgPriceController.text) ?? 0.0;
+
+    double globalYarnPrice =
+        double.tryParse(globalYarnPriceController.text) ?? 0.0;
+    double globalLycraPrice =
+        double.tryParse(globalLycraPriceController.text) ?? 0.0;
+    double globalMfgPrice =
+        double.tryParse(globalMfgPriceController.text) ?? 0.0;
 
     for (int i = 0; i < quantityControllers.length; i++) {
-        final qty = double.tryParse(quantityControllers[i].text) ?? 0;
-        final lycraPercent = double.tryParse(lycraPercentControllers[i].text) ?? 0;
+      final qty = double.tryParse(quantityControllers[i].text) ?? 0;
+      final lycraPercent =
+          double.tryParse(lycraPercentControllers[i].text) ?? 0;
 
-        if (isFabric) {
-            double lycraDecimal = lycraPercent / 100;
-            double yarnQty = qty * (1 - lycraDecimal);
-            double lycraQty = qty * lycraDecimal;
-            double yarnValue = yarnQty * globalYarnPrice;
-            double lycraValue = lycraQty * globalLycraPrice;
-            total += yarnValue + lycraValue + (globalMfgPrice * qty);
-        } else if (isCm) {
-            double lycraDecimal = lycraPercent / 100;
-            double lycraQty = qty * lycraDecimal;
-            double lycraValue = lycraQty * globalLycraPrice;
-            total += lycraValue + (globalMfgPrice * qty);
-        } else {
-            total += qty * globalMfgPrice;
-        }
+      if (isFabric) {
+        double lycraDecimal = lycraPercent / 100;
+        double yarnQty = qty * (1 - lycraDecimal);
+        double lycraQty = qty * lycraDecimal;
+        double yarnValue = yarnQty * globalYarnPrice;
+        double lycraValue = lycraQty * globalLycraPrice;
+        total += yarnValue + lycraValue + (globalMfgPrice * qty);
+      } else if (isCm) {
+        double lycraDecimal = lycraPercent / 100;
+        double lycraQty = qty * lycraDecimal;
+        double lycraValue = lycraQty * globalLycraPrice;
+        total += lycraValue + (globalMfgPrice * qty);
+      } else {
+        total += qty * globalMfgPrice;
+      }
     }
     return total;
   }
@@ -102,7 +110,6 @@ class FabricsCmOrderProvider extends ChangeNotifier {
   bool _isSaving = false;
   bool get isSaving => _isSaving;
 
-
   void _loadExistingOrder(FabricsCmSalesOrder order) {
     existingOrder = order;
     snController.text = order.sn ?? '';
@@ -110,10 +117,10 @@ class FabricsCmOrderProvider extends ChangeNotifier {
     paymentMethodController.text = order.paymentMethod ?? '';
     notesController.text = order.notes ?? '';
     salesResponsibleController.text = order.salesResponsible ?? '';
-    
+
     orderDate = order.orderDate;
     deliveryDate = order.deliveryDate;
-    
+
     globalYarnPriceController.text = order.yarnPrice.toString();
     globalLycraPriceController.text = order.lycraPrice.toString();
     globalMfgPriceController.text = order.manufacturingPrice.toString();
@@ -127,14 +134,14 @@ class FabricsCmOrderProvider extends ChangeNotifier {
     orderTypes['CM'] = false;
     for (var t in order.orderTypesList) {
       if (orderTypes.containsKey(t)) {
-          orderTypes[t] = true;
+        orderTypes[t] = true;
       }
     }
-    
+
     // Legacy fallback if list is empty
     if (order.orderTypesList.isEmpty && order.orderType != null) {
-       if (order.orderType!.contains('قماش')) orderTypes['قماش'] = true;
-       if (order.orderType!.contains('CM')) orderTypes['CM'] = true;
+      if (order.orderType!.contains('قماش')) orderTypes['قماش'] = true;
+      if (order.orderType!.contains('CM')) orderTypes['CM'] = true;
     }
 
     _disposeAllItemControllers();
@@ -155,7 +162,7 @@ class FabricsCmOrderProvider extends ChangeNotifier {
         spinCo: item.spinningCompany,
       );
     }
-    
+
     notifyListeners();
   }
 
@@ -164,11 +171,11 @@ class FabricsCmOrderProvider extends ChangeNotifier {
     customerNameController.clear();
     paymentMethodController.clear();
     notesController.clear();
-    
+
     globalYarnPriceController.text = '0.0';
     globalLycraPriceController.text = '0.0';
     globalMfgPriceController.text = '0.0';
-    
+
     orderDate = DateTime.now();
     deliveryDate = null;
     orderType = null;
@@ -318,27 +325,33 @@ class FabricsCmOrderProvider extends ChangeNotifier {
   FabricsCmSalesOrder _createOrderObject() {
     final List<FabricsCmLineItem> items = [];
     for (int i = 0; i < quantityControllers.length; i++) {
-        final qty = double.tryParse(quantityControllers[i].text) ?? 0;
-        // Basic validation: skip empty rows where key fields are missing
-        if (qty > 0) {
-           items.add(FabricsCmLineItem(
-             quantity: qty,
+      final qty = double.tryParse(quantityControllers[i].text) ?? 0;
+      // Basic validation: skip empty rows where key fields are missing
+      if (qty > 0) {
+        items.add(
+          FabricsCmLineItem(
+            quantity: qty,
 
-             lycraNumber: lycraNumControllers[i].text,
-             lycraPercentage: double.tryParse(lycraPercentControllers[i].text) ?? 0,
-             fabricType: fabricTypeControllers[i].text,
-             yarnCount: yarnCountControllers[i].text,
-             yarnType: yarnTypeControllers[i].text,
-             gauge: int.tryParse(gaugeControllers[i].text) ?? 0,
-             widthInches: double.tryParse(widthControllers[i].text) ?? 0,
-             stitchLength: double.tryParse(stitchLengthControllers[i].text) ?? 0,
+            lycraNumber: lycraNumControllers[i].text,
+            lycraPercentage:
+                double.tryParse(lycraPercentControllers[i].text) ?? 0,
+            fabricType: fabricTypeControllers[i].text,
+            yarnCount: yarnCountControllers[i].text,
+            yarnType: yarnTypeControllers[i].text,
+            gauge: int.tryParse(gaugeControllers[i].text) ?? 0,
+            widthInches: double.tryParse(widthControllers[i].text) ?? 0,
+            stitchLength: double.tryParse(stitchLengthControllers[i].text) ?? 0,
 
-             spinningCompany: spinningCompanyControllers[i].text,
-           ));
-        }
+            spinningCompany: spinningCompanyControllers[i].text,
+          ),
+        );
+      }
     }
 
-    final typesList = orderTypes.entries.where((e) => e.value).map((e) => e.key).toList();
+    final typesList = orderTypes.entries
+        .where((e) => e.value)
+        .map((e) => e.key)
+        .toList();
 
     return FabricsCmSalesOrder(
       sn: snController.text,
@@ -365,58 +378,65 @@ class FabricsCmOrderProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> saveOrder(BuildContext context, GlobalKey<FormState> formKey) async {
+  Future<bool> saveOrder(
+    BuildContext context,
+    GlobalKey<FormState> formKey,
+  ) async {
     if (!formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('يرجى ملء جميع الحقول المطلوبة بشكل صحيح')),
+        const SnackBar(
+          content: Text('يرجى ملء جميع الحقول المطلوبة بشكل صحيح'),
+        ),
       );
       return false;
     }
-    
+
     // Check if at least one item
     bool hasItems = false;
-     for (int i = 0; i < quantityControllers.length; i++) {
-        if ((double.tryParse(quantityControllers[i].text) ?? 0) > 0) {
-            hasItems = true;
-            break;
-        }
-     }
-     if (!hasItems) {
-         ScaffoldMessenger.of(context).showSnackBar(
-             const SnackBar(content: Text('يجب إضافة صنف واحد على الأقل بكمية صحيحة')),
-         );
-         return false;
-     }
+    for (int i = 0; i < quantityControllers.length; i++) {
+      if ((double.tryParse(quantityControllers[i].text) ?? 0) > 0) {
+        hasItems = true;
+        break;
+      }
+    }
+    if (!hasItems) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('يجب إضافة صنف واحد على الأقل بكمية صحيحة'),
+        ),
+      );
+      return false;
+    }
 
     _isSaving = true;
     notifyListeners();
 
     try {
       final newOrderData = _createOrderObject();
-      
+
       if (existingOrder != null && !saveAsNew) {
-          // Update existing order
-          existingOrder!.sn = newOrderData.sn;
-          existingOrder!.customerName = newOrderData.customerName;
-          existingOrder!.salesResponsible = newOrderData.salesResponsible;
-          existingOrder!.paymentMethod = newOrderData.paymentMethod;
-          existingOrder!.deliveryDate = newOrderData.deliveryDate;
-          existingOrder!.orderType = newOrderData.orderType;
-          existingOrder!.orderTypesList = newOrderData.orderTypesList;
-          existingOrder!.branch = newOrderData.branch;
-          existingOrder!.orderDate = newOrderData.orderDate;
-          existingOrder!.notes = newOrderData.notes;
-          existingOrder!.items = newOrderData.items;
-          existingOrder!.yarnPrice = newOrderData.yarnPrice;
-          existingOrder!.lycraPrice = newOrderData.lycraPrice;
-          existingOrder!.manufacturingPrice = newOrderData.manufacturingPrice;
-          
-          await existingOrder!.save();
+        // Update existing order
+        existingOrder!.sn = newOrderData.sn;
+        existingOrder!.customerName = newOrderData.customerName;
+        existingOrder!.salesResponsible = newOrderData.salesResponsible;
+        existingOrder!.paymentMethod = newOrderData.paymentMethod;
+        existingOrder!.deliveryDate = newOrderData.deliveryDate;
+        existingOrder!.orderType = newOrderData.orderType;
+        existingOrder!.orderTypesList = newOrderData.orderTypesList;
+        existingOrder!.branch = newOrderData.branch;
+        existingOrder!.orderDate = newOrderData.orderDate;
+        existingOrder!.notes = newOrderData.notes;
+        existingOrder!.items = newOrderData.items;
+        existingOrder!.yarnPrice = newOrderData.yarnPrice;
+        existingOrder!.lycraPrice = newOrderData.lycraPrice;
+        existingOrder!.manufacturingPrice = newOrderData.manufacturingPrice;
+
+        await existingOrder!.save();
       } else {
-          // Save as new (or first time save)
-          await FabricsCmInvoiceLocalDataSource().saveInvoice(newOrderData);
+        // Save as new (or first time save)
+        await FabricsCmInvoiceLocalDataSource().saveInvoice(newOrderData);
       }
-      
+
       _isSaving = false;
       notifyListeners();
       return true;
@@ -424,95 +444,108 @@ class FabricsCmOrderProvider extends ChangeNotifier {
       _isSaving = false;
       notifyListeners();
       if (!context.mounted) return false;
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('خطأ في الحفظ: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('خطأ في الحفظ: $e')));
       return false;
     }
   }
 
-  Future<void> generatePdf(BuildContext context, GlobalKey<FormState> formKey) async {
-      if (!formKey.currentState!.validate()) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('يرجى ملء جميع الحقول المطلوبة بشكل صحيح قبل إنشاء PDF')),
-        );
-        return;
-      }
-      
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => Dialog(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Column(
-                  children: [
-                    Image.asset(
-                      'assets/images/logo.png',
-                      height: 80,
-                      width: 80,
-                    ),
-                    const SizedBox(height: 15),
-                    const Text('جارٍ إعداد ملف PDF...'),
-                    const SizedBox(height: 15),
-                    const CircularProgressIndicator(),
-                  ],
-                ),
-              ),
-            ],
+  Future<void> generatePdf(
+    BuildContext context,
+    GlobalKey<FormState> formKey,
+  ) async {
+    if (!formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'يرجى ملء جميع الحقول المطلوبة بشكل صحيح قبل إنشاء PDF',
           ),
         ),
       );
+      return;
+    }
 
-      try {
-        final newOrderData = _createOrderObject();
-        
-        // Auto-save logic
-        if (existingOrder != null && !saveAsNew) {
-           existingOrder!.sn = newOrderData.sn;
-           existingOrder!.customerName = newOrderData.customerName;
-           existingOrder!.salesResponsible = newOrderData.salesResponsible;
-           existingOrder!.paymentMethod = newOrderData.paymentMethod;
-           existingOrder!.deliveryDate = newOrderData.deliveryDate;
-           existingOrder!.orderType = newOrderData.orderType;
-           existingOrder!.orderTypesList = newOrderData.orderTypesList;
-           existingOrder!.branch = newOrderData.branch;
-           existingOrder!.orderDate = newOrderData.orderDate;
-           existingOrder!.items = newOrderData.items;
-           existingOrder!.notes = newOrderData.notes;
-           existingOrder!.yarnPrice = newOrderData.yarnPrice;
-           existingOrder!.lycraPrice = newOrderData.lycraPrice;
-           existingOrder!.manufacturingPrice = newOrderData.manufacturingPrice;
-           await existingOrder!.save();
-        } else {
-           await FabricsCmInvoiceLocalDataSource().saveInvoice(newOrderData);
-        }
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Column(
+                children: [
+                  Image.asset('assets/images/logo.png', height: 80, width: 80),
+                  const SizedBox(height: 15),
+                  const Text('جارٍ إعداد ملف PDF...'),
+                  const SizedBox(height: 15),
+                  const CircularProgressIndicator(),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
 
-        // Use the data (either new or updated) for PDF
-        // Note: For PDF we can use newOrderData as it holds the current UI values
-        final pdf = await FabricsCmPdfGenerator.generate(newOrderData);
-        final bytes = await pdf.save();
+    try {
+      final newOrderData = _createOrderObject();
 
+      // Auto-save logic
+      if (existingOrder != null && !saveAsNew) {
+        existingOrder!.sn = newOrderData.sn;
+        existingOrder!.customerName = newOrderData.customerName;
+        existingOrder!.salesResponsible = newOrderData.salesResponsible;
+        existingOrder!.paymentMethod = newOrderData.paymentMethod;
+        existingOrder!.deliveryDate = newOrderData.deliveryDate;
+        existingOrder!.orderType = newOrderData.orderType;
+        existingOrder!.orderTypesList = newOrderData.orderTypesList;
+        existingOrder!.branch = newOrderData.branch;
+        existingOrder!.orderDate = newOrderData.orderDate;
+        existingOrder!.items = newOrderData.items;
+        existingOrder!.notes = newOrderData.notes;
+        existingOrder!.yarnPrice = newOrderData.yarnPrice;
+        existingOrder!.lycraPrice = newOrderData.lycraPrice;
+        existingOrder!.manufacturingPrice = newOrderData.manufacturingPrice;
+        await existingOrder!.save();
+      } else {
+        await FabricsCmInvoiceLocalDataSource().saveInvoice(newOrderData);
+      }
+
+      // Use the data (either new or updated) for PDF
+      // Note: For PDF we can use newOrderData as it holds the current UI values
+      final pdf = await FabricsCmPdfGenerator.generate(newOrderData);
+      final bytes = await pdf.save();
+
+      if (!context.mounted) return;
+      Navigator.of(context).pop(); // Dismiss loading
+
+      final settingsService = SettingsService();
+      final strategy = settingsService.getInvoiceSaveStrategy();
+      final defaultPath = settingsService.getDefaultSavePath();
+
+      String? finalPath;
+      final safeName = (newOrderData.customerName ?? 'Client').replaceAll(
+        RegExp(r'[^\w\s\u0600-\u06FF]'),
+        '',
+      );
+      final fileName = '${safeName}_${newOrderData.sn}.pdf';
+
+      if (Platform.isAndroid || Platform.isIOS) {
+        // Mobile: Share directly
         if (!context.mounted) return;
         Navigator.of(context).pop(); // Dismiss loading
-
-        final settingsService = SettingsService();
-        final strategy = settingsService.getInvoiceSaveStrategy();
-        final defaultPath = settingsService.getDefaultSavePath();
-
-        String? finalPath;
-        final safeName = (newOrderData.customerName ?? 'Client').replaceAll(RegExp(r'[^\w\s\u0600-\u06FF]'), '');
-        final fileName = '${safeName}_${newOrderData.sn}.pdf';
-
+        await Printing.sharePdf(bytes: bytes, filename: fileName);
+      } else {
+        // Desktop: Follow settings strategy
         if (strategy == InvoiceSaveStrategy.auto && defaultPath != null) {
           final customerDir = Directory('$defaultPath/$safeName');
           if (!await customerDir.exists()) {
@@ -529,7 +562,7 @@ class FabricsCmOrderProvider extends ChangeNotifier {
               type: FileType.custom,
               allowedExtensions: ['pdf'],
             );
-            
+
             if (finalPath != null) {
               final file = File(finalPath);
               await file.writeAsBytes(bytes);
@@ -545,27 +578,32 @@ class FabricsCmOrderProvider extends ChangeNotifier {
           }
         }
 
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('تم حفظ الملف: $finalPath'),
-              duration: const Duration(seconds: 8),
-              action: SnackBarAction(
-                label: 'مشاركة',
-                textColor: Colors.yellowAccent,
-                onPressed: () {
-                  Printing.sharePdf(bytes: bytes, filename: fileName);
-                },
-              ),
-            ),
-        );
-      } catch (e) {
-        if (!context.mounted) return;
-        Navigator.of(context).pop(); // Dismiss loading
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('حدث خطأ أثناء إنشاء PDF: $e')),
-        );
       }
+
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('تم حفظ الملف: $finalPath'),
+          duration: (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
+              ? const Duration(seconds: 5)
+              : const Duration(days: 365),
+          action: SnackBarAction(
+            label: 'مشاركة',
+            textColor: Colors.yellowAccent,
+            backgroundColor: Colors.black,
+            onPressed: () {
+              Printing.sharePdf(bytes: bytes, filename: fileName);
+            },
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      Navigator.of(context).pop(); // Dismiss loading
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('حدث خطأ أثناء إنشاء PDF: $e')));
+    }
   }
 
   @override
@@ -575,27 +613,47 @@ class FabricsCmOrderProvider extends ChangeNotifier {
     salesResponsibleController.dispose();
     paymentMethodController.dispose();
     notesController.dispose();
-    
+
     globalYarnPriceController.dispose();
     globalLycraPriceController.dispose();
     globalMfgPriceController.dispose();
 
     _disposeAllItemControllers();
-    
+
     super.dispose();
   }
 
   void _disposeAllItemControllers() {
-    for (var c in quantityControllers) { c.dispose(); }
-    for (var c in lycraNumControllers) { c.dispose(); }
-    for (var c in lycraPercentControllers) { c.dispose(); }
-    for (var c in fabricTypeControllers) { c.dispose(); }
-    for (var c in yarnCountControllers) { c.dispose(); }
-    for (var c in yarnTypeControllers) { c.dispose(); }
-    for (var c in gaugeControllers) { c.dispose(); }
-    for (var c in widthControllers) { c.dispose(); }
-    for (var c in stitchLengthControllers) { c.dispose(); }
-    for (var c in spinningCompanyControllers) { c.dispose(); }
+    for (var c in quantityControllers) {
+      c.dispose();
+    }
+    for (var c in lycraNumControllers) {
+      c.dispose();
+    }
+    for (var c in lycraPercentControllers) {
+      c.dispose();
+    }
+    for (var c in fabricTypeControllers) {
+      c.dispose();
+    }
+    for (var c in yarnCountControllers) {
+      c.dispose();
+    }
+    for (var c in yarnTypeControllers) {
+      c.dispose();
+    }
+    for (var c in gaugeControllers) {
+      c.dispose();
+    }
+    for (var c in widthControllers) {
+      c.dispose();
+    }
+    for (var c in stitchLengthControllers) {
+      c.dispose();
+    }
+    for (var c in spinningCompanyControllers) {
+      c.dispose();
+    }
 
     quantityControllers.clear();
     lycraNumControllers.clear();

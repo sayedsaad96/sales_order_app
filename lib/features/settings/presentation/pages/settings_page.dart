@@ -1,4 +1,4 @@
-// import 'dart:io';
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart'; // Added
@@ -51,6 +51,10 @@ class _SettingsPageState extends State<SettingsPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('الإعدادات'),
+        leading: IconButton(
+          icon: Icon(CupertinoIcons.arrow_right),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         centerTitle: true,
       ),
       drawer: const AppDrawer(),
@@ -61,7 +65,9 @@ class _SettingsPageState extends State<SettingsPage> {
           _buildSectionHeader('تفضيلات عامة'),
           const SizedBox(height: 10),
           Card(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: Column(
               children: [
                 ListTile(
@@ -103,7 +109,9 @@ class _SettingsPageState extends State<SettingsPage> {
                             : CupertinoIcons.sun_max_fill,
                       ),
                       title: const Text('الوضع الليلي'),
-                      subtitle: Text(themeProvider.isDarkMode ? 'مفعل' : 'غير مفعل'),
+                      subtitle: Text(
+                        themeProvider.isDarkMode ? 'مفعل' : 'غير مفعل',
+                      ),
                       value: themeProvider.isDarkMode,
                       onChanged: (value) => themeProvider.toggleTheme(),
                     );
@@ -115,87 +123,109 @@ class _SettingsPageState extends State<SettingsPage> {
           const SizedBox(height: 20),
 
           // -- Invoice Settings Section (Matching User Image) --
-          _buildSectionHeader('إعدادات حفظ الفواتير'),
-          const SizedBox(height: 10),
-          Card(
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: Colors.grey[300]!, width: 1),
-            ),
-            child: Column(
-              children: [
-                _buildRadioOptionUI(
-                  title: 'سؤال مكان الحفظ دائماً',
-                  subtitle: 'سيتم فتح نافذة اختيار مكان الحفظ عند إنشاء كل فاتورة',
-                  value: InvoiceSaveStrategy.ask,
-                ),
-                Divider(height: 1, color: Colors.grey[400]),
-                _buildRadioOptionUI(
-                  title: 'الحفظ التلقائي في مجلد محدد',
-                  subtitle: 'سيتم إنشاء مجلد باسم العميل وحفظ الفاتورة بداخله تلقائياً',
-                  value: InvoiceSaveStrategy.auto,
-                ),
-                if (_saveStrategy == InvoiceSaveStrategy.auto) ...[
-                  Divider(height: 1, color: Colors.grey[400]),
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Text(
-                          'مسار الحفظ الافتراضي:',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                          textAlign: TextAlign.right,
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            ElevatedButton.icon(
-                              onPressed: _pickFolder,
-                              icon: const Icon(CupertinoIcons.folder, size: 18),
-                              label: const Text('تغيير'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Theme.of(context).primaryColor,
-                                foregroundColor: Colors.white,
-                                elevation: 2,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[100],
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.grey[300]!),
-                                ),
-                                child: Text(
-                                  _defaultPath ?? 'لم يتم تحديد مسار',
-                                  style: TextStyle(
-                                    color: _defaultPath == null ? Colors.grey : Colors.black87,
-                                    fontSize: 13,
-                                  ),
-                                  textAlign: TextAlign.left,
-                                  textDirection: TextDirection.ltr,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+          if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) ...[
+            _buildSectionHeader('إعدادات حفظ الفواتير'),
+            const SizedBox(height: 10),
+            Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(color: Colors.grey[300]!, width: 1),
+              ),
+              child: Column(
+                children: [
+                  _buildRadioOptionUI(
+                    title: 'سؤال مكان الحفظ دائماً',
+                    subtitle:
+                        'سيتم فتح نافذة اختيار مكان الحفظ عند إنشاء كل فاتورة',
+                    value: InvoiceSaveStrategy.ask,
                   ),
+                  Divider(height: 1, color: Colors.grey[400]),
+                  _buildRadioOptionUI(
+                    title: 'الحفظ التلقائي في مجلد محدد',
+                    subtitle:
+                        'سيتم إنشاء مجلد باسم العميل وحفظ الفاتورة بداخله تلقائياً',
+                    value: InvoiceSaveStrategy.auto,
+                  ),
+                  if (_saveStrategy == InvoiceSaveStrategy.auto) ...[
+                    Divider(height: 1, color: Colors.grey[400]),
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Text(
+                            'مسار الحفظ الافتراضي:',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                            textAlign: TextAlign.right,
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              ElevatedButton.icon(
+                                onPressed: _pickFolder,
+                                icon: const Icon(
+                                  CupertinoIcons.folder,
+                                  size: 18,
+                                ),
+                                label: const Text('تغيير'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Theme.of(
+                                    context,
+                                  ).primaryColor,
+                                  foregroundColor: Colors.white,
+                                  elevation: 2,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 10,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 12,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: Colors.grey[300]!,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    _defaultPath ?? 'لم يتم تحديد مسار',
+                                    style: TextStyle(
+                                      color: _defaultPath == null
+                                          ? Colors.grey
+                                          : Colors.black87,
+                                      fontSize: 13,
+                                    ),
+                                    textAlign: TextAlign.left,
+                                    textDirection: TextDirection.ltr,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-          const SizedBox(height: 30),
+            const SizedBox(height: 30),
+          ],
         ],
       ),
     );
@@ -219,7 +249,9 @@ class _SettingsPageState extends State<SettingsPage> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isSelected ? Theme.of(context).primaryColor : Colors.grey,
+                  color: isSelected
+                      ? Theme.of(context).primaryColor
+                      : Colors.grey,
                   width: 2,
                 ),
               ),
@@ -251,10 +283,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
                     textAlign: TextAlign.right,
                   ),
                 ],

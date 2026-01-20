@@ -147,7 +147,9 @@ class _SavedQuotationsPageState extends State<SavedQuotationsPage> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('تم حفظ الملف: $finalPath'),
-                    duration: const Duration(seconds: 8),
+                    duration: (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
+                        ? const Duration(seconds: 5)
+                        : const Duration(days: 365),
                     action: SnackBarAction(
                       label: 'مشاركة',
                       textColor: Colors.yellowAccent,
@@ -174,6 +176,9 @@ class _SavedQuotationsPageState extends State<SavedQuotationsPage> {
                        ScaffoldMessenger.of(context).showSnackBar(
                          SnackBar(
                            content: Text('تم حفظ الملف بنجاح'),
+                           duration: (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
+                               ? const Duration(seconds: 5)
+                               : const Duration(days: 365),
                            action: SnackBarAction(
                              label: 'مشاركة',
                              onPressed: () => Printing.sharePdf(bytes: bytes, filename: fileName),

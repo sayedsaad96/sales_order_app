@@ -45,7 +45,11 @@ class _FabricsCmOrderPageState extends State<FabricsCmOrderPage> {
                         onPressed: widget.onMenuPressed,
                         tooltip: 'Menu',
                       )
-                    : null,
+                    : IconButton(
+                        icon: const Icon(CupertinoIcons.back),
+                        onPressed: () => Navigator.of(context).pop(),
+                        tooltip: 'رجوع',
+                      ),
                 title: const Text('Annex Group'),
                 centerTitle: true,
                 actions: [
