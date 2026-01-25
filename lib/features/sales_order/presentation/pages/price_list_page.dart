@@ -272,11 +272,11 @@ class _PriceListPageState extends State<PriceListPage> {
       }
 
       // 4. Share the file
-      // Check if the device can share
       // ignore: deprecated_member_use
-      final result = await Share.shareXFiles([
-        XFile(fileToShare.path),
-      ], text: 'مشاركة $title');
+      final result = await Share.shareXFiles(
+        [XFile(fileToShare.path)],
+        text: 'مشاركة $title',
+      );
 
       if (result.status == ShareResultStatus.dismissed) {
         // Optional: handle dismissed
@@ -286,6 +286,63 @@ class _PriceListPageState extends State<PriceListPage> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('خطأ في المشاركة: $e')));
+      }
+    }
+  }
+
+  Future<void> _downloadFile(
+    BuildContext context,
+    String url,
+    String title,
+  ) async {
+    try {
+      // 1. Get Downloads folder for Windows/Desktop
+      String? downloadsPath;
+      if (Platform.isWindows) {
+        downloadsPath = '${Platform.environment['USERPROFILE']}\\Downloads';
+      } else if (Platform.isMacOS || Platform.isLinux) {
+        downloadsPath = '${Platform.environment['HOME']}/Downloads';
+      }
+
+      if (downloadsPath == null) {
+        throw Exception('Could not determine downloads directory');
+      }
+
+      // 2. Download/Get the file
+      final safeTitle = title
+          .replaceAll(RegExp(r'[^\w\s\u0600-\u06FF]+'), '')
+          .replaceAll(' ', '_');
+      final filename = '${safeTitle}_${url.hashCode}.pdf';
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('جاري بدء التنزيل...'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+
+      final cachedFile = await DocumentRepository().getPdf(url, filename);
+
+      // 3. Copy to Downloads folder
+      final separator = Platform.isWindows ? '\\' : '/';
+      final finalPath = '$downloadsPath$separator$safeTitle.pdf';
+      await cachedFile.copy(finalPath);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('تم تنزيل الملف بنجاح في: $downloadsPath'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('خطأ في التنزيل: $e'), backgroundColor: Colors.red),
+        );
       }
     }
   }
@@ -315,11 +372,18 @@ class _PriceListPageState extends State<PriceListPage> {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton(
-              icon: const Icon(CupertinoIcons.share, color: Colors.blue),
-              tooltip: 'مشاركة',
-              onPressed: () => _shareFile(context, assetPath, title),
-            ),
+            if (Platform.isWindows || Platform.isMacOS || Platform.isLinux)
+              IconButton(
+                icon: const Icon(CupertinoIcons.cloud_download, color: Colors.blue),
+                tooltip: 'تنزيل',
+                onPressed: () => _downloadFile(context, assetPath, title),
+              )
+            else
+              IconButton(
+                icon: const Icon(CupertinoIcons.share, color: Colors.blue),
+                tooltip: 'مشاركة',
+                onPressed: () => _shareFile(context, assetPath, title),
+              ),
             const SizedBox(width: 8),
             const Icon(
               CupertinoIcons.chevron_forward,

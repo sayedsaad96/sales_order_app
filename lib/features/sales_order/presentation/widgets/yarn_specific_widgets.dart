@@ -330,6 +330,7 @@ class YarnCustomerInfoSection extends StatelessWidget {
             'اجل شهر',
             'اجل شهرين',
             'اجل 3 شهور',
+            'اجل 4 شهور',
           ].contains(paymentMethod)
           ? paymentMethod
           : null,
@@ -345,6 +346,7 @@ class YarnCustomerInfoSection extends StatelessWidget {
         'اجل شهر',
         'اجل شهرين',
         'اجل 3 شهور',
+        'اجل 4 شهور',
       ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
       onChanged: onPaymentMethodChanged,
       validator: (v) => v == null ? 'مطلوب' : null,

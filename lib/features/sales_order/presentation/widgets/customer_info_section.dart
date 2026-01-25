@@ -207,6 +207,7 @@ class _CustomerInfoSectionState extends State<CustomerInfoSection> {
         'اجل شهر',
         'اجل شهرين',
         'اجل 3 شهور',
+        'اجل 4 شهور',
       ].contains(widget.paymentMethod) ? widget.paymentMethod : null,
       decoration: const InputDecoration(labelText: 'طريقة السداد'),
       items: [
@@ -217,6 +218,7 @@ class _CustomerInfoSectionState extends State<CustomerInfoSection> {
         'اجل شهر',
         'اجل شهرين',
         'اجل 3 شهور',
+        'اجل 4 شهور',
       ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
       onChanged: widget.onPaymentMethodChanged,
     );

@@ -8,8 +8,11 @@ import 'dart:io';
 
 import 'package:annex_sales_order/core/widgets/pdf_viewer_page.dart';
 import 'package:annex_sales_order/core/services/update_notification_service.dart';
+import 'package:annex_sales_order/core/services/document_repository.dart';
 import 'package:annex_sales_order/core/widgets/app_drawer.dart';
 import 'package:annex_sales_order/features/about/presentation/pages/bank_accounts_page.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:flutter/services.dart';
 
 class PdfDocumentItem {
   final String title;
@@ -241,16 +244,26 @@ class _AboutPageState extends State<AboutPage> {
           title,
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
-        trailing: const Icon(CupertinoIcons.eye),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (Platform.isWindows || Platform.isMacOS || Platform.isLinux)
+              IconButton(
+                icon: const Icon(CupertinoIcons.cloud_download, color: Colors.blue),
+                tooltip: 'تنزيل',
+                onPressed: () => _downloadFile(context, assetPath, title),
+              )
+            else
+              IconButton(
+                icon: const Icon(CupertinoIcons.share, color: Colors.blue),
+                tooltip: 'مشاركة',
+                onPressed: () => _shareFile(context, assetPath, title),
+              ),
+            const SizedBox(width: 8),
+            const Icon(CupertinoIcons.eye),
+          ],
+        ),
         onTap: () {
-          // If it's a Drive URL, PdfViewerPage handles it if logic is updated,
-          // or we pass it as a URL.
-          // PdfViewerPage usually takes 'assetPath' which initially meant local assets,
-          // checking PdfViewerPage implementation is important, but typically it might need adjustment
-          // if it only supports local assets.
-          // Assuming PdfViewerPage can handle URLs or we need to check it.
-          // For now, let's pass the URL.
-
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -261,6 +274,102 @@ class _AboutPageState extends State<AboutPage> {
         },
       ),
     );
+  }
+
+  Future<void> _shareFile(
+    BuildContext context,
+    String assetPath,
+    String title,
+  ) async {
+    try {
+      File fileToShare;
+
+      if (assetPath.startsWith('http')) {
+        final safeTitle = title
+            .replaceAll(RegExp(r'[^\w\s\u0600-\u06FF]+'), '')
+            .replaceAll(' ', '_');
+        final filename = '${safeTitle}_${assetPath.hashCode}.pdf';
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('جاري تحميل الملف للمشاركة...'),
+              duration: Duration(seconds: 1),
+            ),
+          );
+        }
+
+        fileToShare = await DocumentRepository().getPdf(assetPath, filename);
+      } else {
+        final byteData = await rootBundle.load(assetPath);
+        final bytes = byteData.buffer.asUint8List();
+        final tempDir = await getTemporaryDirectory();
+        fileToShare = File('${tempDir.path}/$title.pdf');
+        await fileToShare.writeAsBytes(bytes, flush: true);
+      }
+
+      // ignore: deprecated_member_use
+      await Share.shareXFiles([XFile(fileToShare.path)], text: 'مشاركة $title');
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('خطأ في المشاركة: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _downloadFile(
+    BuildContext context,
+    String url,
+    String title,
+  ) async {
+    try {
+      String? downloadsPath;
+      if (Platform.isWindows) {
+        downloadsPath = '${Platform.environment['USERPROFILE']}\\Downloads';
+      } else if (Platform.isMacOS || Platform.isLinux) {
+        downloadsPath = '${Platform.environment['HOME']}/Downloads';
+      }
+
+      if (downloadsPath == null) {
+        throw Exception('Could not determine downloads directory');
+      }
+
+      final safeTitle = title
+          .replaceAll(RegExp(r'[^\w\s\u0600-\u06FF]+'), '')
+          .replaceAll(' ', '_');
+      final filename = '${safeTitle}_${url.hashCode}.pdf';
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('جاري بدء التنزيل...'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+
+      final cachedFile = await DocumentRepository().getPdf(url, filename);
+      final separator = Platform.isWindows ? '\\' : '/';
+      final finalPath = '$downloadsPath$separator$safeTitle.pdf';
+      await cachedFile.copy(finalPath);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('تم تنزيل الملف بنجاح في: $downloadsPath'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('خطأ في التنزيل: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 
   Widget _buildBankAccountTile(BuildContext context) {

@@ -296,6 +296,7 @@ class _FabricsCmOrderPageState extends State<FabricsCmOrderPage> {
             'اجل شهر',
             'اجل شهرين',
             'اجل 3 شهور',
+            'اجل 4 شهور',
           ].contains(provider.paymentMethod)
           ? provider.paymentMethod
           : null,
@@ -311,6 +312,7 @@ class _FabricsCmOrderPageState extends State<FabricsCmOrderPage> {
         'اجل شهر',
         'اجل شهرين',
         'اجل 3 شهور',
+        'اجل 4 شهور',
       ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
       onChanged: (v) => provider.setPaymentMethod(v),
       validator: (v) => v == null ? 'مطلوب' : null,
