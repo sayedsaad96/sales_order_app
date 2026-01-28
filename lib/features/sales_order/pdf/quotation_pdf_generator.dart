@@ -6,6 +6,16 @@ import 'package:annex_sales_order/features/sales_order/data/models/quotation.dar
 import 'package:annex_sales_order/features/user/data/datasources/user_local_data_source.dart';
 
 class QuotationPdfGenerator {
+  // Define Column Widths
+  static const tableColumnWidths = {
+    0: pw.FixedColumnWidth(60), // Total
+    1: pw.FixedColumnWidth(50), // Price
+    2: pw.FixedColumnWidth(50), // Qty
+    3: pw.FixedColumnWidth(50), // Unit
+    4: pw.FlexColumnWidth(3), // Description
+    5: pw.FixedColumnWidth(25), // #
+  };
+
   static Future<pw.Document> generate(Quotation quotation) async {
     final pdf = pw.Document();
 
@@ -46,12 +56,37 @@ class QuotationPdfGenerator {
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(24),
         textDirection: pw.TextDirection.rtl,
-        header: (context) => _buildProfessionalHeader(
-          quotation,
-          logoImage,
-          primaryColor,
-          headerColor,
-        ),
+        header: (context) {
+          if (context.pageNumber == 1) {
+            return _buildProfessionalHeader(
+              quotation,
+              logoImage,
+              primaryColor,
+              headerColor,
+            );
+          } else {
+            return pw.Column(children: [
+              pw.Table(
+                border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
+                columnWidths: tableColumnWidths,
+                children: [
+                  pw.TableRow(
+                    decoration: pw.BoxDecoration(color: primaryColor),
+                    children: [
+                      _buildTableHeader('الإجمالي'),
+                      _buildTableHeader('السعر'),
+                      _buildTableHeader('الكمية'),
+                      _buildTableHeader('الوحدة'),
+                      _buildTableHeader('البيان والمواصفات'),
+                      _buildTableHeader('م'),
+                    ],
+                  ),
+                ],
+              ),
+              pw.SizedBox(height: 10),
+            ]);
+          }
+        },
         footer: (context) => _buildProfessionalFooter(context, primaryColor),
         build: (pw.Context context) {
           return [
@@ -117,14 +152,7 @@ class QuotationPdfGenerator {
             pw.Table(
               border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
               defaultVerticalAlignment: pw.TableCellVerticalAlignment.middle,
-              columnWidths: const {
-                0: pw.FixedColumnWidth(60), // Total
-                1: pw.FixedColumnWidth(50), // Price
-                2: pw.FixedColumnWidth(50), // Qty
-                3: pw.FixedColumnWidth(50), // Unit
-                4: pw.FlexColumnWidth(3), // Description
-                5: pw.FixedColumnWidth(25), // #
-              },
+              columnWidths: tableColumnWidths,
               children: [
                 pw.TableRow(
                   decoration: pw.BoxDecoration(color: primaryColor),
@@ -190,7 +218,7 @@ class QuotationPdfGenerator {
                               color: primaryColor,
                             ),
                           ),
-                          pw.Text(dateFormat.format(quotation.validUntil!)),
+                          pw.Text(dateFormat.format(quotation.validUntil ?? DateTime.now())),
                         ],
                       ),
                     if (quotation.validUntil != null &&
@@ -198,7 +226,7 @@ class QuotationPdfGenerator {
                         quotation.termsAndConditions!.isNotEmpty)
                       pw.SizedBox(height: 10),
                     if (quotation.termsAndConditions != null &&
-                        quotation.termsAndConditions!.isNotEmpty)
+                        (quotation.termsAndConditions?.isNotEmpty ?? false))
                       pw.Column(
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
                         children: [
@@ -211,7 +239,7 @@ class QuotationPdfGenerator {
                           ),
                           pw.SizedBox(height: 4),
                           pw.Text(
-                            quotation.termsAndConditions!,
+                            quotation.termsAndConditions ?? '',
                             style: const pw.TextStyle(
                               fontSize: 10,
                               lineSpacing: 1.2,
@@ -295,7 +323,7 @@ class QuotationPdfGenerator {
               ],
             ),
 
-            if (quotation.notes != null && quotation.notes!.isNotEmpty) ...[
+            if (quotation.notes != null && (quotation.notes?.isNotEmpty ?? false)) ...[
               pw.SizedBox(height: 20),
               pw.Container(
                 width: double.infinity,
@@ -316,7 +344,7 @@ class QuotationPdfGenerator {
                     ),
                     pw.Divider(color: PdfColors.grey300),
                     pw.Text(
-                      quotation.notes!,
+                      quotation.notes ?? '',
                       style: const pw.TextStyle(fontSize: 10),
                     ),
                   ],
@@ -426,8 +454,8 @@ class QuotationPdfGenerator {
     // Since Pdf widgets build synchronously, we rely on the synchronous getUser from Hive
     // Note: Hive box must be open, which is ensured by app initialization.
     final user = UserLocalDataSource().getUser();
-    final email = (user?.email != null && user!.email!.isNotEmpty)
-        ? user.email!
+    final email = (user?.email != null && (user?.email?.isNotEmpty ?? false))
+        ? user!.email!
         : 'sales@annexeg.com';
 
     return pw.Container(

@@ -11,6 +11,7 @@ import 'package:annex_sales_order/features/sales_order/data/models/yarn_sales_or
 import 'package:annex_sales_order/features/sales_order/data/datasources/yarn_invoice_local_data_source.dart';
 import 'package:annex_sales_order/features/sales_order/pdf/yarn_pdf_generator.dart';
 import 'package:annex_sales_order/features/sales_order/presentation/widgets/yarn_installment_widget.dart';
+import 'package:annex_sales_order/features/analysis/data/analysis_service.dart';
 import 'package:annex_sales_order/features/sales_order/presentation/widgets/yarn_specific_widgets.dart';
 import 'package:annex_sales_order/features/sales_order/presentation/pages/saved_yarn_invoices_page.dart';
 import 'package:file_picker/file_picker.dart';
@@ -63,6 +64,67 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
   final ValueNotifier<double> _totalValueNotifier = ValueNotifier(0.0);
   bool _saveAsNew = false;
 
+  String _generateUniqueSn() {
+    final box = YarnInvoiceLocalDataSource().getAllInvoices();
+    final existingSns = box.map((e) => e.sn ?? '').toSet();
+    
+    final List<int> available = [];
+    for (int i = 1; i <= 999; i++) {
+      final sn = 'YSO-${i.toString().padLeft(3, '0')}';
+      if (!existingSns.contains(sn)) {
+        available.add(i);
+      }
+    }
+
+    if (available.isNotEmpty) {
+      final randomIndex = (DateTime.now().microsecondsSinceEpoch % available.length);
+      final chosen = available[randomIndex.toInt()];
+      return 'YSO-${chosen.toString().padLeft(3, '0')}';
+    }
+
+    return 'YSO-${DateTime.now().millisecondsSinceEpoch.toString().substring(10)}';
+  }
+
+  @override
+  void dispose() {
+    _snController.dispose();
+    _customerNameController.dispose();
+    _contactNameController.dispose();
+    _mobileNumberController.dispose();
+    _regionController.dispose();
+    _deliveryPlaceController.dispose();
+    _salesResponsibleController.dispose();
+    _notesController.dispose();
+    _totalValueNotifier.dispose();
+    
+    for (var controller in _descriptionControllers) {
+      controller.dispose();
+    }
+    for (var controller in _quantityControllers) {
+      controller.dispose();
+    }
+    for (var controller in _unitControllers) {
+      controller.dispose();
+    }
+    for (var controller in _priceControllers) {
+      controller.dispose();
+    }
+    for (var controller in _installmentDurationControllers) {
+      controller.dispose();
+    }
+    for (var controller in _installmentValueControllers) {
+      controller.dispose();
+    }
+
+    // Clear SnackBars when leaving the page
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+      }
+    });
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -108,7 +170,7 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
       }
       if (order.installments.isEmpty) _addInstallment();
     } else {
-      _snController.text = 'YSO-${DateTime.now().microsecond}';
+      _snController.text = _generateUniqueSn();
       _addItem();
       _addInstallment();
       _loadCurrentUser();
@@ -249,6 +311,22 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
 
   Future<void> _saveInvoice() async {
     if (_formKey.currentState!.validate()) {
+      final sn = _snController.text;
+      final isDuplicate = YarnInvoiceLocalDataSource().isSnExists(
+        sn,
+        excludeKey: (widget.existingOrder != null && !_saveAsNew) ? widget.existingOrder?.key : null,
+      );
+
+      if (isDuplicate) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('رقم الفاتورة (S/N) موجود بالفعل، يرجى تغييره'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
       try {
         final newOrderData = _createOrderObject();
         
@@ -277,14 +355,18 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
            await YarnInvoiceLocalDataSource().saveInvoice(newOrderData);
         }
 
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تم حفظ الفاتورة بنجاح')),
-        );
+        if (mounted) {
+          AnalysisService.clearCache();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('تم حفظ الفاتورة بنجاح')),
+          );
+        }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('خطأ في الحفظ: $e')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('خطأ في الحفظ: $e')),
+          );
+        }
       }
     }
   }
@@ -328,6 +410,23 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
       );
 
       try {
+        final sn = _snController.text;
+        final isDuplicate = YarnInvoiceLocalDataSource().isSnExists(
+          sn,
+          excludeKey: (widget.existingOrder != null && !_saveAsNew) ? widget.existingOrder?.key : null,
+        );
+
+        if (isDuplicate) {
+          if (mounted) Navigator.of(context).pop(); // Dismiss loading
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('رقم الفاتورة (S/N) موجود بالفعل، يرجى تغييره'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+
         final newOrderData = _createOrderObject();
         
         // Auto-save logic
@@ -440,7 +539,7 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
   void _resetForm() {
     setState(() {
       _saveAsNew = false;
-      _snController.text = 'YSO-${DateTime.now().microsecond}';
+      _snController.text = _generateUniqueSn();
 // ... rest of reset
 
       _customerNameController.clear();
@@ -537,6 +636,11 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                         orderDate: _orderDate,
                         onDateChanged: (date) => setState(() => _orderDate = date),
                         isMobile: isMobile,
+                        onRefreshSn: () {
+                          setState(() {
+                            _snController.text = _generateUniqueSn();
+                          });
+                        },
                       ),
                       const SizedBox(height: 20),
                       YarnBranchAndTypeSection(
@@ -607,7 +711,16 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                           child: CheckboxListTile(
                             title: const Text('حفظ كفاتورة جديدة (نسخة)'),
                             value: _saveAsNew,
-                            onChanged: (val) => setState(() => _saveAsNew = val ?? false),
+                             onChanged: (val) {
+                               setState(() {
+                                 _saveAsNew = val ?? false;
+                                 if (_saveAsNew) {
+                                   _snController.text = _generateUniqueSn();
+                                 } else if (widget.existingOrder != null) {
+                                   _snController.text = widget.existingOrder!.sn ?? '';
+                                 }
+                               });
+                             },
                           ),
                         ),
                       _buildActionButtons(),
@@ -662,24 +775,4 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
     );
   }
 
-  @override
-  void dispose() {
-    _snController.dispose();
-    _customerNameController.dispose();
-    _contactNameController.dispose();
-    _mobileNumberController.dispose();
-    _regionController.dispose();
-    _deliveryPlaceController.dispose();
-    _salesResponsibleController.dispose();
-    _notesController.dispose();
-    
-    for (var c in _descriptionControllers) { c.dispose(); }
-    for (var c in _quantityControllers) { c.dispose(); }
-    for (var c in _unitControllers) { c.dispose(); }
-    for (var c in _priceControllers) { c.dispose(); }
-    for (var c in _installmentDurationControllers) { c.dispose(); }
-    for (var c in _installmentValueControllers) { c.dispose(); }
-    _totalValueNotifier.dispose();
-    super.dispose();
-  }
-}
+} // _YarnSalesOrderPageState

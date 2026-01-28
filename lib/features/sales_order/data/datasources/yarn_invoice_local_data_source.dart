@@ -42,6 +42,16 @@ class YarnInvoiceLocalDataSource {
     }
   }
 
+  bool isSnExists(String sn, {dynamic excludeKey}) {
+    try {
+      if (!Hive.isBoxOpen(_boxName)) return false;
+      final box = Hive.box<YarnSalesOrder>(_boxName);
+      return box.values.any((order) => order.sn == sn && order.key != excludeKey);
+    } catch (e) {
+      return false;
+    }
+  }
+
   ValueListenable<Box<YarnSalesOrder>> getInvoicesListenable() {
     if (!Hive.isBoxOpen(_boxName)) {
       throw Exception('Box not open');

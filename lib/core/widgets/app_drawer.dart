@@ -10,6 +10,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:annex_sales_order/features/sales_order/presentation/pages/saved_quotations_page.dart';
 import 'package:annex_sales_order/features/settings/presentation/pages/settings_page.dart';
+import 'package:annex_sales_order/features/customer_list/presentation/pages/customer_list_page.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -141,6 +142,21 @@ class AppDrawer extends StatelessWidget {
                     );
                   },
                 ),
+                _buildModernMenuItem(
+                  context,
+                  icon: CupertinoIcons.person_2_fill,
+                  title: 'Customer List',
+                  subtitle: 'Manage customers',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const CustomerListPage(),
+                      ),
+                    );
+                  },
+                ),
 
                 const SizedBox(height: 16),
 
@@ -163,7 +179,7 @@ class AppDrawer extends StatelessWidget {
                 ),
                 _buildModernMenuItem(
                   context,
-                  icon: CupertinoIcons.doc_text,
+                  icon: CupertinoIcons.money_dollar_circle,
                   title: 'Price Lists',
                   subtitle: 'View pricing information',
                   onTap: () {
@@ -284,7 +300,6 @@ class AppDrawer extends StatelessWidget {
       ),
     );
   }
-
 
   Widget _buildModernSocialFooter(BuildContext context, bool isDark) {
     return Padding(

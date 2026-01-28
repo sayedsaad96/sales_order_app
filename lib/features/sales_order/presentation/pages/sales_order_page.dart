@@ -17,6 +17,7 @@ import 'package:annex_sales_order/features/sales_order/presentation/utils/sales_
 import 'package:file_picker/file_picker.dart';
 import 'package:annex_sales_order/core/services/settings_service.dart';
 import 'package:annex_sales_order/core/widgets/app_drawer.dart';
+import 'package:annex_sales_order/features/analysis/data/analysis_service.dart';
 
 class SalesOrderPage extends StatefulWidget {
   final SalesOrder? existingOrder;
@@ -29,9 +30,30 @@ class SalesOrderPage extends StatefulWidget {
 
 class _SalesOrderPageState extends State<SalesOrderPage> {
   final _formKey = GlobalKey<FormState>();
-  final _snController = TextEditingController(
-    text: 'SO-${DateTime.now().microsecond}',
-  );
+  final _snController = TextEditingController();
+
+  String _generateUniqueSn() {
+    final box = InvoiceLocalDataSource().getAllInvoices();
+    final existingSns = box.map((e) => e.sn ?? '').toSet();
+
+    final List<int> available = [];
+    for (int i = 1; i <= 999; i++) {
+      final sn = 'SO-${i.toString().padLeft(3, '0')}';
+      if (!existingSns.contains(sn)) {
+        available.add(i);
+      }
+    }
+
+    if (available.isNotEmpty) {
+      final randomIndex =
+          (DateTime.now().microsecondsSinceEpoch % available.length);
+      final chosen = available[randomIndex.toInt()];
+      return 'SO-${chosen.toString().padLeft(3, '0')}';
+    }
+
+    return 'SO-${DateTime.now().millisecondsSinceEpoch.toString().substring(10)}';
+  }
+
   final _customerNameController = TextEditingController();
   final _regionController = TextEditingController();
   final _salesResponsibleController = TextEditingController();
@@ -51,13 +73,34 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
   bool _saveAsNew = false;
 
   @override
+  void dispose() {
+    _snController.dispose();
+    _customerNameController.dispose();
+    _regionController.dispose();
+    _salesResponsibleController.dispose();
+    _deliveryPlaceController.dispose();
+    _notesController.dispose();
+    _totalValueNotifier.dispose();
+    for (var section in _sections) {
+      section.categoryController.dispose();
+      section.defaultUnitController.dispose();
+    }
+    // Clear SnackBars when leaving the page
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+      }
+    });
+    super.dispose();
+  }
+
+  @override
   void initState() {
     super.initState();
     if (widget.existingOrder != null) {
       final order = widget.existingOrder!;
       _snController.text =
-          order.sn ??
-          'SO-${DateTime.now().microsecond}'; // Preserve SN during edit
+          order.sn ?? _generateUniqueSn(); // Preserve SN during edit
 
       _selectedBranch = order.branch;
       _customerNameController.text = order.customerName ?? '';
@@ -117,6 +160,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
         });
       }
     } else {
+      _snController.text = _generateUniqueSn();
       _addSection();
     }
     _calculateTotal();
@@ -153,7 +197,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
 
   void _resetForm() {
     setState(() {
-      _snController.text = 'SO-${DateTime.now().microsecond}';
+      _snController.text = _generateUniqueSn();
       _customerNameController.clear();
       _regionController.clear();
       _deliveryPlaceController.clear();
@@ -261,6 +305,24 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
 
   Future<void> _saveInvoice() async {
     if (_formKey.currentState!.validate()) {
+      final sn = _snController.text;
+      final isDuplicate = InvoiceLocalDataSource().isSnExists(
+        sn,
+        excludeKey: (_isEditing && !_saveAsNew)
+            ? widget.existingOrder?.key
+            : null,
+      );
+
+      if (isDuplicate) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('رقم الفاتورة (S/N) موجود بالفعل، يرجى تغييره'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
       final validItems = _allValidItems;
 
       if (validItems.isEmpty) {
@@ -315,6 +377,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
       await InvoiceLocalDataSource().saveInvoice(order);
 
       if (mounted) {
+        AnalysisService.clearCache();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -326,21 +389,6 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
         );
       }
     }
-  }
-
-  @override
-  void dispose() {
-    _snController.dispose();
-    _customerNameController.dispose();
-    _regionController.dispose();
-    _salesResponsibleController.dispose();
-    _deliveryPlaceController.dispose();
-    _notesController.dispose();
-    for (var section in _sections) {
-      section.dispose();
-    }
-    _totalValueNotifier.dispose();
-    super.dispose();
   }
 
   void _calculateTotal() {
@@ -405,6 +453,25 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
       );
 
       try {
+        final sn = _snController.text;
+        final isDuplicate = InvoiceLocalDataSource().isSnExists(
+          sn,
+          excludeKey: (_isEditing && !_saveAsNew)
+              ? widget.existingOrder?.key
+              : null,
+        );
+
+        if (isDuplicate) {
+          if (mounted) Navigator.of(context).pop(); // Dismiss loading
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('رقم الفاتورة (S/N) موجود بالفعل، يرجى تغييره'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+
         SalesOrder order;
 
         // Auto-save logic
@@ -624,8 +691,19 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                                         const SizedBox(height: 10),
                                         TextFormField(
                                           controller: _snController,
-                                          decoration: const InputDecoration(
+                                          decoration: InputDecoration(
                                             labelText: 'S/N',
+                                            suffixIcon: IconButton(
+                                              icon: const Icon(
+                                                CupertinoIcons.refresh,
+                                              ),
+                                              onPressed: () {
+                                                setState(() {
+                                                  _snController.text =
+                                                      _generateUniqueSn();
+                                                });
+                                              },
+                                            ),
                                           ),
                                           validator: (value) =>
                                               value?.isEmpty ?? true
@@ -653,8 +731,19 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                                           width: 150,
                                           child: TextFormField(
                                             controller: _snController,
-                                            decoration: const InputDecoration(
+                                            decoration: InputDecoration(
                                               labelText: 'S/N',
+                                              suffixIcon: IconButton(
+                                                icon: const Icon(
+                                                  CupertinoIcons.refresh,
+                                                ),
+                                                onPressed: () {
+                                                  setState(() {
+                                                    _snController.text =
+                                                        _generateUniqueSn();
+                                                  });
+                                                },
+                                              ),
                                             ),
                                             validator: (value) =>
                                                 value?.isEmpty ?? true
@@ -896,8 +985,17 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                               child: CheckboxListTile(
                                 title: const Text('حفظ كفاتورة جديدة (نسخة)'),
                                 value: _saveAsNew,
-                                onChanged: (val) =>
-                                    setState(() => _saveAsNew = val ?? false),
+                                onChanged: (val) {
+                                  setState(() {
+                                    _saveAsNew = val ?? false;
+                                    if (_saveAsNew) {
+                                      _snController.text = _generateUniqueSn();
+                                    } else if (widget.existingOrder != null) {
+                                      _snController.text =
+                                          widget.existingOrder!.sn ?? '';
+                                    }
+                                  });
+                                },
                               ),
                             ),
                           Center(
@@ -1125,12 +1223,13 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
             return Container(
               color: Theme.of(context).cardColor,
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
+
               child: Container(
                 decoration: BoxDecoration(
                   border: Border(
-                    left: BorderSide(color: Colors.grey.shade300),
-                    right: BorderSide(color: Colors.grey.shade300),
-                    bottom: BorderSide(color: Colors.grey.shade300),
+                    left: BorderSide(color: Colors.grey),
+                    right: BorderSide(color: Colors.grey),
+                    bottom: BorderSide(color: Colors.grey),
                   ),
                 ),
                 child: SalesOrderItemRow(

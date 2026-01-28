@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart' as intl;
 import 'package:annex_sales_order/features/sales_order/data/models/quotation.dart';
 import 'package:annex_sales_order/features/sales_order/data/datasources/quotation_local_data_source.dart';
 
@@ -40,18 +39,33 @@ class QuotationProvider extends ChangeNotifier {
       termsController.text = existingQuotation.termsAndConditions ?? '';
     } else {
       // Start fresh
-      _autoGenerateSN();
+      generateUniqueSN();
       // Default validity +7 days
       validUntil = DateTime.now().add(const Duration(days: 7));
       termsController.text = 'الدفع كاش عند الاستلام أو حسب الاتفاق.\nالبضاعة المباعة لا ترد ولا تستبدل بعد خروجها من المخزن.';
     }
   }
 
-  void _autoGenerateSN() {
-      final quotations = _dataSource.getQuotations();
-      final dateStr = intl.DateFormat('yyyyMMdd').format(DateTime.now());
-      final count = quotations.where((q) => intl.DateFormat('yyyyMMdd').format(q.date) == dateStr).length + 1;
-      snController.text = 'Q-$dateStr-${count.toString().padLeft(3, '0')}';
+  void generateUniqueSN() {
+    final box = _dataSource.getQuotations();
+    final existingSns = box.map((e) => e.sn ?? '').toSet();
+    
+    final List<int> available = [];
+    for (int i = 1; i <= 999; i++) {
+      final sn = 'Q-${i.toString().padLeft(3, '0')}';
+      if (!existingSns.contains(sn)) {
+        available.add(i);
+      }
+    }
+
+    if (available.isNotEmpty) {
+      final randomIndex = (DateTime.now().microsecondsSinceEpoch % available.length);
+      final chosen = available[randomIndex.toInt()];
+      snController.text = 'Q-${chosen.toString().padLeft(3, '0')}';
+    } else {
+      snController.text = 'Q-${DateTime.now().millisecondsSinceEpoch.toString().substring(10)}';
+    }
+    notifyListeners();
   }
 
   void setValidity(DateTime date) {
@@ -138,7 +152,17 @@ class QuotationProvider extends ChangeNotifier {
 
   double get totalValue => totalBasePrice + totalWaste;
 
-  Future<void> saveQuotation() async {
+  Future<String?> saveQuotation() async {
+    final sn = snController.text;
+    final isDuplicate = _dataSource.isSnExists(
+      sn,
+      excludeKey: (_existingQuotation != null && _existingQuotation!.isInBox) ? _existingQuotation!.key : null,
+    );
+
+    if (isDuplicate) {
+      return 'رقم عرض السعر موجود بالفعل، يرجى تغييره';
+    }
+
     // Sync controllers back to items
     for (int i = 0; i < _items.length; i++) {
       _items[i].quantity = double.tryParse(quantityControllers[i].text) ?? 0;
@@ -168,6 +192,7 @@ class QuotationProvider extends ChangeNotifier {
     } else {
       await _dataSource.saveQuotation(newQuotation);
     }
+    return null; // Success
   }
 
   @override

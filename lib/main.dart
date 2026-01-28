@@ -20,6 +20,9 @@ import 'package:annex_sales_order/features/sales_order/data/models/quotation.dar
 import 'package:annex_sales_order/features/sales_order/data/datasources/quotation_local_data_source.dart';
 import 'package:annex_sales_order/features/sales_order/data/datasources/fabrics_cm_invoice_local_data_source.dart';
 import 'package:annex_sales_order/core/services/update_notification_service.dart';
+import 'package:annex_sales_order/features/customer_list/data/models/customer.dart';
+import 'package:annex_sales_order/features/customer_list/data/datasources/customer_local_data_source.dart';
+
 
 void main() async {
   runZonedGuarded<Future<void>>(
@@ -71,8 +74,13 @@ void main() async {
         // Initialize Quotation data source
         await QuotationLocalDataSource().init();
 
+
         // Initialize Notification Service (Background checks)
         await UpdateNotificationService().init();
+
+        // Initialize Customer data source
+        Hive.registerAdapter(CustomerAdapter());
+        await CustomerLocalDataSource().init();
       } catch (e, stack) {
         debugPrint('Initialization Error: $e\n$stack');
         // Consider showing a fallback UI here if critical init fails

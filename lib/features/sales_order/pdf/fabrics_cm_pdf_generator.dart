@@ -6,6 +6,16 @@ import 'package:printing/printing.dart';
 import '../data/models/fabrics_cm_sales_order.dart';
 
 class FabricsCmPdfGenerator {
+  // Define Column Widths
+  static const tableColumnWidths = {
+    0: pw.FixedColumnWidth(100), // اسم شركة الغزل
+    1: pw.FixedColumnWidth(85), // طول الغرزه
+    2: pw.FixedColumnWidth(40), // الجوج
+    3: pw.FixedColumnWidth(45), // البوصه
+    4: pw.FlexColumnWidth(3), // مواصفة القماش
+    5: pw.FixedColumnWidth(55), // الكميه (كجم)
+  };
+
   static Future<pw.Document> generate(FabricsCmSalesOrder order) async {
     final pdf = pw.Document();
 
@@ -37,11 +47,36 @@ class FabricsCmPdfGenerator {
     pdf.addPage(
       pw.MultiPage(
         theme: theme,
-        pageFormat: PdfPageFormat.a4, 
+        pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(20),
         textDirection: pw.TextDirection.rtl,
-        header: (context) =>
-            _buildHeaderRow(order, logoImage, primaryColor, accentColor),
+        header: (context) {
+          if (context.pageNumber == 1) {
+            return _buildHeaderRow(order, logoImage, primaryColor, accentColor);
+          } else {
+            return pw.Column(children: [
+              pw.Table(
+                border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
+                columnWidths: tableColumnWidths,
+                children: [
+                  pw.TableRow(
+                    decoration: pw.BoxDecoration(color: primaryColor),
+                    children: [
+                      _buildTableHeader('اسم شركة الغزل', '(مصنعيات فقط)'),
+                      _buildTableHeader(
+                          'طول الغرزه', '(وزن المتر مربع قبل الصباغه)'),
+                      _buildTableHeader('الجوج'),
+                      _buildTableHeader('البوصه'),
+                      _buildTableHeader('مواصفة القماش'),
+                      _buildTableHeader('الكميه', '(كجم)'),
+                    ],
+                  ),
+                ],
+              ),
+              pw.SizedBox(height: 10),
+            ]);
+          }
+        },
         footer: (context) => _buildPageFooter(context),
         build: (pw.Context context) {
           return [
@@ -79,15 +114,15 @@ class FabricsCmPdfGenerator {
                         _buildInfoRow(
                           'تاريخ التوصيل:',
                           order.deliveryDate != null
-                              ? intl.DateFormat(
-                                  'yyyy-MM-dd',
-                                ).format(order.deliveryDate!)
+                              ? intl.DateFormat('yyyy-MM-dd')
+                                  .format(order.deliveryDate!)
                               : '-',
                         ),
                         _buildInfoRow('نوع الطلب:', order.orderType),
                         _buildInfoRow(
                           'التاريخ:',
-                          intl.DateFormat('yyyy-MM-dd').format(order.orderDate),
+                          intl.DateFormat('yyyy-MM-dd')
+                              .format(order.orderDate),
                         ),
                       ],
                     ),
@@ -101,21 +136,15 @@ class FabricsCmPdfGenerator {
             pw.Table(
               border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
               defaultVerticalAlignment: pw.TableCellVerticalAlignment.middle,
-              columnWidths: const {
-                0: pw.FixedColumnWidth(100), // اسم شركة الغزل
-                1: pw.FixedColumnWidth(85), // طول الغرزه
-                2: pw.FixedColumnWidth(40), // الجوج
-                3: pw.FixedColumnWidth(45), // البوصه
-                4: pw.FlexColumnWidth(3), // مواصفة القماش
-                5: pw.FixedColumnWidth(55), // الكميه (كجم)
-              },
+              columnWidths: tableColumnWidths,
               children: [
                 // Header
                 pw.TableRow(
                   decoration: pw.BoxDecoration(color: primaryColor),
                   children: [
                     _buildTableHeader('اسم شركة الغزل', '(مصنعيات فقط)'),
-                    _buildTableHeader('طول الغرزه', '(وزن المتر مربع قبل الصباغه)'),
+                    _buildTableHeader(
+                        'طول الغرزه', '(وزن المتر مربع قبل الصباغه)'),
                     _buildTableHeader('الجوج'),
                     _buildTableHeader('البوصه'),
                     _buildTableHeader('مواصفة القماش'),
@@ -133,22 +162,24 @@ class FabricsCmPdfGenerator {
                       color: rowColor,
                     ),
                     children: [
-                       _buildTableCell(item.spinningCompany ?? ''),
-                       _buildTableCell(numberFormat.format(item.stitchLength ?? 0.0)),
-                       _buildTableCell((item.gauge ?? 0).toString()),
-                       _buildTableCell(numberFormat.format(item.widthInches ?? 0.0)),
-                          _buildTableCell(
-                            'نوع الغزل: ${item.yarnType ?? ''}\n'
-                            'نمرة الغزل: ${item.yarnCount ?? ''}\n'
-                            'نوع القماش: ${item.fabricType ?? ''}\n'
-                            'نسبة الليكرا: ${item.lycraPercentage ?? 0.0}%\n'
-                            'نمرة الليكرا: ${item.lycraNumber ?? ''}',
-                          ),
-                         _buildEditableTableCell(
-                           numberFormat.format(item.quantity),
-                           'quantity_$index',
-                           backgroundColor: rowColor,
-                         ),
+                      _buildTableCell(item.spinningCompany ?? ''),
+                      _buildTableCell(
+                          numberFormat.format(item.stitchLength ?? 0.0)),
+                      _buildTableCell((item.gauge ?? 0).toString()),
+                      _buildTableCell(
+                          numberFormat.format(item.widthInches ?? 0.0)),
+                      _buildTableCell(
+                        'نوع الغزل: ${item.yarnType ?? ''}\n'
+                        'نمرة الغزل: ${item.yarnCount ?? ''}\n'
+                        'نوع القماش: ${item.fabricType ?? ''}\n'
+                        'نسبة الليكرا: ${item.lycraPercentage ?? 0.0}%\n'
+                        'نمرة الليكرا: ${item.lycraNumber ?? ''}',
+                      ),
+                      _buildEditableTableCell(
+                        numberFormat.format(item.quantity),
+                        'quantity_$index',
+                        backgroundColor: rowColor,
+                      ),
                     ],
                   );
                 }),
@@ -204,14 +235,14 @@ class FabricsCmPdfGenerator {
                 ),
               ],
             ),
-            if (order.notes != null && order.notes!.isNotEmpty) ...[
+            if (order.notes != null && (order.notes?.isNotEmpty ?? false)) ...[
               pw.SizedBox(height: 10),
               pw.Text(
                 _fixArabic('ملاحظات:'),
                 style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
               ),
               pw.Text(
-                _fixArabic(order.notes!),
+                _fixArabic(order.notes ?? ''),
                 style: const pw.TextStyle(fontSize: 10),
                 textDirection: pw.TextDirection.rtl,
               ),
@@ -299,9 +330,9 @@ class FabricsCmPdfGenerator {
                     ),
                   ),
                   pw.SizedBox(height: 5),
-                  if (order.branch != null)
+                  if (order.branch != null && (order.branch?.isNotEmpty ?? false))
                     pw.Text(
-                      _fixArabic(order.branch!),
+                      _fixArabic(order.branch ?? ''),
                       style: pw.TextStyle(
                         fontSize: 12,
                         fontWeight: pw.FontWeight.bold,

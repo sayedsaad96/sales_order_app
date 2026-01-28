@@ -111,21 +111,27 @@ class ReturnOrderItem extends HiveObject {
   @HiveField(2)
   String unit;
 
+  @HiveField(3)
+  String? category;
+
   ReturnOrderItem({
     this.item = '',
     this.quantity = 0.0,
     this.unit = '',
+    this.category,
   });
 
   Map<String, dynamic> toJson() => {
     'item': item,
     'quantity': quantity,
     'unit': unit,
+    'category': category,
   };
 
   factory ReturnOrderItem.fromJson(Map<String, dynamic> json) => ReturnOrderItem(
     item: json['item'] ?? '',
     quantity: (json['quantity'] as num).toDouble(),
     unit: json['unit'] ?? '',
+    category: json['category'],
   );
 }

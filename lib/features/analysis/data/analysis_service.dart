@@ -10,7 +10,7 @@ class AnalysisMetrics {
   final Map<String, int> ordersByRep;
   final Map<String, double> salesByCustomer;
   final Map<String, int> ordersByCustomer;
-  
+
   // Breakdown by type
   final Map<String, double> generalSalesByRep;
   final Map<String, double> yarnSalesByRep;
@@ -40,7 +40,8 @@ class AnalysisMetrics {
   final int rawFabricCount;
 
   final Map<String, int> ordersByPaymentMethod;
-  final Map<String, int> customerOrdersByPaymentMethod; // Inner map: {Customer: {Method: Count}} -> Simplified storage
+  final Map<String, int>
+  customerOrdersByPaymentMethod; // Inner map: {Customer: {Method: Count}} -> Simplified storage
 
   AnalysisMetrics({
     required this.salesByRep,
@@ -103,17 +104,16 @@ class AnalysisData {
   });
 }
 
-
 class AnalysisService {
   static final _cache = <String, AnalysisMetrics>{};
   static final _lastCounts = <String, String>{};
 
-  static String _formatDate(DateTime date) => 
+  static String _formatDate(DateTime date) =>
       "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
 
   static String _normalizePaymentMethod(String? method) {
     if (method == null) return 'غير محدد';
-    
+
     final trimmed = method.trim();
     if (trimmed.isEmpty) return 'غير محدد';
 
@@ -125,7 +125,7 @@ class AnalysisService {
       'Cheque': 'كاش',
       'Other': 'كاش',
       'تحويل بنكي': 'كاش',
-      
+
       // Short Arabic to Full Arabic mapping
       'شهر': 'اجل شهر',
       'اسبوعين': 'اجل اسبوعين',
@@ -133,6 +133,8 @@ class AnalysisService {
       'شهرين': 'اجل شهرين',
       '3 شهور': 'اجل 3 شهور',
       '4 شهور': 'اجل 4 شهور',
+      '45 يوم': 'اجل 45 يوم',
+      'شهر ونصف': 'اجل شهرين ونصف',
 
       // Fix trailing space versions
       'اجل اسبوعين ': 'اجل اسبوعين',
@@ -143,21 +145,27 @@ class AnalysisService {
   }
 
   static Future<AnalysisMetrics> getMetrics({
-    String? salesRepName, 
+    String? salesRepName,
     String? customerName,
-    bool forceRefresh = false
+    bool forceRefresh = false,
   }) async {
     const salesBoxName = 'invoicesBox';
     const yarnBoxName = 'yarn_invoices';
     const fabricBoxName = 'fabrics_cm_orders';
     const returnsBoxName = 'return_orders';
 
-    if (!Hive.isBoxOpen(salesBoxName)) await Hive.openBox<SalesOrder>(salesBoxName);
-    if (!Hive.isBoxOpen(yarnBoxName)) await Hive.openBox<YarnSalesOrder>(yarnBoxName);
+    if (!Hive.isBoxOpen(salesBoxName)) {
+      await Hive.openBox<SalesOrder>(salesBoxName);
+    }
+    if (!Hive.isBoxOpen(yarnBoxName)) {
+      await Hive.openBox<YarnSalesOrder>(yarnBoxName);
+    }
     if (!Hive.isBoxOpen(fabricBoxName)) {
       await Hive.openBox<FabricsCmSalesOrder>(fabricBoxName);
     }
-    if (!Hive.isBoxOpen(returnsBoxName)) await Hive.openBox<ReturnOrder>(returnsBoxName);
+    if (!Hive.isBoxOpen(returnsBoxName)) {
+      await Hive.openBox<ReturnOrder>(returnsBoxName);
+    }
 
     final salesBox = Hive.box<SalesOrder>(salesBoxName);
     final yarnBox = Hive.box<YarnSalesOrder>(yarnBoxName);
@@ -165,8 +173,9 @@ class AnalysisService {
     final returnsBox = Hive.box<ReturnOrder>(returnsBoxName);
 
     // Better cache key including specific filters
-    final cacheKey = 'rep_${salesRepName ?? 'all'}_cust_${customerName ?? 'all'}';
-    
+    final cacheKey =
+        'rep_${salesRepName ?? 'all'}_cust_${customerName ?? 'all'}';
+
     // Improved current state key (using lengths and checksum if possible, but lengths are a good start)
     final currentStateKey =
         '${salesBox.length}-${yarnBox.length}-${fabricBox.length}-${returnsBox.length}';
@@ -187,11 +196,15 @@ class AnalysisService {
     );
 
     final metrics = _processMetrics(data);
-    
-    debugPrint('AnalysisService: Computed metrics. Total Orders: ${metrics.totalOrders}');
+
+    debugPrint(
+      'AnalysisService: Computed metrics. Total Orders: ${metrics.totalOrders}',
+    );
     debugPrint('AnalysisService: Rep Filter: ${salesRepName ?? 'NONE'}');
     debugPrint('AnalysisService: Cust Filter: ${customerName ?? 'NONE'}');
-    debugPrint('AnalysisService: Box lengths - Sales: ${salesBox.length}, Yarn: ${yarnBox.length}, Fabric: ${fabricBox.length}');
+    debugPrint(
+      'AnalysisService: Box lengths - Sales: ${salesBox.length}, Yarn: ${yarnBox.length}, Fabric: ${fabricBox.length}',
+    );
 
     _cache[cacheKey] = metrics;
     _lastCounts[cacheKey] = currentStateKey;
@@ -227,7 +240,11 @@ class AnalysisService {
     int totalReturns = 0;
 
     final ordersByPaymentMethod = <String, int>{};
-    final customerOrdersByPaymentMethod = <String, int>{}; // We'll store as "Customer|Method" for simplicity or similar
+    final customerOrdersByPaymentMethod =
+        <
+          String,
+          int
+        >{}; // We'll store as "Customer|Method" for simplicity or similar
     // Actually, a better way for the model is to have a structured way or just filter when needed.
     // Given the request is "analysis in each customer", storing as "Customer|Method" count is okay.
 
@@ -235,15 +252,19 @@ class AnalysisService {
     final customerName = data.customerFilter;
 
     // Process General Sales
-    debugPrint('AnalysisService: Processing ${data.sales.length} general sales');
+    debugPrint(
+      'AnalysisService: Processing ${data.sales.length} general sales',
+    );
     for (var order in data.sales) {
       final rep = order.salesResponsible ?? 'غير محدد';
-      if (salesRepName != null && rep.trim().toLowerCase() != salesRepName.trim().toLowerCase()) {
+      if (salesRepName != null &&
+          rep.trim().toLowerCase() != salesRepName.trim().toLowerCase()) {
         continue;
       }
 
       final customer = order.customerName ?? 'عميل غير معروف';
-      if (customerName != null && customer.trim().toLowerCase() != customerName.trim().toLowerCase()) {
+      if (customerName != null &&
+          customer.trim().toLowerCase() != customerName.trim().toLowerCase()) {
         continue;
       }
       final val = order.totalValue;
@@ -251,7 +272,7 @@ class AnalysisService {
 
       salesByRep[rep] = (salesByRep[rep] ?? 0) + val;
       ordersByRep[rep] = (ordersByRep[rep] ?? 0) + 1;
-      
+
       generalSalesByRep[rep] = (generalSalesByRep[rep] ?? 0) + val;
       generalOrdersByRep[rep] = (generalOrdersByRep[rep] ?? 0) + 1;
 
@@ -259,7 +280,7 @@ class AnalysisService {
 
       salesByCustomer[customer] = (salesByCustomer[customer] ?? 0) + val;
       ordersByCustomer[customer] = (ordersByCustomer[customer] ?? 0) + 1;
-      
+
       totalSalesValue += val;
       totalGeneralSales += val;
       totalOrders++;
@@ -268,19 +289,24 @@ class AnalysisService {
       final method = _normalizePaymentMethod(order.paymentMethod);
       ordersByPaymentMethod[method] = (ordersByPaymentMethod[method] ?? 0) + 1;
       final custMethodKey = '$customer|$method';
-      customerOrdersByPaymentMethod[custMethodKey] = (customerOrdersByPaymentMethod[custMethodKey] ?? 0) + 1;
+      customerOrdersByPaymentMethod[custMethodKey] =
+          (customerOrdersByPaymentMethod[custMethodKey] ?? 0) + 1;
     }
 
     // Process Yarn Sales
-    debugPrint('AnalysisService: Processing ${data.yarnSales.length} yarn sales');
+    debugPrint(
+      'AnalysisService: Processing ${data.yarnSales.length} yarn sales',
+    );
     for (var order in data.yarnSales) {
       final rep = order.salesResponsible ?? 'غير محدد';
-      if (salesRepName != null && rep.trim().toLowerCase() != salesRepName.trim().toLowerCase()) {
+      if (salesRepName != null &&
+          rep.trim().toLowerCase() != salesRepName.trim().toLowerCase()) {
         continue;
       }
 
       final customer = order.customerName ?? 'عميل غير معروف';
-      if (customerName != null && customer.trim().toLowerCase() != customerName.trim().toLowerCase()) {
+      if (customerName != null &&
+          customer.trim().toLowerCase() != customerName.trim().toLowerCase()) {
         continue;
       }
       final val = order.totalValue;
@@ -296,7 +322,7 @@ class AnalysisService {
 
       salesByCustomer[customer] = (salesByCustomer[customer] ?? 0) + val;
       ordersByCustomer[customer] = (ordersByCustomer[customer] ?? 0) + 1;
-      
+
       totalSalesValue += val;
       totalYarnSales += val;
       totalOrders++;
@@ -305,19 +331,24 @@ class AnalysisService {
       final method = _normalizePaymentMethod(order.paymentMethod);
       ordersByPaymentMethod[method] = (ordersByPaymentMethod[method] ?? 0) + 1;
       final custMethodKey = '$customer|$method';
-      customerOrdersByPaymentMethod[custMethodKey] = (customerOrdersByPaymentMethod[custMethodKey] ?? 0) + 1;
+      customerOrdersByPaymentMethod[custMethodKey] =
+          (customerOrdersByPaymentMethod[custMethodKey] ?? 0) + 1;
     }
 
     // Process Fabric Sales
-    debugPrint('AnalysisService: Processing ${data.fabricSales.length} fabric sales');
+    debugPrint(
+      'AnalysisService: Processing ${data.fabricSales.length} fabric sales',
+    );
     for (var order in data.fabricSales) {
       final rep = order.salesResponsible ?? 'غير محدد';
-      if (salesRepName != null && rep.trim().toLowerCase() != salesRepName.trim().toLowerCase()) {
+      if (salesRepName != null &&
+          rep.trim().toLowerCase() != salesRepName.trim().toLowerCase()) {
         continue;
       }
 
       final customer = order.customerName ?? 'عميل غير معروف';
-      if (customerName != null && customer.trim().toLowerCase() != customerName.trim().toLowerCase()) {
+      if (customerName != null &&
+          customer.trim().toLowerCase() != customerName.trim().toLowerCase()) {
         continue;
       }
       final val = order.totalValue;
@@ -342,19 +373,22 @@ class AnalysisService {
       final method = _normalizePaymentMethod(order.paymentMethod);
       ordersByPaymentMethod[method] = (ordersByPaymentMethod[method] ?? 0) + 1;
       final custMethodKey = '$customer|$method';
-      customerOrdersByPaymentMethod[custMethodKey] = (customerOrdersByPaymentMethod[custMethodKey] ?? 0) + 1;
+      customerOrdersByPaymentMethod[custMethodKey] =
+          (customerOrdersByPaymentMethod[custMethodKey] ?? 0) + 1;
     }
 
     // Process Returns
     debugPrint('AnalysisService: Processing ${data.returns.length} returns');
     for (var ret in data.returns) {
       final rep = ret.returnResponsible ?? 'غير محدد';
-      if (salesRepName != null && rep.trim().toLowerCase() != salesRepName.trim().toLowerCase()) {
+      if (salesRepName != null &&
+          rep.trim().toLowerCase() != salesRepName.trim().toLowerCase()) {
         continue;
       }
-      
+
       final customer = ret.customerName ?? 'عميل غير معروف';
-      if (customerName != null && customer.trim().toLowerCase() != customerName.trim().toLowerCase()) {
+      if (customerName != null &&
+          customer.trim().toLowerCase() != customerName.trim().toLowerCase()) {
         continue;
       }
 

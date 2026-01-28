@@ -13,7 +13,9 @@ import 'package:annex_sales_order/features/return_order/presentation/pages/saved
 import 'package:annex_sales_order/core/utils/responsive_constants.dart';
 import 'package:annex_sales_order/features/return_order/presentation/widgets/return_order_item_row.dart';
 import 'package:annex_sales_order/core/services/settings_service.dart';
+import 'package:annex_sales_order/features/return_order/presentation/utils/return_order_helpers.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:annex_sales_order/features/analysis/data/analysis_service.dart';
 
 class ReturnOrderPage extends StatefulWidget {
   final ReturnOrder? existingOrder;
@@ -45,8 +47,8 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
   final _notesController = TextEditingController();
   DateTime? _deliveryDate;
 
-  // Items
-  final List<ReturnOrderItem> _items = [];
+  // Sections
+  final List<ReturnOrderSection> _sections = [];
   final ValueNotifier<double> _totalQuantityNotifier = ValueNotifier(0.0);
   String? _currentSn;
 
@@ -65,10 +67,11 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
       _loadExistingOrder(widget.existingOrder!);
       _currentSn = widget.existingOrder!.sn;
     } else {
-      _addNewItem();
+      _addSection();
       _loadCurrentUser();
       _currentSn = 'RET-${DateTime.now().millisecondsSinceEpoch % 10000}';
     }
+    _updateTotalQuantity();
   }
 
   void _loadExistingOrder(ReturnOrder order) {
@@ -84,12 +87,42 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
     _returnReasonController.text = order.returnReason ?? '';
     _notesController.text = order.notes ?? '';
     _deliveryDate = order.deliveryDate;
+
+    // Group items by category
+    final groupedItems = <String, List<ReturnOrderItem>>{};
     if (order.items.isNotEmpty) {
-      _items.addAll(order.items);
-    } else {
-      _addNewItem();
+      for (var item in order.items) {
+        final cat = item.category ?? '';
+        groupedItems.putIfAbsent(cat, () => []).add(item);
+      }
     }
-    _updateTotalQuantity();
+
+    if (groupedItems.isEmpty) {
+      _addSection();
+    } else {
+      groupedItems.forEach((cat, items) {
+        final controllers = items
+            .map(
+              (i) => ReturnItemControllers(
+                item: i.item,
+                quantity: i.quantity == 0 ? '' : i.quantity.toString(),
+                unit: i.unit,
+              ),
+            )
+            .toList();
+
+        final defaultUnit = items.isNotEmpty ? items.first.unit : '';
+
+        _sections.add(
+          ReturnOrderSection(
+            category: cat,
+            defaultUnit: defaultUnit,
+            items: items,
+            itemControllers: controllers,
+          ),
+        );
+      });
+    }
   }
 
   Future<void> _loadCurrentUser() async {
@@ -114,32 +147,69 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
     _routeToController.dispose();
     _returnReasonController.dispose();
     _notesController.dispose();
+    for (var section in _sections) {
+      section.dispose();
+    }
     _totalQuantityNotifier.dispose();
     super.dispose();
   }
 
-  void _addNewItem() {
-    setState(() {
-      _items.add(ReturnOrderItem(unit: '')); // No default unit
-    });
-    // No need to update total as new item has 0 quantity, but good practice
-    // _updateTotalQuantity();
+  void _addSection() {
+    _sections.add(
+      ReturnOrderSection(
+        items: [ReturnOrderItem()],
+        itemControllers: [ReturnItemControllers()],
+      ),
+    );
   }
 
-  void _removeItem(int index) {
-    if (_items.length > 1) {
-      setState(() {
-        _items.removeAt(index);
-      });
-      _updateTotalQuantity();
+  void _removeSection(int index) {
+    if (_sections.length > 1) {
+      _sections[index].dispose();
+      _sections.removeAt(index);
+      if (mounted) {
+        setState(() {});
+        _updateTotalQuantity();
+      }
+    }
+  }
+
+  void _addItemToSection(int sectionIndex, {int count = 1}) {
+    final section = _sections[sectionIndex];
+    for (int i = 0; i < count; i++) {
+      section.items.add(
+        ReturnOrderItem(unit: section.defaultUnitController.text),
+      );
+      section.itemControllers.add(
+        ReturnItemControllers(unit: section.defaultUnitController.text),
+      );
+    }
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  void _removeItemFromSection(int sectionIndex, int itemIndex) {
+    final section = _sections[sectionIndex];
+    if (section.items.length > 1) {
+      section.items.removeAt(itemIndex);
+      section.itemControllers[itemIndex].dispose();
+      section.itemControllers.removeAt(itemIndex);
+      if (mounted) {
+        setState(() {});
+        _updateTotalQuantity();
+      }
     }
   }
 
   void _updateTotalQuantity() {
-    _totalQuantityNotifier.value = _items.fold(
-      0.0,
-      (sum, item) => sum + item.quantity,
-    );
+    double total = 0;
+    for (var section in _sections) {
+      for (var item in section.items) {
+        total += item.quantity;
+      }
+    }
+    _totalQuantityNotifier.value = total;
   }
 
   // Calculate Total Quantity
@@ -167,7 +237,8 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
   Future<void> _saveOrder() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_items.isEmpty) {
+    final returnOrder = _buildReturnOrderFromForm();
+    if (returnOrder.items.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('يجب إضافة صنف واحد على الأقل')),
       );
@@ -177,10 +248,10 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
     setState(() => _isSaving = true);
 
     try {
-      final returnOrder = _buildReturnOrderFromForm();
       await _dataSource.saveReturnOrder(returnOrder);
 
       if (mounted) {
+        AnalysisService.clearCache();
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('تم حفظ الطلب بنجاح')));
@@ -201,7 +272,8 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
   Future<void> _generatePdf() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_items.isEmpty) {
+    final returnOrder = _buildReturnOrderFromForm();
+    if (returnOrder.items.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('يجب إضافة صنف واحد على الأقل')),
       );
@@ -332,6 +404,17 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
           returnDate: _returnDate,
         );
 
+    final allItems = <ReturnOrderItem>[];
+    for (var section in _sections) {
+      for (var item in section.items) {
+        if (item.item.isNotEmpty || item.quantity > 0) {
+          item.category = section.categoryController.text;
+          item.unit = section.defaultUnitController.text;
+          allItems.add(item);
+        }
+      }
+    }
+
     order
       ..category = _selectedCategory
       ..branch = _selectedBranch
@@ -345,7 +428,7 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
       ..returnReason = _returnReasonController.text
       ..notes = _notesController.text
       ..deliveryDate = _deliveryDate
-      ..items = List.from(_items);
+      ..items = allItems;
 
     return order;
   }
@@ -413,34 +496,14 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
                       ),
                     ),
 
-                    // Items Header (Desktop only)
-                    if (!isMobile)
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: _buildItemsHeader(isMobile),
-                        ),
-                      ),
-
-                    // Items List
-                    SliverList(
-                      delegate: SliverChildBuilderDelegate((context, index) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16.0,
-                            vertical: 4.0,
-                          ),
-                          child: ReturnOrderItemRow(
-                            key: ObjectKey(_items[index]),
-                            index: index,
-                            item: _items[index],
-                            isMobile: isMobile,
-                            onRemove: () => _removeItem(index),
-                            onUpdate: _updateTotalQuantity,
-                          ),
-                        );
-                      }, childCount: _items.length),
-                    ),
+                    // Sections
+                    ..._sections.asMap().entries.expand((entry) {
+                      return _buildSectionSlivers(
+                        entry.key,
+                        entry.value,
+                        isMobile,
+                      );
+                    }),
 
                     SliverPadding(
                       padding: const EdgeInsets.all(16.0),
@@ -449,9 +512,9 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
                           const SizedBox(height: 10),
                           Center(
                             child: ElevatedButton.icon(
-                              onPressed: _addNewItem,
+                              onPressed: () => setState(() => _addSection()),
                               icon: const Icon(CupertinoIcons.add_circled),
-                              label: const Text('إضافة صنف'),
+                              label: const Text('إضافة تصنيف جديد'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.blue[50],
                                 foregroundColor: Colors.blue[900],
@@ -583,40 +646,10 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
               readOnly: true,
             ),
             const SizedBox(height: 10),
-            if (isMobile) ...[
-              _buildDropdown('الفرع', _selectedBranch, [
-                'المحلة',
-                'القاهرة',
-              ], (v) => setState(() => _selectedBranch = v)),
-              const SizedBox(height: 10),
-              _buildDropdown(
-                'القسم',
-                _selectedCategory,
-                ['غزل', 'مستلزمات', 'قماش'],
-                (v) => setState(() => _selectedCategory = v),
-              ),
-            ] else
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildDropdown(
-                      'الفرع',
-                      _selectedBranch,
-                      ['المحلة', 'القاهرة'],
-                      (v) => setState(() => _selectedBranch = v),
-                    ),
-                  ),
-                  const SizedBox(width: 20),
-                  Expanded(
-                    child: _buildDropdown(
-                      'القسم',
-                      _selectedCategory,
-                      ['غزل', 'مستلزمات', 'قماش'],
-                      (v) => setState(() => _selectedCategory = v),
-                    ),
-                  ),
-                ],
-              ),
+            _buildDropdown('الفرع', _selectedBranch, [
+              'المحلة',
+              'القاهرة',
+            ], (v) => setState(() => _selectedBranch = v)),
           ],
         ),
       ),
@@ -774,53 +807,193 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
     );
   }
 
-  Widget _buildItemsHeader(bool isMobile) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: const BoxDecoration(
-        color: Color(0xFFD32F2F), // Red for return items
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(8),
-          topRight: Radius.circular(8),
+  List<Widget> _buildSectionSlivers(
+    int sectionIndex,
+    ReturnOrderSection section,
+    bool isMobile,
+  ) {
+    return [
+      // Section Header (Category & Unit)
+      SliverPadding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        sliver: SliverToBoxAdapter(
+          child: Card(
+            margin: EdgeInsets.zero,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: TextFormField(
+                      controller: section.categoryController,
+                      decoration: const InputDecoration(
+                        labelText: 'التصنيف',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    flex: 2,
+                    child: TextFormField(
+                      controller: section.defaultUnitController,
+                      decoration: const InputDecoration(
+                        labelText: 'الوحدة',
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          for (var item in section.items) {
+                            item.unit = value;
+                          }
+                          for (var controller in section.itemControllers) {
+                            controller.unitController.text = value;
+                          }
+                        });
+                      },
+                    ),
+                  ),
+                  if (_sections.length > 1)
+                    IconButton(
+                      icon: const Icon(
+                        CupertinoIcons.delete,
+                        color: Colors.red,
+                      ),
+                      onPressed: () => _removeSection(sectionIndex),
+                    ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
-      child: Row(
-        children: const [
-          Expanded(
-            flex: 3,
-            child: Text(
-              'الصنف',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+
+      // Table Header (Desktop only)
+      if (!isMobile)
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Container(
+              color: Theme.of(context).cardColor,
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Color(0xFFD32F2F),
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(8),
+                  ),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: const Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: Text(
+                        'الصنف',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 1,
+                      child: Text(
+                        'الكمية',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 1,
+                      child: Text(
+                        'الوحدة',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    SizedBox(width: 40),
+                  ],
+                ),
               ),
             ),
           ),
-          SizedBox(width: 8),
-          Expanded(
-            flex: 1,
-            child: Text(
-              'الكمية',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+        ),
+
+      // Items List
+      SliverList(
+        delegate: SliverChildBuilderDelegate((context, index) {
+          final item = section.items[index];
+          final controllers = section.itemControllers[index];
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Container(
+              color: Theme.of(context).cardColor,
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border(
+                    left: BorderSide(color: Colors.grey.shade300),
+                    right: BorderSide(color: Colors.grey.shade300),
+                    bottom: BorderSide(color: Colors.grey.shade300),
+                  ),
+                ),
+                child: ReturnOrderItemRow(
+                  key: ObjectKey(item),
+                  index: index,
+                  item: item,
+                  controllers: controllers,
+                  isMobile: isMobile,
+                  onRemove: () => _removeItemFromSection(sectionIndex, index),
+                  onUpdate: _updateTotalQuantity,
+                ),
               ),
             ),
-          ),
-          SizedBox(width: 8),
-          Expanded(
-            flex: 1,
-            child: Text(
-              'الوحدة',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          SizedBox(width: 40), // Space for delete icon
-        ],
+          );
+        }, childCount: section.items.length),
       ),
-    );
+
+      // Add Item Button
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              borderRadius: const BorderRadius.vertical(
+                bottom: Radius.circular(12),
+              ),
+            ),
+            padding: const EdgeInsets.all(8.0),
+            margin: const EdgeInsets.only(bottom: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                TextButton.icon(
+                  onPressed: () => _addItemToSection(sectionIndex),
+                  icon: const Icon(CupertinoIcons.add),
+                  label: const Text('إضافة صنف'),
+                ),
+                TextButton.icon(
+                  onPressed: () async {
+                    final count = await showBulkAddDialog(context);
+                    if (count != null) {
+                      _addItemToSection(sectionIndex, count: count);
+                    }
+                  },
+                  icon: const Icon(CupertinoIcons.plus_square_on_square),
+                  label: const Text('إضافة جماعية'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ];
   }
 }

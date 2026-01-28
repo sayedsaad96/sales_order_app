@@ -72,7 +72,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                       height: 100,
                       decoration: const BoxDecoration(
                         image: DecorationImage(
-                          image: AssetImage('assets/images/annex_logo.png'),
+                          image: AssetImage('assets/images/logo.png'),
                           fit: BoxFit.contain,
                         ),
                       ),

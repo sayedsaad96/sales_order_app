@@ -62,7 +62,7 @@ class _SettingsPageState extends State<SettingsPage> {
         padding: const EdgeInsets.all(16.0),
         children: [
           // -- General Preferences Section --
-          _buildSectionHeader('تفضيلات عامة'),
+          _buildSectionHeader('تعديلات عامة'),
           const SizedBox(height: 10),
           Card(
             shape: RoundedRectangleBorder(

@@ -26,6 +26,16 @@ class FabricsCmInvoiceLocalDataSource {
     return box.values.toList();
   }
 
+  bool isSnExists(String sn, {dynamic excludeKey}) {
+    try {
+      if (!Hive.isBoxOpen(_boxName)) return false;
+      final box = Hive.box<FabricsCmSalesOrder>(_boxName);
+      return box.values.any((order) => order.sn == sn && order.key != excludeKey);
+    } catch (e) {
+      return false;
+    }
+  }
+
   Future<void> deleteInvoice(int index) async {
     final box = Hive.box<FabricsCmSalesOrder>(_boxName);
     await box.deleteAt(index);

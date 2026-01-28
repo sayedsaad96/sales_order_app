@@ -9,6 +9,7 @@ class YarnOrderHeader extends StatelessWidget {
   final DateTime orderDate;
   final Function(DateTime) onDateChanged;
   final bool isMobile;
+  final VoidCallback? onRefreshSn;
 
   const YarnOrderHeader({
     super.key,
@@ -16,6 +17,7 @@ class YarnOrderHeader extends StatelessWidget {
     required this.orderDate,
     required this.onDateChanged,
     required this.isMobile,
+    this.onRefreshSn,
   });
 
   @override
@@ -36,7 +38,15 @@ class YarnOrderHeader extends StatelessWidget {
                   const SizedBox(height: 10),
                   TextFormField(
                     controller: snController,
-                    decoration: const InputDecoration(labelText: 'S/N'),
+                    decoration: InputDecoration(
+                      labelText: 'S/N',
+                      suffixIcon: onRefreshSn != null
+                          ? IconButton(
+                              icon: const Icon(CupertinoIcons.refresh),
+                              onPressed: onRefreshSn,
+                            )
+                          : null,
+                    ),
                     validator: (value) =>
                         value?.isEmpty ?? true ? 'مطلوب' : null,
                   ),
@@ -61,7 +71,15 @@ class YarnOrderHeader extends StatelessWidget {
                     width: 150,
                     child: TextFormField(
                       controller: snController,
-                      decoration: const InputDecoration(labelText: 'S/N'),
+                      decoration: InputDecoration(
+                        labelText: 'S/N',
+                        suffixIcon: onRefreshSn != null
+                            ? IconButton(
+                                icon: const Icon(CupertinoIcons.refresh),
+                                onPressed: onRefreshSn,
+                              )
+                            : null,
+                      ),
                       validator: (value) =>
                           value?.isEmpty ?? true ? 'مطلوب' : null,
                     ),
@@ -328,7 +346,9 @@ class YarnCustomerInfoSection extends StatelessWidget {
             'اجل اسبوعين',
             'اجل 3 اسابيع',
             'اجل شهر',
+            'اجل 45 يوم',
             'اجل شهرين',
+            'اجل شهرين ونصف',
             'اجل 3 شهور',
             'اجل 4 شهور',
           ].contains(paymentMethod)
@@ -347,6 +367,8 @@ class YarnCustomerInfoSection extends StatelessWidget {
         'اجل شهرين',
         'اجل 3 شهور',
         'اجل 4 شهور',
+        'اجل 45 يوم',
+        'اجل شهرين ونصف',
       ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
       onChanged: onPaymentMethodChanged,
       validator: (v) => v == null ? 'مطلوب' : null,

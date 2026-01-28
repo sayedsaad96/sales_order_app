@@ -1,10 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../data/models/return_order.dart';
+import '../utils/return_order_helpers.dart';
 
 class ReturnOrderItemRow extends StatefulWidget {
   final int index;
   final ReturnOrderItem item;
+  final ReturnItemControllers controllers;
   final bool isMobile;
   final VoidCallback onRemove;
   final VoidCallback onUpdate;
@@ -13,6 +15,7 @@ class ReturnOrderItemRow extends StatefulWidget {
     super.key,
     required this.index,
     required this.item,
+    required this.controllers,
     required this.isMobile,
     required this.onRemove,
     required this.onUpdate,
@@ -23,37 +26,28 @@ class ReturnOrderItemRow extends StatefulWidget {
 }
 
 class _ReturnOrderItemRowState extends State<ReturnOrderItemRow> {
-  late TextEditingController _itemController;
-  late TextEditingController _quantityController;
-  late TextEditingController _unitController;
-
   @override
   void initState() {
     super.initState();
-    _itemController = TextEditingController(text: widget.item.item);
-    _quantityController = TextEditingController(
-        text: widget.item.quantity == 0 ? '' : widget.item.quantity.toString());
-    _unitController = TextEditingController(text: widget.item.unit);
-
-    _itemController.addListener(_onItemChanged);
-    _quantityController.addListener(_onQuantityChanged);
-    _unitController.addListener(_onUnitChanged);
+    widget.controllers.itemController.addListener(_onItemChanged);
+    widget.controllers.quantityController.addListener(_onQuantityChanged);
+    widget.controllers.unitController.addListener(_onUnitChanged);
   }
 
   @override
   void dispose() {
-    _itemController.dispose();
-    _quantityController.dispose();
-    _unitController.dispose();
+    widget.controllers.itemController.removeListener(_onItemChanged);
+    widget.controllers.quantityController.removeListener(_onQuantityChanged);
+    widget.controllers.unitController.removeListener(_onUnitChanged);
     super.dispose();
   }
 
   void _onItemChanged() {
-    widget.item.item = _itemController.text;
+    widget.item.item = widget.controllers.itemController.text;
   }
 
   void _onQuantityChanged() {
-    final val = double.tryParse(_quantityController.text) ?? 0;
+    final val = double.tryParse(widget.controllers.quantityController.text) ?? 0;
     if (widget.item.quantity != val) {
       widget.item.quantity = val;
       widget.onUpdate();
@@ -61,7 +55,7 @@ class _ReturnOrderItemRowState extends State<ReturnOrderItemRow> {
   }
 
   void _onUnitChanged() {
-    widget.item.unit = _unitController.text;
+    widget.item.unit = widget.controllers.unitController.text;
   }
 
   @override
@@ -82,7 +76,7 @@ class _ReturnOrderItemRowState extends State<ReturnOrderItemRow> {
       child: Column(
         children: [
           TextFormField(
-            controller: _itemController,
+            controller: widget.controllers.itemController,
             decoration: const InputDecoration(
               labelText: 'الصنف',
               border: OutlineInputBorder(),
@@ -93,7 +87,7 @@ class _ReturnOrderItemRowState extends State<ReturnOrderItemRow> {
             children: [
               Expanded(
                 child: TextFormField(
-                  controller: _quantityController,
+                  controller: widget.controllers.quantityController,
                   decoration: const InputDecoration(
                     labelText: 'الكمية',
                     border: OutlineInputBorder(),
@@ -104,7 +98,7 @@ class _ReturnOrderItemRowState extends State<ReturnOrderItemRow> {
               const SizedBox(width: 8),
               Expanded(
                 child: TextFormField(
-                  controller: _unitController,
+                  controller: widget.controllers.unitController,
                   decoration: const InputDecoration(
                     labelText: 'الوحدة',
                     border: OutlineInputBorder(),
@@ -133,7 +127,7 @@ class _ReturnOrderItemRowState extends State<ReturnOrderItemRow> {
         Expanded(
           flex: 3,
           child: TextFormField(
-            controller: _itemController,
+            controller: widget.controllers.itemController,
             decoration: const InputDecoration(
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
@@ -146,7 +140,7 @@ class _ReturnOrderItemRowState extends State<ReturnOrderItemRow> {
         Expanded(
           flex: 1,
           child: TextFormField(
-            controller: _quantityController,
+            controller: widget.controllers.quantityController,
             keyboardType: TextInputType.number,
             textAlign: TextAlign.right,
             decoration: const InputDecoration(
@@ -161,7 +155,7 @@ class _ReturnOrderItemRowState extends State<ReturnOrderItemRow> {
         Expanded(
           flex: 1,
           child: TextFormField(
-            controller: _unitController,
+            controller: widget.controllers.unitController,
             decoration: const InputDecoration(
               border: InputBorder.none,
               enabledBorder: InputBorder.none,

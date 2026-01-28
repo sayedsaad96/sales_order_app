@@ -34,8 +34,14 @@ class _CreateQuotationView extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = Provider.of<QuotationProvider>(context);
     
-    return Scaffold(
-      appBar: AppBar(
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          ScaffoldMessenger.of(context).clearSnackBars();
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
         title: Text(provider.customerController.text.isEmpty ? 'إنشاء عرض سعر' : 'تعديل عرض سعر'),
         actions: [
             IconButton(
@@ -47,7 +53,15 @@ class _CreateQuotationView extends StatelessWidget {
                 icon: const Icon(CupertinoIcons.floppy_disk),
                 tooltip: 'حفظ',
                 onPressed: () async {
-                    await provider.saveQuotation();
+                    final error = await provider.saveQuotation();
+                    if (error != null) {
+                        if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(error), backgroundColor: Colors.red),
+                            );
+                        }
+                        return;
+                    }
                     if (context.mounted) {
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -162,10 +176,12 @@ class _CreateQuotationView extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
+        ), // SafeArea
+      ), // Container
+    ), // Scaffold
+  ); // PopScope
+} // build
+
 
   Widget _buildHeaderSection(BuildContext context, QuotationProvider provider, bool isWide) {
       return Card(
@@ -191,7 +207,14 @@ class _CreateQuotationView extends StatelessWidget {
                                   Expanded(
                                       child: TextField(
                                           controller: provider.snController,
-                                          decoration: const InputDecoration(labelText: 'رقم عرض السعر', border: OutlineInputBorder()),
+                                          decoration: InputDecoration(
+                                            labelText: 'رقم عرض السعر',
+                                            border: const OutlineInputBorder(),
+                                            suffixIcon: IconButton(
+                                              icon: const Icon(CupertinoIcons.refresh),
+                                              onPressed: () => provider.generateUniqueSN(),
+                                            ),
+                                          ),
                                       ),
                                   ),
                               ],
@@ -216,7 +239,14 @@ class _CreateQuotationView extends StatelessWidget {
                           const SizedBox(height: 12),
                           TextField(
                               controller: provider.snController,
-                              decoration: const InputDecoration(labelText: 'رقم عرض السعر', border: OutlineInputBorder()),
+                              decoration: InputDecoration(
+                                labelText: 'رقم عرض السعر',
+                                border: const OutlineInputBorder(),
+                                suffixIcon: IconButton(
+                                  icon: const Icon(CupertinoIcons.refresh),
+                                  onPressed: () => provider.generateUniqueSN(),
+                                ),
+                              ),
                           ),
                           const SizedBox(height: 12),
                           _buildDateTile(context, 'التاريخ', provider.orderDate, (date) => provider.updateDate(date)),
@@ -570,7 +600,16 @@ class _CreateQuotationView extends StatelessWidget {
     );
 
     try {
-      await provider.saveQuotation(); // Ensure latest data is saved
+      final error = await provider.saveQuotation(); // Ensure latest data is saved
+      if (error != null) {
+        if (context.mounted) Navigator.pop(context); // Dismiss loading
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error), backgroundColor: Colors.red),
+          );
+        }
+        return;
+      }
       
       final quotation = Quotation(
         sn: provider.snController.text,

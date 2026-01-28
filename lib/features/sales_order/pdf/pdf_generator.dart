@@ -6,6 +6,16 @@ import 'package:printing/printing.dart';
 import '../data/models/sales_order.dart';
 
 class PdfSalesOrderGenerator {
+  // Define Column Widths
+  static const tableColumnWidths = {
+    0: pw.FlexColumnWidth(2), // Total (Value)
+    1: pw.FlexColumnWidth(1.5), // Price
+    2: pw.FlexColumnWidth(1.5), // Unit
+    3: pw.FlexColumnWidth(1.5), // Qty
+    4: pw.FlexColumnWidth(3), // Item Name
+    5: pw.FlexColumnWidth(2), // Comment
+  };
+
   static Future<pw.Document> generate(SalesOrder order) async {
     final pdf = pw.Document();
 
@@ -39,10 +49,47 @@ class PdfSalesOrderGenerator {
       pw.MultiPage(
         theme: theme,
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.only(top: 30, left: 30, right: 30, bottom: 20),
+        margin: const pw.EdgeInsets.only(
+          top: 30,
+          left: 30,
+          right: 30,
+          bottom: 20,
+        ),
         textDirection: pw.TextDirection.rtl,
-        header: (context) =>
-            _buildHeaderRow(order, logoImage, primaryColor, accentColor),
+        header: (context) {
+          if (context.pageNumber == 1) {
+            return _buildHeaderRow(order, logoImage, primaryColor, accentColor);
+          } else {
+            return pw.Column(
+              children: [
+                pw.Table(
+                  border: pw.TableBorder(
+                    horizontalInside: pw.BorderSide(
+                      color: PdfColors.grey200,
+                      width: 0.5,
+                    ),
+                    bottom: pw.BorderSide(color: PdfColors.grey300, width: 1),
+                  ),
+                  columnWidths: tableColumnWidths,
+                  children: [
+                    pw.TableRow(
+                      decoration: pw.BoxDecoration(color: primaryColor),
+                      children: [
+                        _buildTableHeader('القيمة'),
+                        _buildTableHeader('السعر'),
+                        _buildTableHeader('الوحدة'),
+                        _buildTableHeader('الكمية'),
+                        _buildTableHeader('الصنف', align: pw.TextAlign.center),
+                        _buildTableHeader('تعليق'),
+                      ],
+                    ),
+                  ],
+                ),
+                pw.SizedBox(height: 10),
+              ],
+            );
+          }
+        },
         footer: (context) => _buildPageFooter(context),
         build: (pw.Context context) {
           return [
@@ -77,7 +124,6 @@ class PdfSalesOrderGenerator {
                     ),
                   ),
                 ),
-
                 // Order Details (Left in RTL)
                 pw.Expanded(
                   child: pw.Container(
@@ -114,7 +160,6 @@ class PdfSalesOrderGenerator {
               ],
             ),
             pw.SizedBox(height: 5),
-
             // --- Valid Items Logic with Orphan Protection ---
             ...(() {
               final groupedItems = <String, List<SalesOrderItem>>{};
@@ -125,7 +170,9 @@ class PdfSalesOrderGenerator {
                 groupedItems.putIfAbsent(cat, () => []).add(item);
               }
 
-              return groupedItems.entries.toList().asMap().entries.expand((groupEntry) {
+              return groupedItems.entries.toList().asMap().entries.expand((
+                groupEntry,
+              ) {
                 final groupIndex = groupEntry.key;
                 final category = groupEntry.value.key;
                 final items = groupEntry.value.value;
@@ -137,7 +184,7 @@ class PdfSalesOrderGenerator {
                       padding: const pw.EdgeInsets.only(top: 5, bottom: 5),
                       child: pw.Center(
                         child: pw.Text(
-                          'تصنيف: $category',
+                          '# $category',
                           style: pw.TextStyle(
                             fontSize: 14,
                             fontWeight: pw.FontWeight.bold,
@@ -155,15 +202,9 @@ class PdfSalesOrderGenerator {
                       ),
                       bottom: pw.BorderSide(color: PdfColors.grey300, width: 1),
                     ),
-                    defaultVerticalAlignment: pw.TableCellVerticalAlignment.middle,
-                    columnWidths: const {
-                      0: pw.FlexColumnWidth(2), // Total (Value)
-                      1: pw.FlexColumnWidth(1.5), // Price
-                      2: pw.FlexColumnWidth(1.5), // Unit
-                      3: pw.FlexColumnWidth(1.5), // Qty
-                      4: pw.FlexColumnWidth(3), // Item Name
-                      5: pw.FlexColumnWidth(2), // Comment
-                    },
+                    defaultVerticalAlignment:
+                        pw.TableCellVerticalAlignment.middle,
+                    columnWidths: tableColumnWidths,
                     children: [
                       // Header
                       pw.TableRow(
@@ -173,7 +214,10 @@ class PdfSalesOrderGenerator {
                           _buildTableHeader('السعر'),
                           _buildTableHeader('الوحدة'),
                           _buildTableHeader('الكمية'),
-                          _buildTableHeader('الصنف', align: pw.TextAlign.center),
+                          _buildTableHeader(
+                            'الصنف',
+                            align: pw.TextAlign.center,
+                          ),
                           _buildTableHeader('تعليق'),
                         ],
                       ),
@@ -182,11 +226,11 @@ class PdfSalesOrderGenerator {
                         final index = e.key;
                         final item = e.value;
                         final isEven = index % 2 == 0;
-                        final rowColor = isEven ? PdfColors.white : PdfColors.grey50;
+                        final rowColor = isEven
+                            ? PdfColors.white
+                            : PdfColors.grey50;
                         return pw.TableRow(
-                          decoration: pw.BoxDecoration(
-                            color: rowColor,
-                          ),
+                          decoration: pw.BoxDecoration(color: rowColor),
                           children: [
                             _buildEditableTableCell(
                               numberFormat.format(item.value),
@@ -204,7 +248,10 @@ class PdfSalesOrderGenerator {
                               'quantity_${groupIndex}_$index',
                               backgroundColor: rowColor,
                             ),
-                            _buildTableCell(item.itemName, align: pw.TextAlign.center),
+                            _buildTableCell(
+                              item.itemName,
+                              align: pw.TextAlign.center,
+                            ),
                             _buildEditableTableCell(
                               '',
                               'comment_${groupIndex}_$index',
@@ -219,14 +266,14 @@ class PdfSalesOrderGenerator {
               });
             })(),
 
-            pw.SizedBox(height: 20),
+            pw.SizedBox(height: 1),
 
             // --- Footer / Totals (Flows after table) ---
             pw.Row(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
                 // Notes (Right, takes up available space)
-                if (order.notes != null && order.notes!.isNotEmpty)
+                if (order.notes != null && (order.notes?.isNotEmpty ?? false))
                   pw.Expanded(
                     flex: 2,
                     child: pw.Container(
@@ -249,7 +296,7 @@ class PdfSalesOrderGenerator {
                           ),
                           pw.SizedBox(height: 4),
                           pw.Text(
-                            _fixArabic(order.notes!),
+                            _fixArabic(order.notes ?? ''),
                             style: const pw.TextStyle(fontSize: 10),
                             textDirection: pw.TextDirection.rtl,
                           ),
@@ -390,9 +437,10 @@ class PdfSalesOrderGenerator {
                     ),
                   ),
                   pw.SizedBox(height: 5),
-                  if (order.branch != null)
+                  if (order.branch != null &&
+                      (order.branch?.isNotEmpty ?? false))
                     pw.Text(
-                      _fixArabic(order.branch!),
+                      _fixArabic(order.branch ?? ''),
                       style: pw.TextStyle(
                         fontSize: 12,
                         fontWeight: pw.FontWeight.bold,
@@ -438,11 +486,16 @@ class PdfSalesOrderGenerator {
                   ),
                   pw.SizedBox(height: 2),
                   pw.Text(
-                    'Sales Order',
+                    _fixArabic(
+                      order.orderTypes.isEmpty
+                          ? 'Sales Order'
+                          : order.orderTypes.join(' - '),
+                    ),
                     style: const pw.TextStyle(
                       fontSize: 10,
                       color: PdfColors.grey700,
                     ),
+                    textDirection: pw.TextDirection.rtl,
                   ),
                 ],
               ),
@@ -575,18 +628,13 @@ class PdfSalesOrderGenerator {
       child: pw.TextField(
         name: fieldName,
         value: initialValue,
-        textStyle: pw.TextStyle(
-          font: pw.Font.helvetica(),
-          fontSize: 10,
-        ),
+        textStyle: pw.TextStyle(font: pw.Font.helvetica(), fontSize: 10),
         backgroundColor: backgroundColor ?? PdfColors.white,
       ),
     );
   }
 
-
   static String _fixArabic(String text) {
     return text;
   }
-
 }

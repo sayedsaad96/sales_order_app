@@ -23,6 +23,17 @@ class _FabricsCmOrderPageState extends State<FabricsCmOrderPage> {
   final _formKey = GlobalKey<FormState>();
 
   @override
+  void dispose() {
+    // Clear SnackBars when leaving the page
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+      }
+    });
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) =>
@@ -156,7 +167,11 @@ class _FabricsCmOrderPageState extends State<FabricsCmOrderPage> {
                           ?.copyWith(fontWeight: FontWeight.bold, fontSize: 22),
                     ),
                     const SizedBox(height: 15),
-                    _buildTextField(provider.snController, 'S/N'),
+                    _buildTextField(
+                      provider.snController,
+                      'S/N',
+                      onRefresh: () => provider.generateUniqueSN(),
+                    ),
                   ],
                 )
               : Row(
@@ -174,7 +189,11 @@ class _FabricsCmOrderPageState extends State<FabricsCmOrderPage> {
                     ),
                     SizedBox(
                       width: 200,
-                      child: _buildTextField(provider.snController, 'S/N'),
+                      child: _buildTextField(
+                        provider.snController,
+                        'S/N',
+                        onRefresh: () => provider.generateUniqueSN(),
+                      ),
                     ),
                   ],
                 ),
@@ -251,6 +270,7 @@ class _FabricsCmOrderPageState extends State<FabricsCmOrderPage> {
     int maxLines = 1,
     bool isRequired = false,
     bool isNumeric = false,
+    VoidCallback? onRefresh,
   }) {
     return Focus(
       onFocusChange: (hasFocus) {
@@ -268,6 +288,12 @@ class _FabricsCmOrderPageState extends State<FabricsCmOrderPage> {
         decoration: InputDecoration(
           labelText: label,
           border: const OutlineInputBorder(),
+          suffixIcon: onRefresh != null
+              ? IconButton(
+                  icon: const Icon(CupertinoIcons.refresh),
+                  onPressed: onRefresh,
+                )
+              : null,
         ),
         onTap: () {
           if (isNumeric &&
@@ -294,9 +320,11 @@ class _FabricsCmOrderPageState extends State<FabricsCmOrderPage> {
             'اجل اسبوعين',
             'اجل 3 اسابيع',
             'اجل شهر',
+            'اجل 45 يوم',
             'اجل شهرين',
             'اجل 3 شهور',
             'اجل 4 شهور',
+            'اجل شهرين ونصف',
           ].contains(provider.paymentMethod)
           ? provider.paymentMethod
           : null,
@@ -310,9 +338,11 @@ class _FabricsCmOrderPageState extends State<FabricsCmOrderPage> {
         'اجل اسبوعين',
         'اجل 3 اسابيع',
         'اجل شهر',
+        'اجل 45 يوم',
         'اجل شهرين',
         'اجل 3 شهور',
         'اجل 4 شهور',
+        'اجل شهرين ونصف',
       ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
       onChanged: (v) => provider.setPaymentMethod(v),
       validator: (v) => v == null ? 'مطلوب' : null,

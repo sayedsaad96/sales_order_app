@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:annex_sales_order/features/analysis/data/analysis_service.dart';
 import '../../data/models/fabrics_cm_sales_order.dart';
 import '../../data/datasources/fabrics_cm_invoice_local_data_source.dart';
 import '../../../user/data/datasources/user_local_data_source.dart';
@@ -167,7 +168,7 @@ class FabricsCmOrderProvider extends ChangeNotifier {
   }
 
   void resetForm() {
-    snController.text = 'FCM-${DateTime.now().microsecond}';
+    generateUniqueSN();
     customerNameController.clear();
     paymentMethodController.clear();
     notesController.clear();
@@ -187,6 +188,28 @@ class FabricsCmOrderProvider extends ChangeNotifier {
 
     _loadCurrentUser();
     addItem(); // Add one initial empty row
+    notifyListeners();
+  }
+
+  void generateUniqueSN() {
+    final box = FabricsCmInvoiceLocalDataSource().getInvoices();
+    final existingSns = box.map((e) => e.sn ?? '').toSet();
+    
+    final List<int> available = [];
+    for (int i = 1; i <= 999; i++) {
+      final sn = 'FCM-${i.toString().padLeft(3, '0')}';
+      if (!existingSns.contains(sn)) {
+        available.add(i);
+      }
+    }
+
+    if (available.isNotEmpty) {
+      final randomIndex = (DateTime.now().microsecondsSinceEpoch % available.length);
+      final chosen = available[randomIndex.toInt()];
+      snController.text = 'FCM-${chosen.toString().padLeft(3, '0')}';
+    } else {
+      snController.text = 'FCM-${DateTime.now().millisecondsSinceEpoch.toString().substring(10)}';
+    }
     notifyListeners();
   }
 
@@ -375,6 +398,11 @@ class FabricsCmOrderProvider extends ChangeNotifier {
 
   void setSaveAsNew(bool value) {
     saveAsNew = value;
+    if (saveAsNew) {
+      generateUniqueSN();
+    } else if (existingOrder != null) {
+      snController.text = existingOrder!.sn ?? '';
+    }
     notifyListeners();
   }
 
@@ -412,6 +440,29 @@ class FabricsCmOrderProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      final sn = snController.text;
+      final isDuplicate = FabricsCmInvoiceLocalDataSource().isSnExists(
+        sn,
+        excludeKey:
+            (existingOrder != null && existingOrder!.isInBox)
+                ? existingOrder!.key
+                : null,
+      );
+
+      if (isDuplicate) {
+        _isSaving = false;
+        notifyListeners();
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('رقم الفاتورة (S/N) موجود بالفعل، يرجى تغييره'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return false;
+      }
+
       final newOrderData = _createOrderObject();
 
       if (existingOrder != null && !saveAsNew) {
@@ -437,6 +488,7 @@ class FabricsCmOrderProvider extends ChangeNotifier {
         await FabricsCmInvoiceLocalDataSource().saveInvoice(newOrderData);
       }
 
+      AnalysisService.clearCache();
       _isSaving = false;
       notifyListeners();
       return true;
@@ -497,6 +549,28 @@ class FabricsCmOrderProvider extends ChangeNotifier {
     );
 
     try {
+      final sn = snController.text;
+      final isDuplicate = FabricsCmInvoiceLocalDataSource().isSnExists(
+        sn,
+        excludeKey:
+            (existingOrder != null && existingOrder!.isInBox)
+                ? existingOrder!.key
+                : null,
+      );
+
+      if (isDuplicate) {
+        if (context.mounted) Navigator.of(context).pop(); // Dismiss loading
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('رقم الفاتورة (S/N) موجود بالفعل، يرجى تغييره'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+
       final newOrderData = _createOrderObject();
 
       // Auto-save logic
@@ -519,6 +593,8 @@ class FabricsCmOrderProvider extends ChangeNotifier {
       } else {
         await FabricsCmInvoiceLocalDataSource().saveInvoice(newOrderData);
       }
+
+      AnalysisService.clearCache();
 
       // Use the data (either new or updated) for PDF
       // Note: For PDF we can use newOrderData as it holds the current UI values

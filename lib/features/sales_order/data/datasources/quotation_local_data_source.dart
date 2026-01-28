@@ -26,6 +26,16 @@ class QuotationLocalDataSource {
     return box.values.toList();
   }
 
+  bool isSnExists(String sn, {dynamic excludeKey}) {
+    try {
+      if (!Hive.isBoxOpen(_boxName)) return false;
+      final box = Hive.box<Quotation>(_boxName);
+      return box.values.any((q) => q.sn == sn && q.key != excludeKey);
+    } catch (e) {
+      return false;
+    }
+  }
+
   Future<void> deleteQuotation(Quotation quotation) async {
     await quotation.delete();
   }
