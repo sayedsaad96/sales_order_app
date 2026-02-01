@@ -65,26 +65,31 @@ class QuotationPdfGenerator {
               headerColor,
             );
           } else {
-            return pw.Column(children: [
-              pw.Table(
-                border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
-                columnWidths: tableColumnWidths,
-                children: [
-                  pw.TableRow(
-                    decoration: pw.BoxDecoration(color: primaryColor),
-                    children: [
-                      _buildTableHeader('الإجمالي'),
-                      _buildTableHeader('السعر'),
-                      _buildTableHeader('الكمية'),
-                      _buildTableHeader('الوحدة'),
-                      _buildTableHeader('البيان والمواصفات'),
-                      _buildTableHeader('م'),
-                    ],
+            return pw.Column(
+              children: [
+                pw.Table(
+                  border: pw.TableBorder.all(
+                    color: PdfColors.grey300,
+                    width: 0.5,
                   ),
-                ],
-              ),
-              pw.SizedBox(height: 10),
-            ]);
+                  columnWidths: tableColumnWidths,
+                  children: [
+                    pw.TableRow(
+                      decoration: pw.BoxDecoration(color: primaryColor),
+                      children: [
+                        _buildTableHeader('الإجمالي'),
+                        _buildTableHeader('السعر'),
+                        _buildTableHeader('الكمية'),
+                        _buildTableHeader('الوحدة'),
+                        _buildTableHeader('البيان والمواصفات'),
+                        _buildTableHeader('م'),
+                      ],
+                    ),
+                  ],
+                ),
+                pw.SizedBox(height: 10),
+              ],
+            );
           }
         },
         footer: (context) => _buildProfessionalFooter(context, primaryColor),
@@ -127,26 +132,6 @@ class QuotationPdfGenerator {
             pw.SizedBox(height: 20),
 
             // Info Grid
-            pw.Row(
-              children: [
-                pw.Expanded(
-                  child: _buildInfoCard(
-                    'رقم العرض',
-                    quotation.sn ?? '####',
-                    primaryColor,
-                  ),
-                ),
-                pw.SizedBox(width: 10),
-                pw.Expanded(
-                  child: _buildInfoCard(
-                    'تاريخ العرض',
-                    dateFormat.format(quotation.date),
-                    primaryColor,
-                  ),
-                ),
-              ],
-            ),
-            pw.SizedBox(height: 20),
 
             // Table
             pw.Table(
@@ -218,7 +203,11 @@ class QuotationPdfGenerator {
                               color: primaryColor,
                             ),
                           ),
-                          pw.Text(dateFormat.format(quotation.validUntil ?? DateTime.now())),
+                          pw.Text(
+                            dateFormat.format(
+                              quotation.validUntil ?? DateTime.now(),
+                            ),
+                          ),
                         ],
                       ),
                     if (quotation.validUntil != null &&
@@ -269,13 +258,6 @@ class QuotationPdfGenerator {
                   child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.end,
                     children: [
-                      pw.Row(
-                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                        children: [
-                          pw.Text('إجمالي البنود:'),
-                          pw.Text('${quotation.items.length}'),
-                        ],
-                      ),
                       if (quotation.wasteTotal > 0) ...[
                         pw.SizedBox(height: 4),
                         pw.Row(
@@ -286,7 +268,6 @@ class QuotationPdfGenerator {
                           ],
                         ),
                       ],
-                      pw.Divider(color: headerColor),
                       pw.Container(
                         padding: const pw.EdgeInsets.symmetric(
                           vertical: 4,
@@ -323,7 +304,8 @@ class QuotationPdfGenerator {
               ],
             ),
 
-            if (quotation.notes != null && (quotation.notes?.isNotEmpty ?? false)) ...[
+            if (quotation.notes != null &&
+                (quotation.notes?.isNotEmpty ?? false)) ...[
               pw.SizedBox(height: 20),
               pw.Container(
                 width: double.infinity,
@@ -408,7 +390,7 @@ class QuotationPdfGenerator {
         crossAxisAlignment: pw.CrossAxisAlignment.center,
         children: [
           pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            crossAxisAlignment: pw.CrossAxisAlignment.center,
             children: [
               pw.Text(
                 'عرض سعر',
@@ -416,13 +398,6 @@ class QuotationPdfGenerator {
                   fontSize: 24,
                   fontWeight: pw.FontWeight.bold,
                   color: primaryColor,
-                ),
-              ),
-              pw.Text(
-                'Quotation',
-                style: const pw.TextStyle(
-                  fontSize: 12,
-                  color: PdfColors.grey600,
                 ),
               ),
             ],
@@ -456,7 +431,7 @@ class QuotationPdfGenerator {
     final user = UserLocalDataSource().getUser();
     final email = (user?.email != null && (user?.email?.isNotEmpty ?? false))
         ? user!.email!
-        : 'sales@annexeg.com';
+        : 'support@annexeg.com';
 
     return pw.Container(
       margin: const pw.EdgeInsets.only(top: 20),
@@ -490,34 +465,6 @@ class QuotationPdfGenerator {
                 ),
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  static pw.Widget _buildInfoCard(String label, String value, PdfColor color) {
-    return pw.Container(
-      padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: pw.BoxDecoration(
-        borderRadius: pw.BorderRadius.circular(4),
-        border: pw.Border.all(color: PdfColors.grey300),
-      ),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.center,
-        children: [
-          pw.Text(
-            label,
-            style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
-          ),
-          pw.SizedBox(height: 2),
-          pw.Text(
-            value,
-            style: pw.TextStyle(
-              fontSize: 11,
-              fontWeight: pw.FontWeight.bold,
-              color: color,
-            ),
           ),
         ],
       ),

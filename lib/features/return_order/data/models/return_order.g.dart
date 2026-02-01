@@ -93,19 +93,22 @@ class ReturnOrderItemAdapter extends TypeAdapter<ReturnOrderItem> {
       item: fields[0] as String,
       quantity: fields[1] as double,
       unit: fields[2] as String,
+      category: fields[3] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, ReturnOrderItem obj) {
     writer
-      ..writeByte(3)
+      ..writeByte(4)
       ..writeByte(0)
       ..write(obj.item)
       ..writeByte(1)
       ..write(obj.quantity)
       ..writeByte(2)
-      ..write(obj.unit);
+      ..write(obj.unit)
+      ..writeByte(3)
+      ..write(obj.category);
   }
 
   @override

@@ -84,7 +84,6 @@ class _SettingsPageState extends State<SettingsPage> {
                     );
                   },
                 ),
-                const Divider(height: 1),
                 ListTile(
                   leading: const Icon(CupertinoIcons.cloud_upload),
                   title: const Text('النسخ الاحتياطي والاستعادة'),
@@ -99,7 +98,6 @@ class _SettingsPageState extends State<SettingsPage> {
                     );
                   },
                 ),
-                const Divider(height: 1),
                 Consumer<ThemeProvider>(
                   builder: (context, themeProvider, child) {
                     return SwitchListTile(
@@ -130,7 +128,6 @@ class _SettingsPageState extends State<SettingsPage> {
               elevation: 2,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
-                side: BorderSide(color: Colors.grey[300]!, width: 1),
               ),
               child: Column(
                 children: [
@@ -140,7 +137,6 @@ class _SettingsPageState extends State<SettingsPage> {
                         'سيتم فتح نافذة اختيار مكان الحفظ عند إنشاء كل فاتورة',
                     value: InvoiceSaveStrategy.ask,
                   ),
-                  Divider(height: 1, color: Colors.grey[400]),
                   _buildRadioOptionUI(
                     title: 'الحفظ التلقائي في مجلد محدد',
                     subtitle:
@@ -148,7 +144,6 @@ class _SettingsPageState extends State<SettingsPage> {
                     value: InvoiceSaveStrategy.auto,
                   ),
                   if (_saveStrategy == InvoiceSaveStrategy.auto) ...[
-                    Divider(height: 1, color: Colors.grey[400]),
                     Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(

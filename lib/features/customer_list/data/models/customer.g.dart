@@ -20,16 +20,17 @@ class CustomerAdapter extends TypeAdapter<Customer> {
       archtype: fields[0] as String?,
       customerType: fields[1] as String?,
       industry: fields[2] as String?,
-      customerCode: fields[3] as String,
+      customerCode: fields[3] as String?,
       customerName: fields[4] as String,
       paymentTerm: fields[5] as String?,
+      additionalInfo: fields[6] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Customer obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.archtype)
       ..writeByte(1)
@@ -41,7 +42,9 @@ class CustomerAdapter extends TypeAdapter<Customer> {
       ..writeByte(4)
       ..write(obj.customerName)
       ..writeByte(5)
-      ..write(obj.paymentTerm);
+      ..write(obj.paymentTerm)
+      ..writeByte(6)
+      ..write(obj.additionalInfo);
   }
 
   @override

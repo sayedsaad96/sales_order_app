@@ -147,8 +147,7 @@ class _SalesOrderItemRowState extends State<SalesOrderItemRow> {
             controller: widget.controllers.nameController,
             decoration: const InputDecoration(
               border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
+              labelText: 'الكود او اللون',
               contentPadding: EdgeInsets.symmetric(horizontal: 8),
               filled: false,
             ),
@@ -163,8 +162,6 @@ class _SalesOrderItemRowState extends State<SalesOrderItemRow> {
             textAlign: TextAlign.right,
             decoration: const InputDecoration(
               border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
               contentPadding: EdgeInsets.symmetric(horizontal: 8),
               filled: false,
             ),
@@ -182,8 +179,6 @@ class _SalesOrderItemRowState extends State<SalesOrderItemRow> {
             controller: widget.controllers.unitController,
             decoration: const InputDecoration(
               border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
               contentPadding: EdgeInsets.symmetric(horizontal: 8),
               filled: false,
             ),
@@ -197,8 +192,6 @@ class _SalesOrderItemRowState extends State<SalesOrderItemRow> {
             keyboardType: TextInputType.number,
             decoration: const InputDecoration(
               border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
               contentPadding: EdgeInsets.symmetric(horizontal: 8),
               filled: false,
             ),

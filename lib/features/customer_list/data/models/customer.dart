@@ -14,7 +14,7 @@ class Customer extends HiveObject {
   String? industry;
 
   @HiveField(3)
-  String customerCode;
+  String? customerCode;
 
   @HiveField(4)
   String customerName;
@@ -22,13 +22,17 @@ class Customer extends HiveObject {
   @HiveField(5)
   String? paymentTerm;
 
+  @HiveField(6)
+  String? additionalInfo;
+
   Customer({
     this.archtype,
     this.customerType,
     this.industry,
-    required this.customerCode,
+    this.customerCode,
     required this.customerName,
     this.paymentTerm,
+    this.additionalInfo,
   });
 
   Map<String, dynamic> toJson() => {
@@ -38,14 +42,16 @@ class Customer extends HiveObject {
         'customerCode': customerCode,
         'customerName': customerName,
         'paymentTerm': paymentTerm,
+        'additionalInfo': additionalInfo,
       };
 
   factory Customer.fromJson(Map<String, dynamic> json) => Customer(
         archtype: json['archtype'],
         customerType: json['customerType'],
         industry: json['industry'],
-        customerCode: json['customerCode'] ?? '',
+        customerCode: json['customerCode'],
         customerName: json['customerName'] ?? '',
         paymentTerm: json['paymentTerm'],
+        additionalInfo: json['additionalInfo'],
       );
 }

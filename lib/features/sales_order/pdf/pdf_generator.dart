@@ -225,28 +225,23 @@ class PdfSalesOrderGenerator {
                       ...items.asMap().entries.map((e) {
                         final index = e.key;
                         final item = e.value;
-                        final isEven = index % 2 == 0;
-                        final rowColor = isEven
-                            ? PdfColors.white
-                            : PdfColors.grey50;
+                        final rowColor = PdfColor.fromInt(0xFFdbe5ff);
+
                         return pw.TableRow(
                           decoration: pw.BoxDecoration(color: rowColor),
                           children: [
                             _buildEditableTableCell(
                               numberFormat.format(item.value),
                               'value_${groupIndex}_$index',
-                              backgroundColor: rowColor,
                             ),
                             _buildEditableTableCell(
                               numberFormat.format(item.price),
                               'price_${groupIndex}_$index',
-                              backgroundColor: rowColor,
                             ),
                             _buildTableCell(item.unit),
                             _buildEditableTableCell(
                               numberFormat.format(item.quantity),
                               'quantity_${groupIndex}_$index',
-                              backgroundColor: rowColor,
                             ),
                             _buildTableCell(
                               item.itemName,
@@ -255,7 +250,6 @@ class PdfSalesOrderGenerator {
                             _buildEditableTableCell(
                               '',
                               'comment_${groupIndex}_$index',
-                              backgroundColor: rowColor,
                             ),
                           ],
                         );
@@ -386,7 +380,7 @@ class PdfSalesOrderGenerator {
                       vertical: 4,
                     ),
                     decoration: pw.BoxDecoration(
-                      color: accentColor,
+                      color: PdfColor.fromInt(0xFFdbe5ff),
                       borderRadius: pw.BorderRadius.circular(4),
                     ),
                     child: pw.Row(

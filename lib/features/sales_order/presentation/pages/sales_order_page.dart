@@ -441,7 +441,10 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                       width: 80,
                     ),
                     const SizedBox(height: 15),
-                    const Text('جارٍ إعداد ملف PDF...'),
+                    const Text(
+                      'جارٍ إعداد ملف PDF...',
+                      style: TextStyle(fontSize: 16, color: Colors.black),
+                    ),
                     const SizedBox(height: 15),
                     const CircularProgressIndicator(),
                   ],
@@ -588,8 +591,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('تم حفظ الملف: $finalPath'),
-                duration:
-                    (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
+                duration: (!Platform.isAndroid && !Platform.isIOS)
                     ? const Duration(seconds: 5)
                     : const Duration(days: 365),
                 action: SnackBarAction(
@@ -816,9 +818,6 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                                           child: Container(
                                             width: 150,
                                             decoration: BoxDecoration(
-                                              border: Border.all(
-                                                color: Colors.grey,
-                                              ),
                                               borderRadius:
                                                   BorderRadius.circular(8),
                                             ),
@@ -1079,7 +1078,10 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
           child: Card(
             margin: EdgeInsets.zero,
             shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+              borderRadius: BorderRadius.vertical(
+                top: Radius.circular(12),
+                bottom: Radius.circular(12),
+              ),
             ),
             child: Padding(
               padding: const EdgeInsets.all(8.0),
@@ -1226,11 +1228,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
 
               child: Container(
                 decoration: BoxDecoration(
-                  border: Border(
-                    left: BorderSide(color: Colors.grey),
-                    right: BorderSide(color: Colors.grey),
-                    bottom: BorderSide(color: Colors.grey),
-                  ),
+                  border: Border(bottom: BorderSide(color: Colors.grey)),
                 ),
                 child: SalesOrderItemRow(
                   key: ObjectKey(item),

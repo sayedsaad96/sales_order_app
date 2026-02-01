@@ -21,6 +21,7 @@ class _AddEditCustomerPageState extends State<AddEditCustomerPage> {
   final _nameController = TextEditingController();
   final _codeController = TextEditingController();
   final _termController = TextEditingController();
+  final _additionalInfoController = TextEditingController();
 
   // Dropdown Values
   String? _selectedArchetype;
@@ -53,11 +54,12 @@ class _AddEditCustomerPageState extends State<AddEditCustomerPage> {
     super.initState();
     if (widget.customer != null) {
       _nameController.text = widget.customer!.customerName;
-      _codeController.text = widget.customer!.customerCode;
+      _codeController.text = widget.customer!.customerCode ?? '';
       _termController.text = widget.customer!.paymentTerm ?? '';
       _selectedArchetype = widget.customer!.archtype;
       _selectedCustomerType = widget.customer!.customerType;
       _selectedIndustry = widget.customer!.industry;
+      _additionalInfoController.text = widget.customer!.additionalInfo ?? '';
     }
   }
 
@@ -66,6 +68,7 @@ class _AddEditCustomerPageState extends State<AddEditCustomerPage> {
     _nameController.dispose();
     _codeController.dispose();
     _termController.dispose();
+    _additionalInfoController.dispose();
     super.dispose();
   }
 
@@ -78,6 +81,7 @@ class _AddEditCustomerPageState extends State<AddEditCustomerPage> {
         archtype: _selectedArchetype,
         customerType: _selectedCustomerType,
         industry: _selectedIndustry,
+        additionalInfo: _additionalInfoController.text,
       );
 
       try {
@@ -126,7 +130,6 @@ class _AddEditCustomerPageState extends State<AddEditCustomerPage> {
               _buildTextField(
                 controller: _codeController,
                 label: 'Customer Code',
-                validator: (v) => v == null || v.isEmpty ? 'مطلوب' : null,
               ),
               const SizedBox(height: 16),
               _buildDropdown(
@@ -154,6 +157,12 @@ class _AddEditCustomerPageState extends State<AddEditCustomerPage> {
                 controller: _termController,
                 label: 'Payment Term',
               ),
+              const SizedBox(height: 16),
+              _buildTextField(
+                controller: _additionalInfoController,
+                label: 'معلومات اضافيه',
+                maxLines: 3,
+              ),
 
               const SizedBox(height: 32),
               SizedBox(
@@ -179,10 +188,12 @@ class _AddEditCustomerPageState extends State<AddEditCustomerPage> {
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
+    int maxLines = 1,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
+      maxLines: maxLines,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),

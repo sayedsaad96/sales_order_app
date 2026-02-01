@@ -512,7 +512,7 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('تم حفظ الملف: $finalPath'),
-              duration: (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
+              duration: (!Platform.isAndroid && !Platform.isIOS)
                   ? const Duration(seconds: 5)
                   : const Duration(days: 365),
               action: SnackBarAction(

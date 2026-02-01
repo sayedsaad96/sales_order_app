@@ -172,7 +172,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
                   ],
                 ),
                 const Divider(),
-                _buildInfoRow(Icons.qr_code, 'Code', customer.customerCode),
+                _buildInfoRow(Icons.qr_code, 'Code', customer.customerCode ?? '-'),
                 _buildInfoRow(
                   Icons.business,
                   'Type',
@@ -192,6 +192,11 @@ class _CustomerListPageState extends State<CustomerListPage> {
                   Icons.label,
                   'Archetype',
                   customer.archtype ?? '-',
+                ),
+                _buildInfoRow(
+                  Icons.info_outline,
+                  'معلومات اضافيه',
+                  customer.additionalInfo ?? '-',
                 ),
               ],
             ),
@@ -297,6 +302,12 @@ class _CustomerListPageState extends State<CustomerListPage> {
                   ),
                   DataColumn(
                     label: Text(
+                      'معلومات اضافيه',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  DataColumn(
+                    label: Text(
                       'Actions',
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
@@ -318,7 +329,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            customer.customerCode,
+                            customer.customerCode ?? '-',
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -338,6 +349,16 @@ class _CustomerListPageState extends State<CustomerListPage> {
                           style: const TextStyle(
                             color: Colors.green,
                             fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      DataCell(
+                        SizedBox(
+                          width: 150,
+                          child: Text(
+                            customer.additionalInfo ?? '-',
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 2,
                           ),
                         ),
                       ),
