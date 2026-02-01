@@ -72,22 +72,6 @@ Managing sales orders, quotations, and invoices manually can be time-consuming a
 
 ---
 
-## 📸 Screenshots
-
-> Add screenshots to the `screenshots/` folder and uncomment the lines below.
-
-<!--
-![Splash Screen](screenshots/splash.png)
-![Home Dashboard](screenshots/home.png)
-![Sales Order Form](screenshots/sales_order.png)
-![PDF Invoice Preview](screenshots/pdf_preview.png)
-![Sales Analytics](screenshots/analytics.png)
-![Customer List](screenshots/customers.png)
-![Dark Mode](screenshots/dark_mode.png)
--->
-
----
-
 ## 📁 Project Structure
 
 ```
