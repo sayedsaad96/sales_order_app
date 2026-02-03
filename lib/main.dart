@@ -22,6 +22,8 @@ import 'package:annex_sales_order/features/sales_order/data/datasources/fabrics_
 import 'package:annex_sales_order/core/services/update_notification_service.dart';
 import 'package:annex_sales_order/features/customer_list/data/models/customer.dart';
 import 'package:annex_sales_order/features/customer_list/data/datasources/customer_local_data_source.dart';
+import 'package:annex_sales_order/features/authorization/data/models/authorized_person.dart';
+import 'package:annex_sales_order/features/authorization/data/datasources/authorization_local_data_source.dart';
 
 
 void main() async {
@@ -81,6 +83,10 @@ void main() async {
         // Initialize Customer data source
         Hive.registerAdapter(CustomerAdapter());
         await CustomerLocalDataSource().init();
+
+        // Initialize Authorization data source
+        Hive.registerAdapter(AuthorizedPersonAdapter());
+        await AuthorizationLocalDataSource().init();
       } catch (e, stack) {
         debugPrint('Initialization Error: $e\n$stack');
         // Consider showing a fallback UI here if critical init fails

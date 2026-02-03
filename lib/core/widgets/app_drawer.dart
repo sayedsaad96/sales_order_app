@@ -436,7 +436,7 @@ class _AppDrawerState extends State<AppDrawer> {
 
   Widget _buildModernSocialFooter(BuildContext context, bool isDark) {
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.all(16.0),
       child: Wrap(
         alignment: WrapAlignment.center,
         spacing: 12,

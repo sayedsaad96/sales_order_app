@@ -85,6 +85,8 @@ class SalesOrder extends HiveObject {
   );
 
   double get totalValue => items.fold(0, (sum, item) => sum + item.value);
+
+  int get totalQuantity => items.fold(0, (sum, item) => sum + item.quantity);
 }
 
 @HiveType(typeId: 2)

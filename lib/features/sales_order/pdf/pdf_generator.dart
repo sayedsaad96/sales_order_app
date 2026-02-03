@@ -50,10 +50,10 @@ class PdfSalesOrderGenerator {
         theme: theme,
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.only(
-          top: 30,
-          left: 30,
-          right: 30,
-          bottom: 20,
+          top: 20,
+          left: 20,
+          right: 20,
+          bottom: 15,
         ),
         textDirection: pw.TextDirection.rtl,
         header: (context) {
@@ -102,17 +102,17 @@ class PdfSalesOrderGenerator {
                 // Customer Info (Right in RTL)
                 pw.Expanded(
                   child: pw.Container(
-                    margin: const pw.EdgeInsets.only(left: 10),
-                    padding: const pw.EdgeInsets.all(10),
+                    margin: const pw.EdgeInsets.only(left: 5),
+                    padding: const pw.EdgeInsets.all(6),
                     decoration: pw.BoxDecoration(
                       border: pw.Border.all(color: PdfColors.grey300),
-                      borderRadius: pw.BorderRadius.circular(8),
+                      borderRadius: pw.BorderRadius.circular(6),
                     ),
                     child: pw.Column(
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
                         _buildSectionHeader('بيانات العميل', primaryColor),
-                        pw.SizedBox(height: 8),
+                        pw.SizedBox(height: 4),
                         _buildInfoRow('الاسم:', order.customerName),
                         _buildInfoRow('المنطقة:', order.region),
                         _buildInfoRow(
@@ -127,17 +127,17 @@ class PdfSalesOrderGenerator {
                 // Order Details (Left in RTL)
                 pw.Expanded(
                   child: pw.Container(
-                    margin: const pw.EdgeInsets.only(right: 10),
-                    padding: const pw.EdgeInsets.all(10),
+                    margin: const pw.EdgeInsets.only(right: 5),
+                    padding: const pw.EdgeInsets.all(6),
                     decoration: pw.BoxDecoration(
                       border: pw.Border.all(color: PdfColors.grey300),
-                      borderRadius: pw.BorderRadius.circular(8),
+                      borderRadius: pw.BorderRadius.circular(6),
                     ),
                     child: pw.Column(
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
                         _buildSectionHeader('تفاصيل الطلب', primaryColor),
-                        pw.SizedBox(height: 8),
+                        pw.SizedBox(height: 4),
                         _buildInfoRow('مسئول البيع:', order.salesResponsible),
                         _buildInfoRow('طريقة السداد:', order.paymentMethod),
                         // Use helper for Date to match style
@@ -310,7 +310,42 @@ class PdfSalesOrderGenerator {
                       children: [
                         pw.Container(
                           padding: const pw.EdgeInsets.symmetric(
-                            vertical: 10,
+                            vertical: 4,
+                            horizontal: 10,
+                          ),
+                          margin: const pw.EdgeInsets.only(bottom: 1),
+                          decoration: pw.BoxDecoration(
+                            color: accentColor,
+                            borderRadius: const pw.BorderRadius.all(
+                              pw.Radius.circular(4),
+                            ),
+                          ),
+                          child: pw.Row(
+                            mainAxisAlignment:
+                                pw.MainAxisAlignment.spaceBetween,
+                            children: [
+                              pw.Text(
+                                'إجمالي الكميات',
+                                style: pw.TextStyle(
+                                  color: primaryColor,
+                                  fontWeight: pw.FontWeight.bold,
+                                  fontSize: 10,
+                                ),
+                              ),
+                              pw.Text(
+                                order.totalQuantity.toString(),
+                                style: pw.TextStyle(
+                                  color: primaryColor,
+                                  fontWeight: pw.FontWeight.bold,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        pw.Container(
+                          padding: const pw.EdgeInsets.symmetric(
+                            vertical: 6,
                             horizontal: 10,
                           ),
                           decoration: const pw.BoxDecoration(
@@ -328,7 +363,7 @@ class PdfSalesOrderGenerator {
                                 style: pw.TextStyle(
                                   color: PdfColors.white,
                                   fontWeight: pw.FontWeight.bold,
-                                  fontSize: 14,
+                                  fontSize: 12,
                                 ),
                               ),
                               pw.Text(
@@ -336,7 +371,7 @@ class PdfSalesOrderGenerator {
                                 style: pw.TextStyle(
                                   color: PdfColors.white,
                                   fontWeight: pw.FontWeight.bold,
-                                  fontSize: 14,
+                                  fontSize: 12,
                                 ),
                               ),
                             ],
@@ -425,7 +460,7 @@ class PdfSalesOrderGenerator {
                   pw.Text(
                     'طلب بيع',
                     style: pw.TextStyle(
-                      fontSize: 18,
+                      fontSize: 14,
                       fontWeight: pw.FontWeight.bold,
                       color: primaryColor,
                     ),
@@ -436,7 +471,7 @@ class PdfSalesOrderGenerator {
                     pw.Text(
                       _fixArabic(order.branch ?? ''),
                       style: pw.TextStyle(
-                        fontSize: 12,
+                        fontSize: 10,
                         fontWeight: pw.FontWeight.bold,
                         color: PdfColors.black,
                       ),
@@ -469,7 +504,7 @@ class PdfSalesOrderGenerator {
                             order.deliveryIncluded ? 'الشركة' : 'العميل',
                           ),
                           style: pw.TextStyle(
-                            fontSize: 10,
+                            fontSize: 8,
                             fontWeight: pw.FontWeight.bold,
                             color: PdfColors.black,
                           ),
@@ -486,7 +521,7 @@ class PdfSalesOrderGenerator {
                           : order.orderTypes.join(' - '),
                     ),
                     style: const pw.TextStyle(
-                      fontSize: 10,
+                      fontSize: 8,
                       color: PdfColors.grey700,
                     ),
                     textDirection: pw.TextDirection.rtl,
@@ -503,7 +538,7 @@ class PdfSalesOrderGenerator {
                 children: [
                   if (logoImage != null)
                     pw.Container(
-                      height: 50,
+                      height: 40,
                       child: pw.Image(logoImage, fit: pw.BoxFit.contain),
                     ),
                 ],
@@ -543,7 +578,7 @@ class PdfSalesOrderGenerator {
         style: pw.TextStyle(
           color: color,
           fontWeight: pw.FontWeight.bold,
-          fontSize: 12,
+          fontSize: 10,
         ),
       ),
     );
@@ -560,7 +595,7 @@ class PdfSalesOrderGenerator {
             child: pw.Text(
               label,
               style: pw.TextStyle(
-                fontSize: 10,
+                fontSize: 8,
                 color: PdfColors.grey700,
                 fontWeight: pw.FontWeight.bold,
               ),
@@ -569,7 +604,7 @@ class PdfSalesOrderGenerator {
           pw.Expanded(
             child: pw.Text(
               value ?? '-',
-              style: const pw.TextStyle(fontSize: 10),
+              style: const pw.TextStyle(fontSize: 8),
               maxLines: 2,
             ),
           ),

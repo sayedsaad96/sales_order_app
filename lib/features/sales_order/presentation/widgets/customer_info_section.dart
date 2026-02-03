@@ -55,6 +55,8 @@ class _CustomerInfoSectionState extends State<CustomerInfoSection> {
           controller: widget.customerNameController,
           decoration: const InputDecoration(labelText: 'اسم العميل'),
           validator: (v) => v?.isEmpty ?? true ? 'مطلوب' : null,
+                textCapitalization: TextCapitalization.sentences,
+
         ),
         const SizedBox(height: 10),
         TextFormField(

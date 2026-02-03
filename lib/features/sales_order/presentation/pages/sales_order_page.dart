@@ -61,6 +61,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
   final _notesController = TextEditingController();
   final List<OrderSection> _sections = [];
   final ValueNotifier<double> _totalValueNotifier = ValueNotifier(0.0);
+  final ValueNotifier<int> _totalQuantityNotifier = ValueNotifier(0);
 
   String? _selectedBranch = "القاهرة";
   final Map<String, bool> _orderTypes = {'مستلزمات': true, 'جوما': false};
@@ -81,6 +82,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
     _deliveryPlaceController.dispose();
     _notesController.dispose();
     _totalValueNotifier.dispose();
+    _totalQuantityNotifier.dispose();
     for (var section in _sections) {
       section.categoryController.dispose();
       section.defaultUnitController.dispose();
@@ -393,12 +395,15 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
 
   void _calculateTotal() {
     double total = 0;
+    int totalQty = 0;
     for (var section in _sections) {
       for (var item in section.items) {
         total += item.value;
+        totalQty += item.quantity;
       }
     }
     _totalValueNotifier.value = total;
+    _totalQuantityNotifier.value = totalQty;
   }
 
   // double get _totalValue => _sections.fold(
@@ -590,6 +595,8 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
             Navigator.of(context).pop();
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
+                showCloseIcon: true,
+                closeIconColor: Colors.yellowAccent,
                 content: Text('تم حفظ الملف: $finalPath'),
                 duration: (!Platform.isAndroid && !Platform.isIOS)
                     ? const Duration(seconds: 5)
@@ -927,6 +934,42 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                             ),
                           ),
                           const SizedBox(height: 20),
+                          ValueListenableBuilder<int>(
+                            valueListenable: _totalQuantityNotifier,
+                            builder: (context, totalQty, child) {
+                              return Container(
+                                padding: const EdgeInsets.all(16),
+                                margin: const EdgeInsets.only(bottom: 10),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue[50],
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.blue[200]!),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text(
+                                      'إجمالي الكميات:',
+                                      style: TextStyle(
+                                        color: Colors.blue,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
+                                      ),
+                                    ),
+                                    Text(
+                                      totalQty.toString(),
+                                      style: const TextStyle(
+                                        color: Colors.blue,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
                           ValueListenableBuilder<double>(
                             valueListenable: _totalValueNotifier,
                             builder: (context, total, child) {
@@ -1090,6 +1133,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                   Expanded(
                     flex: 2,
                     child: TextFormField(
+                      textCapitalization: TextCapitalization.sentences,
                       controller: section.categoryController,
                       decoration: const InputDecoration(
                         labelText: 'التصنيف',

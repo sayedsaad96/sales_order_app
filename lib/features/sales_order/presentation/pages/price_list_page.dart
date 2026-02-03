@@ -273,10 +273,9 @@ class _PriceListPageState extends State<PriceListPage> {
 
       // 4. Share the file
       // ignore: deprecated_member_use
-      final result = await Share.shareXFiles(
-        [XFile(fileToShare.path)],
-        text: 'مشاركة $title',
-      );
+      final result = await Share.shareXFiles([
+        XFile(fileToShare.path),
+      ], text: 'مشاركة $title');
 
       if (result.status == ShareResultStatus.dismissed) {
         // Optional: handle dismissed
@@ -341,7 +340,10 @@ class _PriceListPageState extends State<PriceListPage> {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('خطأ في التنزيل: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('خطأ في التنزيل: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -367,14 +369,17 @@ class _PriceListPageState extends State<PriceListPage> {
         ),
         title: Text(
           title,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (Platform.isWindows || Platform.isMacOS || Platform.isLinux)
               IconButton(
-                icon: const Icon(CupertinoIcons.cloud_download, color: Colors.blue),
+                icon: const Icon(
+                  CupertinoIcons.cloud_download,
+                  color: Colors.blue,
+                ),
                 tooltip: 'تنزيل',
                 onPressed: () => _downloadFile(context, assetPath, title),
               )
@@ -384,12 +389,6 @@ class _PriceListPageState extends State<PriceListPage> {
                 tooltip: 'مشاركة',
                 onPressed: () => _shareFile(context, assetPath, title),
               ),
-            const SizedBox(width: 8),
-            const Icon(
-              CupertinoIcons.chevron_forward,
-              size: 20,
-              color: Colors.grey,
-            ),
           ],
         ),
         onTap: () {

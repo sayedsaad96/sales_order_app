@@ -49,7 +49,12 @@ class ReturnOrderPdfGenerator {
       pw.MultiPage(
         theme: theme,
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(30),
+        margin: const pw.EdgeInsets.only(
+          top: 20,
+          left: 20,
+          right: 20,
+          bottom: 15,
+        ),
         textDirection: pw.TextDirection.rtl,
         header: (context) {
           if (context.pageNumber == 1) {
@@ -93,17 +98,17 @@ class ReturnOrderPdfGenerator {
                 // Customer Info (Right in RTL)
                 pw.Expanded(
                   child: pw.Container(
-                    margin: const pw.EdgeInsets.only(left: 10),
-                    padding: const pw.EdgeInsets.all(10),
+                    margin: const pw.EdgeInsets.only(left: 5),
+                    padding: const pw.EdgeInsets.all(6),
                     decoration: pw.BoxDecoration(
                       border: pw.Border.all(color: PdfColors.grey300),
-                      borderRadius: pw.BorderRadius.circular(8),
+                      borderRadius: pw.BorderRadius.circular(6),
                     ),
                     child: pw.Column(
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
                         _buildSectionHeader('بيانات العميل', primaryColor),
-                        pw.SizedBox(height: 8),
+                        pw.SizedBox(height: 4),
                         _buildInfoRow('الاسم:', order.customerName),
                         _buildInfoRow('المنطقة:', order.region),
                         // Route combo
@@ -122,17 +127,17 @@ class ReturnOrderPdfGenerator {
                 // Return Details (Left in RTL)
                 pw.Expanded(
                   child: pw.Container(
-                    margin: const pw.EdgeInsets.only(right: 10),
-                    padding: const pw.EdgeInsets.all(10),
+                    margin: const pw.EdgeInsets.only(right: 5),
+                    padding: const pw.EdgeInsets.all(6),
                     decoration: pw.BoxDecoration(
                       border: pw.Border.all(color: PdfColors.grey300),
-                      borderRadius: pw.BorderRadius.circular(8),
+                      borderRadius: pw.BorderRadius.circular(6),
                     ),
                     child: pw.Column(
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
                         _buildSectionHeader('تفاصيل المرتجع', primaryColor),
-                        pw.SizedBox(height: 8),
+                        pw.SizedBox(height: 4),
                         _buildInfoRow(
                           'مسئول المرتجع:',
                           order.returnResponsible,
@@ -166,87 +171,82 @@ class ReturnOrderPdfGenerator {
                 groupedItems.putIfAbsent(cat, () => []).add(item);
               }
 
-              return groupedItems.entries.map((groupEntry) {
+              return groupedItems.entries.expand((groupEntry) {
                 final category = groupEntry.key;
                 final items = groupEntry.value;
 
-                return pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    if (groupedItems.length > 1 ||
-                        (category != 'عام' && category.isNotEmpty))
-                      pw.Container(
-                        padding: const pw.EdgeInsets.only(top: 10, bottom: 5),
-                        child: pw.Text(
-                          'تصنيف: $category',
-                          style: pw.TextStyle(
-                            fontSize: 14,
-                            fontWeight: pw.FontWeight.bold,
-                            color: primaryColor,
+                return [
+                  if (groupedItems.length > 1 ||
+                      (category != 'عام' && category.isNotEmpty))
+                    pw.Container(
+                      padding: const pw.EdgeInsets.only(top: 10, bottom: 5),
+                      child: pw.Text(
+                        'تصنيف: $category',
+                        style: pw.TextStyle(
+                          fontSize: 14,
+                          fontWeight: pw.FontWeight.bold,
+                          color: primaryColor,
+                        ),
+                      ),
+                    ),
+                  pw.Table(
+                    border: pw.TableBorder(
+                      horizontalInside: pw.BorderSide(
+                        color: PdfColors.grey200,
+                        width: 0.5,
+                      ),
+                      bottom: pw.BorderSide(color: PdfColors.grey300, width: 1),
+                    ),
+                    defaultVerticalAlignment:
+                        pw.TableCellVerticalAlignment.middle,
+                    columnWidths: tableColumnWidths,
+                    children: [
+                      // Header
+                      pw.TableRow(
+                        decoration: const pw.BoxDecoration(color: primaryColor),
+                        children: [
+                          _buildTableHeader('الوحدة'),
+                          _buildTableHeader('الكمية'),
+                          _buildTableHeader(
+                            'الصنف',
+                            align: pw.TextAlign.center,
                           ),
-                        ),
+                        ],
                       ),
-                    pw.Table(
-                      border: pw.TableBorder(
-                        horizontalInside: pw.BorderSide(
-                          color: PdfColors.grey200,
-                          width: 0.5,
-                        ),
-                        bottom:
-                            pw.BorderSide(color: PdfColors.grey300, width: 1),
-                      ),
-                      defaultVerticalAlignment:
-                          pw.TableCellVerticalAlignment.middle,
-                      columnWidths: tableColumnWidths,
-                      children: [
-                        // Header
-                        pw.TableRow(
-                          decoration:
-                              const pw.BoxDecoration(color: primaryColor),
+                      // Rows
+                      ...items.asMap().entries.map((e) {
+                        final index = e.key;
+                        final item = e.value;
+                        final isEven = index % 2 == 0;
+                        return pw.TableRow(
+                          decoration: pw.BoxDecoration(
+                            color: isEven ? PdfColors.white : accentColor,
+                          ),
                           children: [
-                            _buildTableHeader('الوحدة'),
-                            _buildTableHeader('الكمية'),
-                            _buildTableHeader(
-                              'الصنف',
+                            _buildEditableTableCell(
+                              item.unit,
+                              'unit_${category}_$index',
+                              backgroundColor:
+                                  isEven ? PdfColors.white : accentColor,
+                              font: arabicFont,
+                            ),
+                            _buildEditableTableCell(
+                              numberFormat.format(item.quantity),
+                              'quantity_${category}_$index',
+                              backgroundColor:
+                                  isEven ? PdfColors.white : accentColor,
+                            ),
+                            _buildTableCell(
+                              item.item,
                               align: pw.TextAlign.center,
                             ),
                           ],
-                        ),
-                        // Rows
-                        ...items.asMap().entries.map((e) {
-                          final index = e.key;
-                          final item = e.value;
-                          final isEven = index % 2 == 0;
-                          return pw.TableRow(
-                            decoration: pw.BoxDecoration(
-                              color: isEven ? PdfColors.white : accentColor,
-                            ),
-                            children: [
-                              _buildEditableTableCell(
-                                item.unit,
-                                'unit_${category}_$index',
-                                backgroundColor:
-                                    isEven ? PdfColors.white : accentColor,
-                                font: arabicFont,
-                              ),
-                              _buildEditableTableCell(
-                                numberFormat.format(item.quantity),
-                                'quantity_${category}_$index',
-                                backgroundColor:
-                                    isEven ? PdfColors.white : accentColor,
-                              ),
-                              _buildTableCell(
-                                item.item,
-                                align: pw.TextAlign.center,
-                              ),
-                            ],
-                          );
-                        }),
-                      ],
-                    ),
-                    pw.SizedBox(height: 10),
-                  ],
-                );
+                        );
+                      }),
+                    ],
+                  ),
+                  pw.SizedBox(height: 10),
+                ];
               }).toList();
             })(),
 
@@ -266,7 +266,7 @@ class ReturnOrderPdfGenerator {
                       children: [
                         pw.Container(
                           padding: const pw.EdgeInsets.symmetric(
-                            vertical: 10,
+                            vertical: 6,
                             horizontal: 10,
                           ),
                           decoration: const pw.BoxDecoration(
@@ -284,7 +284,7 @@ class ReturnOrderPdfGenerator {
                                 style: pw.TextStyle(
                                   color: PdfColors.white,
                                   fontWeight: pw.FontWeight.bold,
-                                  fontSize: 14,
+                                  fontSize: 12,
                                 ),
                               ),
                               pw.Container(
@@ -297,7 +297,7 @@ class ReturnOrderPdfGenerator {
                                   textStyle: pw.TextStyle(
                                     color: PdfColors.white,
                                     fontWeight: pw.FontWeight.bold,
-                                    fontSize: 14,
+                                    fontSize: 12,
                                     font: pw.Font.helvetica(),
                                   ),
                                   backgroundColor: primaryColor,
@@ -423,17 +423,17 @@ class ReturnOrderPdfGenerator {
                   pw.Text(
                     'طلب مرتجع',
                     style: pw.TextStyle(
-                      fontSize: 18,
+                      fontSize: 14,
                       fontWeight: pw.FontWeight.bold,
                       color: primaryColor,
                     ),
                   ),
-                  pw.SizedBox(height: 5),
+                  pw.SizedBox(height: 3),
                   if (order.branch != null && (order.branch?.isNotEmpty ?? false))
                     pw.Text(
                       _fixArabic(order.branch ?? ''),
                       style: pw.TextStyle(
-                        fontSize: 12,
+                        fontSize: 10,
                         fontWeight: pw.FontWeight.bold,
                         color: PdfColors.black,
                       ),
@@ -444,7 +444,7 @@ class ReturnOrderPdfGenerator {
                     pw.Text(
                       _fixArabic(order.category ?? ''),
                       style: const pw.TextStyle(
-                        fontSize: 10,
+                        fontSize: 8,
                         color: PdfColors.grey700,
                       ),
                       textDirection: pw.TextDirection.rtl,
@@ -474,7 +474,7 @@ class ReturnOrderPdfGenerator {
                         child: pw.Text(
                           _fixArabic(order.deliveryCostPayer),
                           style: pw.TextStyle(
-                            fontSize: 10,
+                            fontSize: 8,
                             fontWeight: pw.FontWeight.bold,
                             color: PdfColors.black,
                           ),
@@ -495,7 +495,7 @@ class ReturnOrderPdfGenerator {
                 children: [
                   if (logoImage != null)
                     pw.Container(
-                      height: 50,
+                      height: 40,
                       child: pw.Image(logoImage, fit: pw.BoxFit.contain),
                     ),
                 ],
@@ -545,7 +545,7 @@ class ReturnOrderPdfGenerator {
         style: pw.TextStyle(
           color: color,
           fontWeight: pw.FontWeight.bold,
-          fontSize: 12,
+          fontSize: 10,
         ),
       ),
     );
@@ -562,7 +562,7 @@ class ReturnOrderPdfGenerator {
             child: pw.Text(
               label,
               style: pw.TextStyle(
-                fontSize: 10,
+                fontSize: 8,
                 color: PdfColors.grey700,
                 fontWeight: pw.FontWeight.bold,
               ),
@@ -571,7 +571,7 @@ class ReturnOrderPdfGenerator {
           pw.Expanded(
             child: pw.Text(
               value ?? '-',
-              style: const pw.TextStyle(fontSize: 10),
+              style: const pw.TextStyle(fontSize: 8),
               maxLines: 2,
             ),
           ),

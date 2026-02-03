@@ -47,7 +47,9 @@ class _AboutPageState extends State<AboutPage> {
     final cacheFile = await _getCacheFile();
 
     try {
-      final response = await http.get(Uri.parse(_sheetUrl)).timeout(const Duration(seconds: 10));
+      final response = await http
+          .get(Uri.parse(_sheetUrl))
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final decodedBody = utf8.decode(response.bodyBytes);
@@ -73,7 +75,7 @@ class _AboutPageState extends State<AboutPage> {
         final content = await file.readAsString();
         _parseAndLoad(content);
         if (mounted) {
-           ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('عرض نسخة محفوظة offline ($errorMsg)')),
           );
         }
@@ -87,39 +89,39 @@ class _AboutPageState extends State<AboutPage> {
 
   void _parseAndLoad(String csvContent) {
     try {
-        final List<List<dynamic>> rows = const CsvToListConverter().convert(
-          csvContent,
-        );
+      final List<List<dynamic>> rows = const CsvToListConverter().convert(
+        csvContent,
+      );
 
-        final List<PdfDocumentItem> loadedDocs = [];
+      final List<PdfDocumentItem> loadedDocs = [];
 
-        // Skip header row (index 0)
-        for (int i = 1; i < rows.length; i++) {
-          final row = rows[i];
-          if (row.length >= 2) {
-            final title = row[0].toString().trim();
-            final url = row[1].toString().trim();
+      // Skip header row (index 0)
+      for (int i = 1; i < rows.length; i++) {
+        final row = rows[i];
+        if (row.length >= 2) {
+          final title = row[0].toString().trim();
+          final url = row[1].toString().trim();
 
-            if (title.isNotEmpty && url.isNotEmpty) {
-              loadedDocs.add(PdfDocumentItem(title: title, url: url));
-            }
+          if (title.isNotEmpty && url.isNotEmpty) {
+            loadedDocs.add(PdfDocumentItem(title: title, url: url));
           }
         }
+      }
 
-        if (mounted) {
-          setState(() {
-            _pdfDocuments = loadedDocs;
-            _isLoading = false;
-            _errorMessage = null;
-          });
-        }
+      if (mounted) {
+        setState(() {
+          _pdfDocuments = loadedDocs;
+          _isLoading = false;
+          _errorMessage = null;
+        });
+      }
     } catch (e) {
       _showError('Error parsing data');
     }
   }
 
   void _showError(String msg) {
-     if (mounted) {
+    if (mounted) {
       setState(() {
         _isLoading = false;
         _errorMessage = msg;
@@ -242,14 +244,17 @@ class _AboutPageState extends State<AboutPage> {
         leading: Icon(displayIcon, color: Colors.blue[800]),
         title: Text(
           title,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (Platform.isWindows || Platform.isMacOS || Platform.isLinux)
               IconButton(
-                icon: const Icon(CupertinoIcons.cloud_download, color: Colors.blue),
+                icon: const Icon(
+                  CupertinoIcons.cloud_download,
+                  color: Colors.blue,
+                ),
                 tooltip: 'تنزيل',
                 onPressed: () => _downloadFile(context, assetPath, title),
               )
@@ -259,8 +264,6 @@ class _AboutPageState extends State<AboutPage> {
                 tooltip: 'مشاركة',
                 onPressed: () => _shareFile(context, assetPath, title),
               ),
-            const SizedBox(width: 8),
-            const Icon(CupertinoIcons.eye),
           ],
         ),
         onTap: () {
@@ -312,9 +315,9 @@ class _AboutPageState extends State<AboutPage> {
       await Share.shareXFiles([XFile(fileToShare.path)], text: 'مشاركة $title');
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('خطأ في المشاركة: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('خطأ في المشاركة: $e')));
       }
     }
   }
@@ -366,7 +369,10 @@ class _AboutPageState extends State<AboutPage> {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('خطأ في التنزيل: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('خطأ في التنزيل: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
