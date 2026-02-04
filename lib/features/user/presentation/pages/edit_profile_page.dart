@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:annex_sales_order/features/user/data/datasources/user_local_data_source.dart';
 import 'package:annex_sales_order/features/user/data/models/user_model.dart';
 import 'package:annex_sales_order/core/widgets/app_drawer.dart';
+import 'package:annex_sales_order/features/user/presentation/pages/business_card_screen.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -16,6 +17,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final _nameController = TextEditingController();
   final _mobileController = TextEditingController();
   final _emailController = TextEditingController();
+  final _jobTitleController = TextEditingController();
   final _userDataSource = UserLocalDataSource();
 
   @override
@@ -30,6 +32,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       _nameController.text = user.fullName;
       _mobileController.text = user.mobileNumber;
       _emailController.text = user.email ?? '';
+      _jobTitleController.text = user.jobTitle ?? '';
     }
   }
 
@@ -40,6 +43,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           fullName: _nameController.text,
           mobileNumber: _mobileController.text,
           email: _emailController.text.isNotEmpty ? _emailController.text : null,
+          jobTitle: _jobTitleController.text.isNotEmpty ? _jobTitleController.text : null,
         );
         await _userDataSource.saveUser(user);
 
@@ -64,6 +68,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _nameController.dispose();
     _mobileController.dispose();
     _emailController.dispose();
+    _jobTitleController.dispose();
     super.dispose();
   }
 
@@ -134,6 +139,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       ),
                       keyboardType: TextInputType.emailAddress,
                     ),
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      controller: _jobTitleController,
+                      decoration: const InputDecoration(
+                        labelText: 'المسمى الوظيفي (اختياري)',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(CupertinoIcons.briefcase),
+                      ),
+                    ),
                     const SizedBox(height: 30),
                     SizedBox(
                       width: double.infinity,
@@ -144,6 +158,42 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           'حفظ التعديلات',
                           style: TextStyle(fontSize: 18),
                         ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: OutlinedButton.icon(
+                        icon: const Icon(CupertinoIcons.qrcode),
+                        label: const Text(
+                          'مشاركة الكارت الشخصي',
+                          style: TextStyle(fontSize: 18),
+                        ),
+                        onPressed: () {
+                           // Construct a temporary user object from current form state or loaded data
+                           // Note: Using current loaded data from _userDataSource or current controllers if valid
+                           // Ideally we should save first or use the saved data. 
+                           // For safety, let's use the data from controllers if valid, or just pass the current user if saved.
+                           
+                           // But simpler: just pass the user object if exists.
+                           // We need to fetch the user again or reuse logic.
+                           // Let's reuse _loadUserData logic but we need the object.
+                           
+                           final user = _userDataSource.getUser();
+                           if (user != null) {
+                               Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => BusinessCardScreen(user: user),
+                                ),
+                              );
+                           } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('يرجى حفظ البيانات أولاً')),
+                              );
+                           }
+                        },
                       ),
                     ),
                   ],

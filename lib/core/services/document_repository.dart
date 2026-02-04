@@ -9,6 +9,17 @@ class DocumentRepository {
   Map<String, int> _metadata = {};
   bool _metadataLoaded = false;
 
+  Future<void> clearMetadataCache() async {
+    _metadata = {};
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/pdf_cache_metadata.json');
+      if (await file.exists()) {
+        await file.delete();
+      }
+    } catch (_) {}
+  }
+
   Future<File> getPdf(String url, String filename) async {
     await _ensureMetadataLoaded();
 

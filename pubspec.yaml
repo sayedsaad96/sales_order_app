@@ -53,6 +53,9 @@ dependencies:
   workmanager: ^0.9.0+3
   file_picker: ^8.1.7
   package_info_plus: ^9.0.0
+  qr_flutter: ^4.1.0
+  image_gallery_saver: ^2.0.3
+  permission_handler: ^12.0.1
 
 dev_dependencies:
   flutter_test:
@@ -96,6 +99,16 @@ flutter:
       fonts:
         - asset: assets/fonts/Cairo-Regular.ttf
         - asset: assets/fonts/Cairo-Bold.ttf
+    - family: Montserrat
+      fonts:
+        - asset: assets/fonts/Montserrat-Regular.ttf
+        - asset: assets/fonts/Montserrat-Bold.ttf
+        - asset: assets/fonts/Montserrat-BoldItalic.ttf
+        - asset: assets/fonts/Montserrat-Italic.ttf
+    - family: Merienda
+      fonts:
+        - asset: assets/fonts/Merienda-Regular.ttf
+        - asset: assets/fonts/Merienda-Bold.ttf
 
 msix_config:
   display_name: Annex Group

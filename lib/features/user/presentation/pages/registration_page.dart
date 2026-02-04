@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:annex_sales_order/features/user/data/datasources/user_local_data_source.dart';
 import 'package:annex_sales_order/features/user/data/models/user_model.dart';
-import 'package:annex_sales_order/features/sales_order/presentation/pages/sales_order_page.dart';
+import 'package:annex_sales_order/features/sales_order/presentation/pages/sales_order_container_page.dart';
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
@@ -32,7 +32,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
         if (mounted) {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const SalesOrderPage()),
+            MaterialPageRoute(builder: (context) => const SalesOrderContainerPage()),
           );
         }
       } catch (e) {

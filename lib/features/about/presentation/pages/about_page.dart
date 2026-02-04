@@ -145,11 +145,12 @@ class _AboutPageState extends State<AboutPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () {
+            onPressed: () async {
               setState(() {
                 _isLoading = true;
                 _errorMessage = null;
               });
+              await DocumentRepository().clearMetadataCache();
               _fetchPdfList();
             },
           ),

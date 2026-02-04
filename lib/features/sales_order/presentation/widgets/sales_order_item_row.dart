@@ -49,7 +49,7 @@ class _SalesOrderItemRowState extends State<SalesOrderItemRow> {
           TextFormField(
             controller: widget.controllers.nameController,
             decoration: const InputDecoration(
-              labelText: 'الكود او اللون',
+              labelText: 'الكود او الصنف',
               border: OutlineInputBorder(),
             ),
             onChanged: (v) {
@@ -147,7 +147,7 @@ class _SalesOrderItemRowState extends State<SalesOrderItemRow> {
             controller: widget.controllers.nameController,
             decoration: const InputDecoration(
               border: InputBorder.none,
-              labelText: 'الكود او اللون',
+              labelText: 'الكود او الصنف',
               contentPadding: EdgeInsets.symmetric(horizontal: 8),
               filled: false,
             ),

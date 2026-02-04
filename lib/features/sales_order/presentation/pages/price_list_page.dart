@@ -146,11 +146,12 @@ class _PriceListPageState extends State<PriceListPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () {
+            onPressed: () async {
               setState(() {
                 _isLoading = true;
                 _errorMessage = null;
               });
+              await DocumentRepository().clearMetadataCache();
               _fetchPriceLists();
             },
           ),
