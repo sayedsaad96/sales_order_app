@@ -599,7 +599,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                 closeIconColor: Colors.yellowAccent,
                 content: Text('تم حفظ الملف: $finalPath'),
                 duration: (!Platform.isAndroid && !Platform.isIOS)
-                    ? const Duration(seconds: 5)
+                    ? const Duration(seconds: 1)
                     : const Duration(days: 365),
                 action: SnackBarAction(
                   label: 'مشاركة',

@@ -24,6 +24,8 @@ import 'package:annex_sales_order/features/customer_list/data/models/customer.da
 import 'package:annex_sales_order/features/customer_list/data/datasources/customer_local_data_source.dart';
 import 'package:annex_sales_order/features/authorization/data/models/authorized_person.dart';
 import 'package:annex_sales_order/features/authorization/data/datasources/authorization_local_data_source.dart';
+import 'package:annex_sales_order/features/tax_invoice/data/models/tax_invoice_request.dart';
+import 'package:annex_sales_order/features/tax_invoice/data/datasources/tax_invoice_local_data_source.dart';
 
 
 void main() async {
@@ -87,6 +89,10 @@ void main() async {
         // Initialize Authorization data source
         Hive.registerAdapter(AuthorizedPersonAdapter());
         await AuthorizationLocalDataSource().init();
+
+        // Initialize Tax Invoice data source
+        Hive.registerAdapter(TaxInvoiceRequestAdapter());
+        await TaxInvoiceLocalDataSource().init();
       } catch (e, stack) {
         debugPrint('Initialization Error: $e\n$stack');
         // Consider showing a fallback UI here if critical init fails
@@ -94,7 +100,9 @@ void main() async {
 
       runApp(
         MultiProvider(
-          providers: [ChangeNotifierProvider(create: (_) => ThemeProvider())],
+          providers: [
+            ChangeNotifierProvider(create: (_) => ThemeProvider()),
+          ],
           child: const SalesOrderApp(isRegistered: true),
         ),
       );

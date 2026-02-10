@@ -95,6 +95,7 @@ class _BusinessCardScreenState extends State<BusinessCardScreen> {
             );
           }
 
+          // Mobile
           return SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
@@ -161,23 +162,11 @@ class _BusinessCardScreenState extends State<BusinessCardScreen> {
   }
 
   Widget _buildActionList() {
-    return Column(
-      children: [
-        _buildActionButton(
-          label: 'Share',
-          icon: CupertinoIcons.share,
-          color: Colors.blue,
-          onTap: () => _handleAction(() => _service.shareAsImage(_globalKey)),
-        ),
-        const SizedBox(height: 12),
-        _buildActionButton(
-          label: 'Save',
-          icon: CupertinoIcons.photo_fill,
-          color: Colors.purple,
-          onTap: () =>
-              _handleAction(() => _service.saveToGallery(_globalKey, context)),
-        ),
-      ],
+    return _buildActionButton(
+      label: 'Share',
+      icon: CupertinoIcons.share,
+      color: Colors.limeAccent,
+      onTap: () => _handleAction(() => _service.shareAsImage(_globalKey)),
     );
   }
 

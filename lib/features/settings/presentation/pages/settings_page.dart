@@ -58,170 +58,175 @@ class _SettingsPageState extends State<SettingsPage> {
         centerTitle: true,
       ),
       drawer: const AppDrawer(),
-      body: ListView(
-        padding: const EdgeInsets.all(16.0),
-        children: [
-          // -- General Preferences Section --
-          _buildSectionHeader('تعديلات عامة'),
-          const SizedBox(height: 10),
-          Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              children: [
-                ListTile(
-                  leading: const Icon(CupertinoIcons.person_crop_circle),
-                  title: const Text('تعديل الملف الشخصي'),
-                  subtitle: const Text('تحديث بياناتك الشخصية'),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const EditProfilePage(),
-                      ),
-                    );
-                  },
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 700),
+          child: ListView(
+            padding: const EdgeInsets.all(16.0),
+            children: [
+              // -- General Preferences Section --
+              _buildSectionHeader('تعديلات عامة'),
+              const SizedBox(height: 10),
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                ListTile(
-                  leading: const Icon(CupertinoIcons.cloud_upload),
-                  title: const Text('النسخ الاحتياطي والاستعادة'),
-                  subtitle: const Text('إدارة نسخ البيانات'),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const BackupPage(),
-                      ),
-                    );
-                  },
-                ),
-                Consumer<ThemeProvider>(
-                  builder: (context, themeProvider, child) {
-                    return SwitchListTile(
-                      secondary: Icon(
-                        themeProvider.isDarkMode
-                            ? CupertinoIcons.moon_fill
-                            : CupertinoIcons.sun_max_fill,
-                      ),
-                      title: const Text('الوضع الليلي'),
-                      subtitle: Text(
-                        themeProvider.isDarkMode ? 'مفعل' : 'غير مفعل',
-                      ),
-                      value: themeProvider.isDarkMode,
-                      onChanged: (value) => themeProvider.toggleTheme(),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // -- Invoice Settings Section (Matching User Image) --
-          if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) ...[
-            _buildSectionHeader('إعدادات حفظ الفواتير'),
-            const SizedBox(height: 10),
-            Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                children: [
-                  _buildRadioOptionUI(
-                    title: 'سؤال مكان الحفظ دائماً',
-                    subtitle:
-                        'سيتم فتح نافذة اختيار مكان الحفظ عند إنشاء كل فاتورة',
-                    value: InvoiceSaveStrategy.ask,
-                  ),
-                  _buildRadioOptionUI(
-                    title: 'الحفظ التلقائي في مجلد محدد',
-                    subtitle:
-                        'سيتم إنشاء مجلد باسم العميل وحفظ الفاتورة بداخله تلقائياً',
-                    value: InvoiceSaveStrategy.auto,
-                  ),
-                  if (_saveStrategy == InvoiceSaveStrategy.auto) ...[
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const Text(
-                            'مسار الحفظ الافتراضي:',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                            ),
-                            textAlign: TextAlign.right,
+                child: Column(
+                  children: [
+                    ListTile(
+                      leading: const Icon(CupertinoIcons.person_crop_circle),
+                      title: const Text('تعديل الملف الشخصي'),
+                      subtitle: const Text('تحديث بياناتك الشخصية'),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const EditProfilePage(),
                           ),
-                          const SizedBox(height: 8),
-                          Row(
+                        );
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(CupertinoIcons.cloud_upload),
+                      title: const Text('النسخ الاحتياطي والاستعادة'),
+                      subtitle: const Text('إدارة نسخ البيانات'),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const BackupPage(),
+                          ),
+                        );
+                      },
+                    ),
+                    Consumer<ThemeProvider>(
+                      builder: (context, themeProvider, child) {
+                        return SwitchListTile(
+                          secondary: Icon(
+                            themeProvider.isDarkMode
+                                ? CupertinoIcons.moon_fill
+                                : CupertinoIcons.sun_max_fill,
+                          ),
+                          title: const Text('الوضع الليلي'),
+                          subtitle: Text(
+                            themeProvider.isDarkMode ? 'مفعل' : 'غير مفعل',
+                          ),
+                          value: themeProvider.isDarkMode,
+                          onChanged: (value) => themeProvider.toggleTheme(),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // -- Invoice Settings Section (Matching User Image) --
+              if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) ...[
+                _buildSectionHeader('إعدادات حفظ الفواتير'),
+                const SizedBox(height: 10),
+                Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      _buildRadioOptionUI(
+                        title: 'سؤال مكان الحفظ دائماً',
+                        subtitle:
+                            'سيتم فتح نافذة اختيار مكان الحفظ عند إنشاء كل فاتورة',
+                        value: InvoiceSaveStrategy.ask,
+                      ),
+                      _buildRadioOptionUI(
+                        title: 'الحفظ التلقائي في مجلد محدد',
+                        subtitle:
+                            'سيتم إنشاء مجلد باسم العميل وحفظ الفاتورة بداخله تلقائياً',
+                        value: InvoiceSaveStrategy.auto,
+                      ),
+                      if (_saveStrategy == InvoiceSaveStrategy.auto) ...[
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              ElevatedButton.icon(
-                                onPressed: _pickFolder,
-                                icon: const Icon(
-                                  CupertinoIcons.folder,
-                                  size: 18,
+                              const Text(
+                                'مسار الحفظ الافتراضي:',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
                                 ),
-                                label: const Text('تغيير'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Theme.of(
-                                    context,
-                                  ).primaryColor,
-                                  foregroundColor: Colors.white,
-                                  elevation: 2,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 10,
-                                  ),
-                                ),
+                                textAlign: TextAlign.right,
                               ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 12,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[100],
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: Colors.grey[300]!,
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  ElevatedButton.icon(
+                                    onPressed: _pickFolder,
+                                    icon: const Icon(
+                                      CupertinoIcons.folder,
+                                      size: 18,
+                                    ),
+                                    label: const Text('تغيير'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Theme.of(
+                                        context,
+                                      ).primaryColor,
+                                      foregroundColor: Colors.white,
+                                      elevation: 2,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 10,
+                                      ),
                                     ),
                                   ),
-                                  child: Text(
-                                    _defaultPath ?? 'لم يتم تحديد مسار',
-                                    style: TextStyle(
-                                      color: _defaultPath == null
-                                          ? Colors.grey
-                                          : Colors.black87,
-                                      fontSize: 13,
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 12,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[100],
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: Colors.grey[300]!,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        _defaultPath ?? 'لم يتم تحديد مسار',
+                                        style: TextStyle(
+                                          color: _defaultPath == null
+                                              ? Colors.grey
+                                              : Colors.black87,
+                                          fontSize: 13,
+                                        ),
+                                        textAlign: TextAlign.left,
+                                        textDirection: TextDirection.ltr,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
-                                    textAlign: TextAlign.left,
-                                    textDirection: TextDirection.ltr,
-                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(height: 30),
-          ],
-        ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 30),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }

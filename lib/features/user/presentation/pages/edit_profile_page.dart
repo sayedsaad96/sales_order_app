@@ -83,126 +83,176 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ),
       ),
       drawer: const AppDrawer(),
-      body: Center(
-        child: SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 500),
-            child: Padding(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isDesktop = constraints.maxWidth > 900;
+          return Center(
+            child: SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(CupertinoIcons.person_crop_circle_fill, size: 80, color: Colors.blue),
-                    const SizedBox(height: 30),
-                    TextFormField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'الاسم بالكامل',
-                        border: OutlineInputBorder(),
-                        prefixIcon:  Icon(CupertinoIcons.person),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'برجاء إدخال الاسم';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 20),
-                    TextFormField(
-                      controller: _mobileController,
-                      decoration: const InputDecoration(
-                        labelText: 'رقم الموبايل',
-                        border: OutlineInputBorder(),
-                        prefixIcon:  Icon(CupertinoIcons.phone),
-                      ),
-                      keyboardType: TextInputType.phone,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'برجاء إدخال رقم الموبايل';
-                        }
-                        if (value.length < 11) {
-                          return 'رقم الموبايل غير صحيح';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 20),
-                    TextFormField(
-                      controller: _emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'البريد الإلكتروني (اختياري)',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(CupertinoIcons.mail),
-                      ),
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-                    const SizedBox(height: 20),
-                    TextFormField(
-                      controller: _jobTitleController,
-                      decoration: const InputDecoration(
-                        labelText: 'المسمى الوظيفي (اختياري)',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(CupertinoIcons.briefcase),
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: _updateProfile,
-                        child: const Text(
-                          'حفظ التعديلات',
-                          style: TextStyle(fontSize: 18),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: isDesktop ? 1100 : 500),
+                child: Form(
+                  key: _formKey,
+                  child: isDesktop
+                      ? Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Expanded(
+                              flex: 4,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    CupertinoIcons.person_crop_circle_fill,
+                                    size: 200, // Larger icon for desktop
+                                    color: Colors.blue,
+                                  ),
+                                  const SizedBox(height: 20),
+                                  Text(
+                                    'تعديل البيانات',
+                                    style: Theme.of(context).textTheme.headlineMedium,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 60),
+                            Expanded(
+                              flex: 6,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  _buildTextFields(),
+                                  const SizedBox(height: 30),
+                                  _buildButtons(context),
+                                ],
+                              ),
+                            ),
+                          ],
+                        )
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              CupertinoIcons.person_crop_circle_fill,
+                              size: 80,
+                              color: Colors.blue,
+                            ),
+                            const SizedBox(height: 30),
+                            _buildTextFields(),
+                            const SizedBox(height: 30),
+                            _buildButtons(context),
+                          ],
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: OutlinedButton.icon(
-                        icon: const Icon(CupertinoIcons.qrcode),
-                        label: const Text(
-                          'مشاركة الكارت الشخصي',
-                          style: TextStyle(fontSize: 18),
-                        ),
-                        onPressed: () {
-                           // Construct a temporary user object from current form state or loaded data
-                           // Note: Using current loaded data from _userDataSource or current controllers if valid
-                           // Ideally we should save first or use the saved data. 
-                           // For safety, let's use the data from controllers if valid, or just pass the current user if saved.
-                           
-                           // But simpler: just pass the user object if exists.
-                           // We need to fetch the user again or reuse logic.
-                           // Let's reuse _loadUserData logic but we need the object.
-                           
-                           final user = _userDataSource.getUser();
-                           if (user != null) {
-                               Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => BusinessCardScreen(user: user),
-                                ),
-                              );
-                           } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('يرجى حفظ البيانات أولاً')),
-                              );
-                           }
-                        },
-                      ),
-                    ),
-                  ],
                 ),
               ),
             ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildTextFields() {
+    return Column(
+      children: [
+        TextFormField(
+          controller: _nameController,
+          decoration: const InputDecoration(
+            labelText: 'الاسم بالكامل',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(CupertinoIcons.person),
+          ),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'برجاء إدخال الاسم';
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 20),
+        TextFormField(
+          controller: _mobileController,
+          decoration: const InputDecoration(
+            labelText: 'رقم الموبايل',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(CupertinoIcons.phone),
+          ),
+          keyboardType: TextInputType.phone,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'برجاء إدخال رقم الموبايل';
+            }
+            if (value.length < 11) {
+              return 'رقم الموبايل غير صحيح';
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 20),
+        TextFormField(
+          controller: _emailController,
+          decoration: const InputDecoration(
+            labelText: 'البريد الإلكتروني (اختياري)',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(CupertinoIcons.mail),
+          ),
+          keyboardType: TextInputType.emailAddress,
+        ),
+        const SizedBox(height: 20),
+        TextFormField(
+          controller: _jobTitleController,
+          decoration: const InputDecoration(
+            labelText: 'المسمى الوظيفي (اختياري)',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(CupertinoIcons.briefcase),
           ),
         ),
-      ),
+      ],
+    );
+  }
+
+  Widget _buildButtons(BuildContext context) {
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton(
+            onPressed: _updateProfile,
+            child: const Text(
+              'حفظ التعديلات',
+              style: TextStyle(fontSize: 18),
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: OutlinedButton.icon(
+            icon: const Icon(CupertinoIcons.qrcode),
+            label: const Text(
+              'مشاركة الكارت الشخصي',
+              style: TextStyle(fontSize: 18),
+            ),
+            onPressed: () {
+              final user = _userDataSource.getUser();
+              if (user != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => BusinessCardScreen(user: user),
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('يرجى حفظ البيانات أولاً')),
+                );
+              }
+            },
+          ),
+        ),
+      ],
     );
   }
 }

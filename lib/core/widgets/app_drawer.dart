@@ -12,6 +12,8 @@ import 'package:annex_sales_order/features/sales_order/presentation/pages/saved_
 import 'package:annex_sales_order/features/settings/presentation/pages/settings_page.dart';
 import 'package:annex_sales_order/features/customer_list/presentation/pages/customer_list_page.dart';
 import 'package:annex_sales_order/features/authorization/presentation/screens/authorization_screen.dart';
+import 'package:annex_sales_order/features/tax_invoice/presentation/screens/tax_invoice_request_screen.dart';
+import 'package:annex_sales_order/features/new_lead/presentation/screens/new_lead_form_screen.dart';
 
 class AppDrawer extends StatefulWidget {
   const AppDrawer({super.key});
@@ -42,6 +44,10 @@ class _AppDrawerState extends State<AppDrawer> {
       'customer_list_sub': 'Manage customers',
       'auth_pdf': 'Authorization',
       'auth_pdf_sub': 'Create authorization',
+      'new_lead': 'New Lead',
+      'new_lead_sub': 'Create new lead',
+      'tax_invoice': 'Tax Invoice Request',
+      'tax_invoice_sub': 'Request tax invoice PDF',
       'information': 'Information',
       'about_us': 'About Us',
       'about_us_sub': 'Company information',
@@ -70,6 +76,10 @@ class _AppDrawerState extends State<AppDrawer> {
       'customer_list_sub': 'إدارة العملاء',
       'auth_pdf': 'تفويض',
       'auth_pdf_sub': 'إنشاء تفويض',
+      'new_lead': 'عميل جديد',
+      'new_lead_sub': 'إنشاء بيانات عميل جديد',
+      'tax_invoice': 'طلب فاتورة ضريبية',
+      'tax_invoice_sub': 'إنشاء طلب فاتورة ضريبية PDF',
       'information': 'معلومات',
       'about_us': 'من نحن',
       'about_us_sub': 'معلومات الشركة',
@@ -237,6 +247,38 @@ class _AppDrawerState extends State<AppDrawer> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => const AuthorizationPdfScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  
+                  _buildModernMenuItem(
+                    context,
+                    icon: CupertinoIcons.doc_plaintext,
+                    title: _t('tax_invoice'),
+                    subtitle: _t('tax_invoice_sub'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const TaxInvoiceRequestScreen(),
+                        ),
+                      );
+                    },
+                  ),
+
+                  _buildModernMenuItem(
+                    context,
+                    icon: CupertinoIcons.person_add,
+                    title: _t('new_lead'),
+                    subtitle: _t('new_lead_sub'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const NewLeadFormScreen(),
                         ),
                       );
                     },

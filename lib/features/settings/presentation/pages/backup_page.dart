@@ -103,41 +103,46 @@ class _BackupPageState extends State<BackupPage> {
       appBar: AppBar(
         title: const Text('Backup & Restore'),
       ),
-      body: Stack(
-        children: [
-          ListView(
-            padding: const EdgeInsets.all(16),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: Stack(
             children: [
-              _buildModernCard(
-                icon: CupertinoIcons.cloud_upload_fill,
-                title: 'Backup Data',
-                subtitle: 'Save all your data to a file',
-                color: Colors.blue,
-                onTap: _createBackup,
+              ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  _buildModernCard(
+                    icon: CupertinoIcons.cloud_upload_fill,
+                    title: 'Backup Data',
+                    subtitle: 'Save all your data to a file',
+                    color: Colors.blue,
+                    onTap: _createBackup,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildModernCard(
+                    icon: CupertinoIcons.cloud_download_fill,
+                    title: 'Restore Data',
+                    subtitle: 'Restore data from a backup file',
+                    color: Colors.orange,
+                    onTap: _restoreBackup,
+                    isDangerous: true,
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Note: Backup includes all customers, orders, quotations, and settings. Photos and external files are not included.',
+                     style: TextStyle(color: Colors.grey),
+                     textAlign: TextAlign.center,
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              _buildModernCard(
-                icon: CupertinoIcons.cloud_download_fill,
-                title: 'Restore Data',
-                subtitle: 'Restore data from a backup file',
-                color: Colors.orange,
-                onTap: _restoreBackup,
-                isDangerous: true,
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'Note: Backup includes all customers, orders, quotations, and settings. Photos and external files are not included.',
-                 style: TextStyle(color: Colors.grey),
-                 textAlign: TextAlign.center,
-              ),
+              if (_isLoading)
+                Container(
+                  color: Colors.black54,
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
             ],
           ),
-          if (_isLoading)
-            Container(
-              color: Colors.black54,
-              child: const Center(child: CircularProgressIndicator()),
-            ),
-        ],
+        ),
       ),
     );
   }

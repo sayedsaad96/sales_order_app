@@ -115,70 +115,75 @@ class _AddEditCustomerPageState extends State<AddEditCustomerPage> {
           tooltip: 'رجوع',
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              _buildTextField(
-                controller: _nameController,
-                label: 'Customer Name',
-                validator: (v) => v == null || v.isEmpty ? 'مطلوب' : null,
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _codeController,
-                label: 'Customer Code',
-              ),
-              const SizedBox(height: 16),
-              _buildDropdown(
-                label: 'Archetype',
-                value: _selectedArchetype,
-                items: _archetypes,
-                onChanged: (v) => setState(() => _selectedArchetype = v),
-              ),
-              const SizedBox(height: 16),
-              _buildDropdown(
-                label: 'Customer Type',
-                value: _selectedCustomerType,
-                items: _customerTypes,
-                onChanged: (v) => setState(() => _selectedCustomerType = v),
-              ),
-              const SizedBox(height: 16),
-              _buildDropdown(
-                label: 'Industry',
-                value: _selectedIndustry,
-                items: _industries,
-                onChanged: (v) => setState(() => _selectedIndustry = v),
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _termController,
-                label: 'Payment Term',
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _additionalInfoController,
-                label: 'معلومات اضافيه',
-                maxLines: 3,
-              ),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  _buildTextField(
+                    controller: _nameController,
+                    label: 'Customer Name',
+                    validator: (v) => v == null || v.isEmpty ? 'مطلوب' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    controller: _codeController,
+                    label: 'Customer Code',
+                  ),
+                  const SizedBox(height: 16),
+                  _buildDropdown(
+                    label: 'Archetype',
+                    value: _selectedArchetype,
+                    items: _archetypes,
+                    onChanged: (v) => setState(() => _selectedArchetype = v),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildDropdown(
+                    label: 'Customer Type',
+                    value: _selectedCustomerType,
+                    items: _customerTypes,
+                    onChanged: (v) => setState(() => _selectedCustomerType = v),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildDropdown(
+                    label: 'Industry',
+                    value: _selectedIndustry,
+                    items: _industries,
+                    onChanged: (v) => setState(() => _selectedIndustry = v),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    controller: _termController,
+                    label: 'Payment Term',
+                  ),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    controller: _additionalInfoController,
+                    label: 'معلومات اضافيه',
+                    maxLines: 3,
+                  ),
 
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _saveCustomer,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _saveCustomer,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text('حفظ', style: TextStyle(fontSize: 18)),
                     ),
                   ),
-                  child: const Text('حفظ', style: TextStyle(fontSize: 18)),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
