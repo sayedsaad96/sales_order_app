@@ -12,14 +12,12 @@ class BankAccount {
   final String branch;
   final String accountName;
   final String accountNumber;
-  final String iban;
 
   BankAccount({
     required this.bankName,
     required this.branch,
     required this.accountName,
     required this.accountNumber,
-    required this.iban,
   });
 
   String toShareText() {
@@ -28,7 +26,6 @@ class BankAccount {
 الفرع: $branch
 اسم الحساب: $accountName
 رقم الحساب: $accountNumber
-رقم الايبان: $iban
 ''';
   }
 }
@@ -89,7 +86,6 @@ class _BankAccountsPageState extends State<BankAccountsPage> {
                 branch: row[1].toString(),
                 accountName: row[2].toString(),
                 accountNumber: row[3].toString(), // Ensure string
-                iban: row[4].toString(), // Ensure string
               ),
             );
           }
@@ -270,13 +266,6 @@ class _BankAccountsPageState extends State<BankAccountsPage> {
               CupertinoIcons.number,
               'رقم الحساب',
               account.accountNumber,
-            ),
-            const SizedBox(height: 12),
-            _buildCopyableDetailRow(
-              context,
-              CupertinoIcons.creditcard,
-              'رقم الايبان',
-              account.iban,
             ),
           ],
         ),

@@ -492,7 +492,7 @@ class _NewLeadFormScreenState extends State<NewLeadFormScreen> {
                         onPressed: _generatePdf,
                         icon: const Icon(Icons.picture_as_pdf, size: 28),
                         label: const Text(
-                          'Generate PDF',
+                          'PDF',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,

@@ -60,7 +60,7 @@ class UpdateNotificationService {
             InitializationSettings(android: initializationSettingsAndroid);
 
         await _notificationsPlugin.initialize(
-          initializationSettings,
+          settings: initializationSettings,
           onDidReceiveNotificationResponse: (details) {
             // Handle notification tap
           },
@@ -338,10 +338,10 @@ class UpdateNotificationService {
         NotificationDetails(android: androidPlatformChannelSpecifics);
 
     await _notificationsPlugin.show(
-      DateTime.now().millisecondsSinceEpoch ~/ 1000, // Unique ID based on time
-      'تحديث جديد', // Title
-      contentText,
-      platformChannelSpecifics,
+      id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      title: 'تحديث جديد',
+      body: contentText,
+      notificationDetails: platformChannelSpecifics,
     );
   }
 }

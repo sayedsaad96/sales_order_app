@@ -48,7 +48,7 @@ class _TaxInvoiceRequestScreenState extends State<TaxInvoiceRequestScreen> {
 
   // Unit Dropdown
   String? _selectedUnit;
-  final List<String> _units = ['KG', 'Unit', 'Roll', 'Box', 'Other'];
+  final List<String> _units = ['KG', 'Cone', 'Roll', 'Box', 'Other', 'Unit'];
 
   @override
   void initState() {
@@ -228,7 +228,7 @@ class _TaxInvoiceRequestScreenState extends State<TaxInvoiceRequestScreen> {
           RegExp(r'[^\w\s\u0600-\u06FF]'),
           '',
         );
-        final fileName = 'Tax_Invoice_$safeName.pdf';
+        final fileName = 'TaxInvoice_$safeName.pdf';
 
         if (Platform.isAndroid || Platform.isIOS) {
           // Mobile: Share directly
@@ -319,14 +319,17 @@ class _TaxInvoiceRequestScreenState extends State<TaxInvoiceRequestScreen> {
           IconButton(
             icon: const Icon(Icons.history),
             onPressed: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SavedTaxInvoicesScreen(),
-                ),
-              );
-              if (result != null && result is Map) {
-                _loadRequest(result['request'], result['index']);
+              await _dataSource.ensureInitialized();
+              if (context.mounted) {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SavedTaxInvoicesScreen(),
+                  ),
+                );
+                if (result != null && result is Map) {
+                  _loadRequest(result['request'], result['index']);
+                }
               }
             },
             tooltip: 'الطلبات المحفوظة',

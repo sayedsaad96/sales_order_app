@@ -23,66 +23,82 @@ class _SavedTaxInvoicesScreenState extends State<SavedTaxInvoicesScreen> {
       ),
       body: Directionality(
         textDirection: TextDirection.rtl,
-        child: ValueListenableBuilder<Box<TaxInvoiceRequest>>(
-          valueListenable: _dataSource.getListenable(),
-          builder: (context, box, _) {
-            final requests = box.values.toList().reversed.toList();
+        child: FutureBuilder(
+          future: _dataSource.ensureInitialized(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-            if (requests.isEmpty) {
-              return const Center(
-                child: Text('لا توجد طلبات محفوظة'),
+            if (snapshot.hasError) {
+              return Center(
+                child: Text('خطأ في تحميل البيانات: ${snapshot.error}'),
               );
             }
 
-            return ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: requests.length,
-              itemBuilder: (context, index) {
-                final request = requests[index];
-                
-                // Hive index for non-reversed list is needed for update/delete
-                // But we can use the key if we use put/delete with key
-                // Or calculate the actual index in the box
-                final actualIndex = box.length - 1 - index;
+            return ValueListenableBuilder<Box<TaxInvoiceRequest>>(
+              valueListenable: _dataSource.getListenable(),
+              builder: (context, box, _) {
+                final requests = box.values.toList().reversed.toList();
 
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    title: Text(
-                      request.customerNameOnTaxCard,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                if (requests.isEmpty) {
+                  return const Center(child: Text('لا توجد طلبات محفوظة'));
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: requests.length,
+                  itemBuilder: (context, index) {
+                    final request = requests[index];
+                    final actualIndex = box.length - 1 - index;
+
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 4),
-                        Text('ساب: ${request.sapCustomerCode}'),
-                        Text('الصنف: ${request.itemName}'),
-                        if (request.fromDate != null || request.toDate != null)
-                          Text(
-                            'الفترة: ${request.fromDate != null ? intl.DateFormat('yyyy/MM/dd').format(request.fromDate!) : ''} - ${request.toDate != null ? intl.DateFormat('yyyy/MM/dd').format(request.toDate!) : ''}',
-                            style: const TextStyle(fontSize: 12),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        title: Text(
+                          request.customerNameOnTaxCard,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
                           ),
-                      ],
-                    ),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete_outline, color: Colors.red),
-                      onPressed: () => _confirmDelete(context, actualIndex),
-                    ),
-                    onTap: () {
-                      Navigator.pop(context, {'request': request, 'index': actualIndex});
-                    },
-                  ),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 4),
+                            Text('ساب: ${request.sapCustomerCode}'),
+                            Text('الصنف: ${request.itemName}'),
+                            if (request.fromDate != null ||
+                                request.toDate != null)
+                              Text(
+                                'الفترة: ${request.fromDate != null ? intl.DateFormat('yyyy/MM/dd').format(request.fromDate!) : ''} - ${request.toDate != null ? intl.DateFormat('yyyy/MM/dd').format(request.toDate!) : ''}',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                          ],
+                        ),
+                        trailing: IconButton(
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            color: Colors.red,
+                          ),
+                          onPressed: () => _confirmDelete(context, actualIndex),
+                        ),
+                        onTap: () {
+                          Navigator.pop(context, {
+                            'request': request,
+                            'index': actualIndex,
+                          });
+                        },
+                      ),
+                    );
+                  },
                 );
               },
             );

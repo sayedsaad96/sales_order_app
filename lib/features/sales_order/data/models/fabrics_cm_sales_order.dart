@@ -28,13 +28,6 @@ class FabricsCmSalesOrder extends HiveObject {
   @HiveField(10)
   List<String> orderTypesList; // Replaces orderType string logically
 
-  @HiveField(11)
-  double? yarnPrice;
-  @HiveField(12)
-  double? lycraPrice;
-  @HiveField(13)
-  double? manufacturingPrice;
-
   FabricsCmSalesOrder({
     this.sn,
     this.customerName,
@@ -47,9 +40,6 @@ class FabricsCmSalesOrder extends HiveObject {
     this.notes,
     this.branch,
     this.orderTypesList = const [],
-    this.yarnPrice,
-    this.lycraPrice,
-    this.manufacturingPrice,
   });
 
   Map<String, dynamic> toJson() => {
@@ -64,9 +54,6 @@ class FabricsCmSalesOrder extends HiveObject {
     'notes': notes,
     'branch': branch,
     'orderTypesList': orderTypesList,
-    'yarnPrice': yarnPrice,
-    'lycraPrice': lycraPrice,
-    'manufacturingPrice': manufacturingPrice,
   };
 
   factory FabricsCmSalesOrder.fromJson(Map<String, dynamic> json) => FabricsCmSalesOrder(
@@ -81,36 +68,11 @@ class FabricsCmSalesOrder extends HiveObject {
     notes: json['notes'],
     branch: json['branch'],
     orderTypesList: List<String>.from(json['orderTypesList'] ?? []),
-    yarnPrice: (json['yarnPrice'] as num?)?.toDouble(),
-    lycraPrice: (json['lycraPrice'] as num?)?.toDouble(),
-    manufacturingPrice: (json['manufacturingPrice'] as num?)?.toDouble(),
   );
 
-  double get baseTotal {
-    bool isFabric = orderTypesList.contains('قماش');
-    bool isCm = orderTypesList.contains('CM');
-    return items.fold(0.0, (sum, item) => sum + item.calculateBaseValue(
-      isFabric, 
-      isCm, 
-      globalYarnPrice: yarnPrice ?? 0.0,
-      globalLycraPrice: lycraPrice ?? 0.0,
-      globalMfgPrice: manufacturingPrice ?? 0.0,
-    ));
+  double get totalValue {
+    return items.fold(0.0, (sum, item) => sum + item.calculateTotal());
   }
-
-  double get wasteTotal {
-    bool isFabric = orderTypesList.contains('قماش');
-    bool isCm = orderTypesList.contains('CM');
-    return items.fold(0.0, (sum, item) => sum + item.calculateWaste(
-      isFabric, 
-      isCm, 
-      globalYarnPrice: yarnPrice ?? 0.0,
-      globalLycraPrice: lycraPrice ?? 0.0,
-      globalMfgPrice: manufacturingPrice ?? 0.0,
-    ));
-  }
-
-  double get totalValue => baseTotal + wasteTotal;
 }
 
 @HiveType(typeId: 9)
@@ -118,115 +80,54 @@ class FabricsCmLineItem extends HiveObject {
   @HiveField(0)
   double quantity;
 
-  @HiveField(2)
-  String? lycraNumber;
-  @HiveField(3)
-  double? lycraPercentage;
-  @HiveField(4)
-  String? fabricType;
-  @HiveField(5)
-  String? yarnCount;
-  @HiveField(6)
-  String? yarnType;
-  @HiveField(7)
-  int? gauge;
-  @HiveField(8)
-  double? widthInches;
-  @HiveField(9)
-  double? stitchLength;
+  // New Fields
+  @HiveField(1)
+  String? fabricDetails; // Replaces detailed specs
+  @HiveField(10)
+  double? price;
 
+  // Kept Fields
   @HiveField(11)
   String? spinningCompany;
 
+  @HiveField(7)
+  dynamic gauge;
+  @HiveField(8)
+  dynamic inch;
+  @HiveField(9)
+  dynamic stitchLength;
+
   FabricsCmLineItem({
     this.quantity = 0.0,
-    this.lycraNumber,
-    this.lycraPercentage = 0.0,
-    this.fabricType,
-    this.yarnCount,
-    this.yarnType,
-    this.gauge = 0,
-    this.widthInches = 0.0,
-    this.stitchLength = 0.0,
+    this.fabricDetails,
+    this.price = 0.0,
     this.spinningCompany,
+    this.gauge,
+    this.inch,
+    this.stitchLength,
   });
 
   Map<String, dynamic> toJson() => {
     'quantity': quantity,
-    'lycraNumber': lycraNumber,
-    'lycraPercentage': lycraPercentage,
-    'fabricType': fabricType,
-    'yarnCount': yarnCount,
-    'yarnType': yarnType,
-    'gauge': gauge,
-    'widthInches': widthInches,
-    'stitchLength': stitchLength,
+    'fabricDetails': fabricDetails,
+    'price': price,
     'spinningCompany': spinningCompany,
+    'gauge': gauge,
+    'inch': inch,
+    'stitchLength': stitchLength,
   };
 
   factory FabricsCmLineItem.fromJson(Map<String, dynamic> json) => FabricsCmLineItem(
     quantity: (json['quantity'] as num).toDouble(),
-    lycraNumber: json['lycraNumber'],
-    lycraPercentage: (json['lycraPercentage'] as num?)?.toDouble(),
-    fabricType: json['fabricType'],
-    yarnCount: json['yarnCount'],
-    yarnType: json['yarnType'],
-    gauge: json['gauge'],
-    widthInches: (json['widthInches'] as num?)?.toDouble(),
-    stitchLength: (json['stitchLength'] as num?)?.toDouble(),
+    fabricDetails: json['fabricDetails'],
+    price: (json['price'] as num?)?.toDouble(),
     spinningCompany: json['spinningCompany'],
+    gauge: json['gauge'],
+    inch: json['inch'],
+    stitchLength: json['stitchLength'],
   );
 
-  double calculateBaseValue(
-    bool isFabric,
-    bool isCm, {
-    double globalYarnPrice = 0.0,
-    double globalLycraPrice = 0.0,
-    double globalMfgPrice = 0.0,
-  }) {
-    if (isFabric) {
-      double lycraDecimal = (lycraPercentage ?? 0.0) / 100;
-      double yarnQty = quantity * (1 - lycraDecimal);
-      double lycraQty = quantity * lycraDecimal;
-      return (yarnQty * globalYarnPrice) + (lycraQty * globalLycraPrice) + (globalMfgPrice * quantity);
-    } else if (isCm) {
-      double lycraDecimal = (lycraPercentage ?? 0.0) / 100;
-      return (quantity * lycraDecimal * globalLycraPrice) + (globalMfgPrice * quantity);
-    }
-    return quantity * globalMfgPrice;
-  }
-
-  double calculateWaste(
-    bool isFabric,
-    bool isCm, {
-    double globalYarnPrice = 0.0,
-    double globalLycraPrice = 0.0,
-    double globalMfgPrice = 0.0,
-  }) {
-    if (isFabric) {
-      return calculateBaseValue(isFabric, isCm,
-              globalYarnPrice: globalYarnPrice,
-              globalLycraPrice: globalLycraPrice,
-              globalMfgPrice: globalMfgPrice) *
-          0.02;
-    }
-    return 0.0;
-  }
-
-  double calculateValue(
-    bool isFabric,
-    bool isCm, {
-    double globalYarnPrice = 0.0,
-    double globalLycraPrice = 0.0,
-    double globalMfgPrice = 0.0,
-  }) {
-    return calculateBaseValue(isFabric, isCm,
-            globalYarnPrice: globalYarnPrice,
-            globalLycraPrice: globalLycraPrice,
-            globalMfgPrice: globalMfgPrice) +
-        calculateWaste(isFabric, isCm,
-            globalYarnPrice: globalYarnPrice,
-            globalLycraPrice: globalLycraPrice,
-            globalMfgPrice: globalMfgPrice);
+  double calculateTotal() {
+    return quantity * (price ?? 0.0);
   }
 }

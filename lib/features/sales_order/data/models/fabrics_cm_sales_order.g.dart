@@ -28,16 +28,13 @@ class FabricsCmSalesOrderAdapter extends TypeAdapter<FabricsCmSalesOrder> {
       notes: fields[8] as String?,
       branch: fields[9] as String?,
       orderTypesList: (fields[10] as List).cast<String>(),
-      yarnPrice: fields[11] as double?,
-      lycraPrice: fields[12] as double?,
-      manufacturingPrice: fields[13] as double?,
     );
   }
 
   @override
   void write(BinaryWriter writer, FabricsCmSalesOrder obj) {
     writer
-      ..writeByte(14)
+      ..writeByte(11)
       ..writeByte(0)
       ..write(obj.sn)
       ..writeByte(1)
@@ -59,13 +56,7 @@ class FabricsCmSalesOrderAdapter extends TypeAdapter<FabricsCmSalesOrder> {
       ..writeByte(9)
       ..write(obj.branch)
       ..writeByte(10)
-      ..write(obj.orderTypesList)
-      ..writeByte(11)
-      ..write(obj.yarnPrice)
-      ..writeByte(12)
-      ..write(obj.lycraPrice)
-      ..writeByte(13)
-      ..write(obj.manufacturingPrice);
+      ..write(obj.orderTypesList);
   }
 
   @override
@@ -91,42 +82,33 @@ class FabricsCmLineItemAdapter extends TypeAdapter<FabricsCmLineItem> {
     };
     return FabricsCmLineItem(
       quantity: fields[0] as double,
-      lycraNumber: fields[2] as String?,
-      lycraPercentage: fields[3] as double?,
-      fabricType: fields[4] as String?,
-      yarnCount: fields[5] as String?,
-      yarnType: fields[6] as String?,
-      gauge: fields[7] as int?,
-      widthInches: fields[8] as double?,
-      stitchLength: fields[9] as double?,
+      fabricDetails: fields[1] as String?,
+      price: fields[10] as double?,
       spinningCompany: fields[11] as String?,
+      gauge: fields[7] as dynamic,
+      inch: fields[8] as dynamic,
+      stitchLength: fields[9] as dynamic,
     );
   }
 
   @override
   void write(BinaryWriter writer, FabricsCmLineItem obj) {
     writer
-      ..writeByte(10)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.quantity)
-      ..writeByte(2)
-      ..write(obj.lycraNumber)
-      ..writeByte(3)
-      ..write(obj.lycraPercentage)
-      ..writeByte(4)
-      ..write(obj.fabricType)
-      ..writeByte(5)
-      ..write(obj.yarnCount)
-      ..writeByte(6)
-      ..write(obj.yarnType)
+      ..writeByte(1)
+      ..write(obj.fabricDetails)
+      ..writeByte(10)
+      ..write(obj.price)
+      ..writeByte(11)
+      ..write(obj.spinningCompany)
       ..writeByte(7)
       ..write(obj.gauge)
       ..writeByte(8)
-      ..write(obj.widthInches)
+      ..write(obj.inch)
       ..writeByte(9)
-      ..write(obj.stitchLength)
-      ..writeByte(11)
-      ..write(obj.spinningCompany);
+      ..write(obj.stitchLength);
   }
 
   @override

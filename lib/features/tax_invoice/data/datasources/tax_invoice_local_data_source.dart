@@ -6,12 +6,16 @@ class TaxInvoiceLocalDataSource {
   static const String boxName = 'tax_invoice_requests';
   static Box<TaxInvoiceRequest>? _boxInstance;
 
-  Future<void> init() async {
+  Future<void> ensureInitialized() async {
     if (!Hive.isBoxOpen(boxName)) {
       _boxInstance = await Hive.openBox<TaxInvoiceRequest>(boxName);
     } else {
       _boxInstance = Hive.box<TaxInvoiceRequest>(boxName);
     }
+  }
+
+  Future<void> init() async {
+    await ensureInitialized();
   }
 
   Box<TaxInvoiceRequest> get _box {
@@ -34,6 +38,7 @@ class TaxInvoiceLocalDataSource {
   }
 
   Future<void> add(TaxInvoiceRequest request) async {
+    await ensureInitialized();
     try {
       await _box.add(request);
     } catch (e) {
@@ -43,6 +48,7 @@ class TaxInvoiceLocalDataSource {
   }
 
   Future<void> update(int index, TaxInvoiceRequest request) async {
+    await ensureInitialized();
     try {
       await _box.putAt(index, request);
     } catch (e) {
@@ -52,6 +58,7 @@ class TaxInvoiceLocalDataSource {
   }
 
   Future<void> delete(int index) async {
+    await ensureInitialized();
     try {
       if (index >= 0 && index < _box.length) {
         await _box.deleteAt(index);

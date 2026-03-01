@@ -341,8 +341,10 @@ class YarnCustomerInfoSection extends StatelessWidget {
     return DropdownButtonFormField<String>(
       initialValue:
           [
-            'كاش',
+            'كاش مع المبيعات',
+            'كاش مع السيارة',
             'تحويل بنكي',
+            'اجل اسبوع',
             'اجل اسبوعين',
             'اجل 3 اسابيع',
             'اجل شهر',
@@ -359,8 +361,10 @@ class YarnCustomerInfoSection extends StatelessWidget {
         border: OutlineInputBorder(),
       ),
       items: [
-        'كاش',
+        'كاش مع المبيعات',
+        'كاش مع السيارة',
         'تحويل بنكي',
+        'اجل اسبوع',
         'اجل اسبوعين',
         'اجل 3 اسابيع',
         'اجل شهر',

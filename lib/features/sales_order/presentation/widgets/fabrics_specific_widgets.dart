@@ -31,7 +31,7 @@ class FabricsBranchAndTypeSection extends StatelessWidget {
                   _buildBranchDropdown(context),
                   const SizedBox(height: 10),
                   const Text('النوع: ', style: TextStyle(fontWeight: FontWeight.bold)),
-                  _buildTypeCheckboxes(),
+                  _buildTypeCheckboxes(context),
                 ],
               )
             : Row(
@@ -40,7 +40,7 @@ class FabricsBranchAndTypeSection extends StatelessWidget {
                   Expanded(child: _buildBranchDropdown(context, isDesktop: true)),
                   const SizedBox(width: 20),
                   const Text('النوع: ', style: TextStyle(fontWeight: FontWeight.bold)),
-                  ...orderTypes.keys.map((key) => _buildTypeTile(key)),
+                   ...orderTypes.keys.map((key) => _buildTypeTile(context, key)),
                 ],
               ),
       ),
@@ -74,21 +74,21 @@ class FabricsBranchAndTypeSection extends StatelessWidget {
     );
   }
 
-  Widget _buildTypeCheckboxes() {
+  Widget _buildTypeCheckboxes(BuildContext context) {
     return Wrap(
       spacing: 12,
-      children: orderTypes.keys.map((key) => _buildTypeTile(key)).toList(),
+      children: orderTypes.keys.map((key) => _buildTypeTile(context, key)).toList(),
     );
   }
 
-  Widget _buildTypeTile(String key) {
+  Widget _buildTypeTile(BuildContext context, String key) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Checkbox(
           value: orderTypes[key],
           onChanged: (v) => onTypeChanged(key, v ?? false),
-          activeColor: Colors.indigo, // Use Fabrics theme color
+          activeColor: Theme.of(context).colorScheme.primary, // Use Fabrics theme color
         ),
         Text(key),
       ],

@@ -55,8 +55,7 @@ class _CustomerInfoSectionState extends State<CustomerInfoSection> {
           controller: widget.customerNameController,
           decoration: const InputDecoration(labelText: 'اسم العميل'),
           validator: (v) => v?.isEmpty ?? true ? 'مطلوب' : null,
-                textCapitalization: TextCapitalization.sentences,
-
+          textCapitalization: TextCapitalization.sentences,
         ),
         const SizedBox(height: 10),
         TextFormField(
@@ -203,8 +202,10 @@ class _CustomerInfoSectionState extends State<CustomerInfoSection> {
     return DropdownButtonFormField<String>(
       initialValue:
           [
-            'كاش',
+            'كاش مع المبيعات',
+            'كاش مع السيارة',
             'تحويل بنكي',
+            'اجل اسبوع',
             'اجل اسبوعين',
             'اجل 3 اسابيع',
             'اجل شهر',
@@ -218,8 +219,10 @@ class _CustomerInfoSectionState extends State<CustomerInfoSection> {
           : null,
       decoration: const InputDecoration(labelText: 'طريقة السداد'),
       items: [
-        'كاش',
+        'كاش مع المبيعات',
+        'كاش مع السيارة',
         'تحويل بنكي',
+        'اجل اسبوع',
         'اجل اسبوعين',
         'اجل 3 اسابيع',
         'اجل شهر',

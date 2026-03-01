@@ -47,9 +47,7 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
   String _editQuantity = 'الكمية المحددة';
   String _deliveryResponsibility = 'العميل';
 
-  final Map<String, bool> _orderTypes = {
-    'غزل': true,
-  };
+  final Map<String, bool> _orderTypes = {'غزل': true};
 
   // Dynamic lists
   final List<TextEditingController> _descriptionControllers = [];
@@ -67,7 +65,7 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
   String _generateUniqueSn() {
     final box = YarnInvoiceLocalDataSource().getAllInvoices();
     final existingSns = box.map((e) => e.sn ?? '').toSet();
-    
+
     final List<int> available = [];
     for (int i = 1; i <= 999; i++) {
       final sn = 'YSO-${i.toString().padLeft(3, '0')}';
@@ -77,7 +75,8 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
     }
 
     if (available.isNotEmpty) {
-      final randomIndex = (DateTime.now().microsecondsSinceEpoch % available.length);
+      final randomIndex =
+          (DateTime.now().microsecondsSinceEpoch % available.length);
       final chosen = available[randomIndex.toInt()];
       return 'YSO-${chosen.toString().padLeft(3, '0')}';
     }
@@ -96,7 +95,7 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
     _salesResponsibleController.dispose();
     _notesController.dispose();
     _totalValueNotifier.dispose();
-    
+
     for (var controller in _descriptionControllers) {
       controller.dispose();
     }
@@ -163,10 +162,7 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
       if (order.items.isEmpty) _addItem();
 
       for (var inst in order.installments) {
-        _addInstallment(
-          duration: inst.duration,
-          value: inst.value,
-        );
+        _addInstallment(duration: inst.duration, value: inst.value);
       }
       if (order.installments.isEmpty) _addInstallment();
     } else {
@@ -186,12 +182,14 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
       final unit = _unitControllers[i].text;
       final price = double.tryParse(_priceControllers[i].text) ?? 0.0;
       if (desc.isNotEmpty || qty > 0) {
-        items.add(YarnSalesOrderItem(
-          description: desc,
-          quantity: qty,
-          unit: unit,
-          price: price,
-        ));
+        items.add(
+          YarnSalesOrderItem(
+            description: desc,
+            quantity: qty,
+            unit: unit,
+            price: price,
+          ),
+        );
       }
     }
 
@@ -219,20 +217,35 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
       branch: _selectedBranch,
       editQuantity: _editQuantity,
       deliveryResponsibility: _deliveryResponsibility,
-      orderTypes: _orderTypes.entries.where((e) => e.value).map((e) => e.key).toList(),
+      orderTypes: _orderTypes.entries
+          .where((e) => e.value)
+          .map((e) => e.key)
+          .toList(),
       items: items,
       installments: installments,
     );
   }
 
-  void _addItem({String? description, double? quantity, String? unit, double? price, int count = 1}) {
+  void _addItem({
+    String? description,
+    double? quantity,
+    String? unit,
+    double? price,
+    int count = 1,
+  }) {
     setState(() {
       for (int i = 0; i < count; i++) {
-        _descriptionControllers.add(TextEditingController(text: description ?? ''));
-        _quantityControllers.add(TextEditingController(text: quantity?.toString() ?? ''));
+        _descriptionControllers.add(
+          TextEditingController(text: description ?? ''),
+        );
+        _quantityControllers.add(
+          TextEditingController(text: quantity?.toString() ?? ''),
+        );
         _unitControllers.add(TextEditingController(text: unit ?? 'KG'));
-        _priceControllers.add(TextEditingController(text: price?.toString() ?? ''));
-        
+        _priceControllers.add(
+          TextEditingController(text: price?.toString() ?? ''),
+        );
+
         _quantityControllers.last.addListener(_calculateTotal);
         _priceControllers.last.addListener(_calculateTotal);
       }
@@ -258,8 +271,12 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
 
   void _addInstallment({String? duration, String? value}) {
     setState(() {
-      _installmentDurationControllers.add(TextEditingController(text: duration ?? ''));
-      _installmentValueControllers.add(TextEditingController(text: value ?? ''));
+      _installmentDurationControllers.add(
+        TextEditingController(text: duration ?? ''),
+      );
+      _installmentValueControllers.add(
+        TextEditingController(text: value ?? ''),
+      );
     });
   }
 
@@ -274,14 +291,14 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
     }
   }
 
-   String? _mapPaymentMethod(String? method) {
+  String? _mapPaymentMethod(String? method) {
     if (method == null) return null;
     final mapping = {
-      'Cash': 'كاش',
+      'Cash': 'كاش مع المبيعات',
       'Bank transfer': 'تحويل بنكي',
       'Credit': 'اجل شهر',
       'Cheque': 'تحويل بنكي',
-      'Other': 'كاش',
+      'Other': 'كاش مع المبيعات',
     };
     return mapping[method] ?? method;
   }
@@ -314,7 +331,9 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
       final sn = _snController.text;
       final isDuplicate = YarnInvoiceLocalDataSource().isSnExists(
         sn,
-        excludeKey: (widget.existingOrder != null && !_saveAsNew) ? widget.existingOrder?.key : null,
+        excludeKey: (widget.existingOrder != null && !_saveAsNew)
+            ? widget.existingOrder?.key
+            : null,
       );
 
       if (isDuplicate) {
@@ -329,30 +348,32 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
 
       try {
         final newOrderData = _createOrderObject();
-        
-        if (widget.existingOrder != null && !_saveAsNew) {
-           // Update existing order
-           widget.existingOrder!.sn = newOrderData.sn;
-           widget.existingOrder!.orderDate = newOrderData.orderDate;
-           widget.existingOrder!.deliveryDate = newOrderData.deliveryDate;
-           widget.existingOrder!.branch = newOrderData.branch;
-           widget.existingOrder!.customerName = newOrderData.customerName;
-           widget.existingOrder!.contactName = newOrderData.contactName;
-           widget.existingOrder!.mobileNumber = newOrderData.mobileNumber;
-           widget.existingOrder!.region = newOrderData.region;
-           widget.existingOrder!.deliveryPlace = newOrderData.deliveryPlace;
-           widget.existingOrder!.paymentMethod = newOrderData.paymentMethod;
-           widget.existingOrder!.salesResponsible = newOrderData.salesResponsible;
-           widget.existingOrder!.notes = newOrderData.notes;
-           widget.existingOrder!.editQuantity = newOrderData.editQuantity;
-           widget.existingOrder!.deliveryResponsibility = newOrderData.deliveryResponsibility;
-           widget.existingOrder!.orderTypes = newOrderData.orderTypes;
-           widget.existingOrder!.items = newOrderData.items;
-           widget.existingOrder!.installments = newOrderData.installments;
 
-           await widget.existingOrder!.save();
+        if (widget.existingOrder != null && !_saveAsNew) {
+          // Update existing order
+          widget.existingOrder!.sn = newOrderData.sn;
+          widget.existingOrder!.orderDate = newOrderData.orderDate;
+          widget.existingOrder!.deliveryDate = newOrderData.deliveryDate;
+          widget.existingOrder!.branch = newOrderData.branch;
+          widget.existingOrder!.customerName = newOrderData.customerName;
+          widget.existingOrder!.contactName = newOrderData.contactName;
+          widget.existingOrder!.mobileNumber = newOrderData.mobileNumber;
+          widget.existingOrder!.region = newOrderData.region;
+          widget.existingOrder!.deliveryPlace = newOrderData.deliveryPlace;
+          widget.existingOrder!.paymentMethod = newOrderData.paymentMethod;
+          widget.existingOrder!.salesResponsible =
+              newOrderData.salesResponsible;
+          widget.existingOrder!.notes = newOrderData.notes;
+          widget.existingOrder!.editQuantity = newOrderData.editQuantity;
+          widget.existingOrder!.deliveryResponsibility =
+              newOrderData.deliveryResponsibility;
+          widget.existingOrder!.orderTypes = newOrderData.orderTypes;
+          widget.existingOrder!.items = newOrderData.items;
+          widget.existingOrder!.installments = newOrderData.installments;
+
+          await widget.existingOrder!.save();
         } else {
-           await YarnInvoiceLocalDataSource().saveInvoice(newOrderData);
+          await YarnInvoiceLocalDataSource().saveInvoice(newOrderData);
         }
 
         if (mounted) {
@@ -363,9 +384,9 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('خطأ في الحفظ: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('خطأ في الحفظ: $e')));
         }
       }
     }
@@ -395,7 +416,11 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                       'assets/images/logo.png',
                       height: 80,
                       width: 80,
-                      errorBuilder: (context, error, stackTrace) => const Icon(CupertinoIcons.doc_text_fill, size: 80, color: Colors.teal),
+                      errorBuilder: (context, error, stackTrace) => const Icon(
+                        CupertinoIcons.doc_text_fill,
+                        size: 80,
+                        color: Colors.teal,
+                      ),
                     ),
                     const SizedBox(height: 15),
                     const Text('جارٍ إعداد ملف PDF...'),
@@ -413,7 +438,9 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
         final sn = _snController.text;
         final isDuplicate = YarnInvoiceLocalDataSource().isSnExists(
           sn,
-          excludeKey: (widget.existingOrder != null && !_saveAsNew) ? widget.existingOrder?.key : null,
+          excludeKey: (widget.existingOrder != null && !_saveAsNew)
+              ? widget.existingOrder?.key
+              : null,
         );
 
         if (isDuplicate) {
@@ -428,30 +455,32 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
         }
 
         final newOrderData = _createOrderObject();
-        
+
         // Auto-save logic
         if (widget.existingOrder != null && !_saveAsNew) {
-           widget.existingOrder!.sn = newOrderData.sn;
-           widget.existingOrder!.orderDate = newOrderData.orderDate;
-           widget.existingOrder!.deliveryDate = newOrderData.deliveryDate;
-           widget.existingOrder!.branch = newOrderData.branch;
-           widget.existingOrder!.customerName = newOrderData.customerName;
-           widget.existingOrder!.contactName = newOrderData.contactName;
-           widget.existingOrder!.mobileNumber = newOrderData.mobileNumber;
-           widget.existingOrder!.region = newOrderData.region;
-           widget.existingOrder!.deliveryPlace = newOrderData.deliveryPlace;
-           widget.existingOrder!.paymentMethod = newOrderData.paymentMethod;
-           widget.existingOrder!.salesResponsible = newOrderData.salesResponsible;
-           widget.existingOrder!.notes = newOrderData.notes;
-           widget.existingOrder!.editQuantity = newOrderData.editQuantity;
-           widget.existingOrder!.deliveryResponsibility = newOrderData.deliveryResponsibility;
-           widget.existingOrder!.orderTypes = newOrderData.orderTypes;
-           widget.existingOrder!.items = newOrderData.items;
-           widget.existingOrder!.installments = newOrderData.installments;
+          widget.existingOrder!.sn = newOrderData.sn;
+          widget.existingOrder!.orderDate = newOrderData.orderDate;
+          widget.existingOrder!.deliveryDate = newOrderData.deliveryDate;
+          widget.existingOrder!.branch = newOrderData.branch;
+          widget.existingOrder!.customerName = newOrderData.customerName;
+          widget.existingOrder!.contactName = newOrderData.contactName;
+          widget.existingOrder!.mobileNumber = newOrderData.mobileNumber;
+          widget.existingOrder!.region = newOrderData.region;
+          widget.existingOrder!.deliveryPlace = newOrderData.deliveryPlace;
+          widget.existingOrder!.paymentMethod = newOrderData.paymentMethod;
+          widget.existingOrder!.salesResponsible =
+              newOrderData.salesResponsible;
+          widget.existingOrder!.notes = newOrderData.notes;
+          widget.existingOrder!.editQuantity = newOrderData.editQuantity;
+          widget.existingOrder!.deliveryResponsibility =
+              newOrderData.deliveryResponsibility;
+          widget.existingOrder!.orderTypes = newOrderData.orderTypes;
+          widget.existingOrder!.items = newOrderData.items;
+          widget.existingOrder!.installments = newOrderData.installments;
 
-           await widget.existingOrder!.save();
+          await widget.existingOrder!.save();
         } else {
-           await YarnInvoiceLocalDataSource().saveInvoice(newOrderData);
+          await YarnInvoiceLocalDataSource().saveInvoice(newOrderData);
         }
 
         final pdf = await YarnPdfGenerator.generate(newOrderData);
@@ -462,7 +491,10 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
         final defaultPath = settingsService.getDefaultSavePath();
 
         String? finalPath;
-        final safeName = (newOrderData.customerName ?? 'Client').replaceAll(RegExp(r'[^\w\s\u0600-\u06FF]'), '');
+        final safeName = (newOrderData.customerName ?? 'Client').replaceAll(
+          RegExp(r'[^\w\s\u0600-\u06FF]'),
+          '',
+        );
         final fileName = '${safeName}_${newOrderData.sn}.pdf';
 
         if (Platform.isAndroid || Platform.isIOS) {
@@ -540,7 +572,7 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
     setState(() {
       _saveAsNew = false;
       _snController.text = _generateUniqueSn();
-// ... rest of reset
+      // ... rest of reset
 
       _customerNameController.clear();
       _contactNameController.clear();
@@ -557,18 +589,30 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
 
       _orderTypes['غزل'] = true;
 
-      for (var c in _descriptionControllers) { c.dispose(); }
-      for (var c in _quantityControllers) { c.dispose(); }
-      for (var c in _unitControllers) { c.dispose(); }
-      for (var c in _priceControllers) { c.dispose(); }
+      for (var c in _descriptionControllers) {
+        c.dispose();
+      }
+      for (var c in _quantityControllers) {
+        c.dispose();
+      }
+      for (var c in _unitControllers) {
+        c.dispose();
+      }
+      for (var c in _priceControllers) {
+        c.dispose();
+      }
       _descriptionControllers.clear();
       _quantityControllers.clear();
       _unitControllers.clear();
       _priceControllers.clear();
       _addItem();
 
-      for (var c in _installmentDurationControllers) { c.dispose(); }
-      for (var c in _installmentValueControllers) { c.dispose(); }
+      for (var c in _installmentDurationControllers) {
+        c.dispose();
+      }
+      for (var c in _installmentValueControllers) {
+        c.dispose();
+      }
       _installmentDurationControllers.clear();
       _installmentValueControllers.clear();
       _addInstallment();
@@ -582,12 +626,12 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
   Widget build(BuildContext context) {
     return Theme(
       data: Theme.of(context).copyWith(
-            primaryColor: Colors.teal,
-            colorScheme: Theme.of(context).colorScheme.copyWith(
-              primary: Colors.teal,
-              secondary: Colors.tealAccent,
-            ),
-          ),
+        primaryColor: Colors.teal,
+        colorScheme: Theme.of(context).colorScheme.copyWith(
+          primary: Colors.teal,
+          secondary: Colors.tealAccent,
+        ),
+      ),
       child: Scaffold(
         appBar: AppBar(
           leading: widget.onMenuPressed != null
@@ -622,7 +666,8 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
         drawer: const AppDrawer(),
         body: LayoutBuilder(
           builder: (context, constraints) {
-            final isMobile = constraints.maxWidth < ResponsiveConstants.kMobileBreakpoint;
+            final isMobile =
+                constraints.maxWidth < ResponsiveConstants.kMobileBreakpoint;
             return Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 1200),
@@ -634,7 +679,8 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                       YarnOrderHeader(
                         snController: _snController,
                         orderDate: _orderDate,
-                        onDateChanged: (date) => setState(() => _orderDate = date),
+                        onDateChanged: (date) =>
+                            setState(() => _orderDate = date),
                         isMobile: isMobile,
                         onRefreshSn: () {
                           setState(() {
@@ -646,8 +692,10 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                       YarnBranchAndTypeSection(
                         selectedBranch: _selectedBranch,
                         orderTypes: _orderTypes,
-                        onBranchChanged: (v) => setState(() => _selectedBranch = v),
-                        onTypeChanged: (key, v) => setState(() => _orderTypes[key] = v),
+                        onBranchChanged: (v) =>
+                            setState(() => _selectedBranch = v),
+                        onTypeChanged: (key, v) =>
+                            setState(() => _orderTypes[key] = v),
                         isMobile: isMobile,
                       ),
                       const SizedBox(height: 20),
@@ -658,14 +706,18 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                         regionController: _regionController,
                         deliveryPlaceController: _deliveryPlaceController,
                         paymentMethod: _paymentMethod,
-                        onPaymentMethodChanged: (v) => setState(() => _paymentMethod = v),
+                        onPaymentMethodChanged: (v) =>
+                            setState(() => _paymentMethod = v),
                         salesResponsibleController: _salesResponsibleController,
                         deliveryDate: _deliveryDate,
                         editQuantity: _editQuantity,
                         deliveryResponsibility: _deliveryResponsibility,
-                        onDeliveryDateChanged: (date) => setState(() => _deliveryDate = date),
-                        onEditQuantityChanged: (v) => setState(() => _editQuantity = v),
-                        onDeliveryResponsibilityChanged: (v) => setState(() => _deliveryResponsibility = v),
+                        onDeliveryDateChanged: (date) =>
+                            setState(() => _deliveryDate = date),
+                        onEditQuantityChanged: (v) =>
+                            setState(() => _editQuantity = v),
+                        onDeliveryResponsibilityChanged: (v) =>
+                            setState(() => _deliveryResponsibility = v),
                         isMobile: isMobile,
                       ),
                       const SizedBox(height: 20),
@@ -711,16 +763,17 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                           child: CheckboxListTile(
                             title: const Text('حفظ كفاتورة جديدة (نسخة)'),
                             value: _saveAsNew,
-                             onChanged: (val) {
-                               setState(() {
-                                 _saveAsNew = val ?? false;
-                                 if (_saveAsNew) {
-                                   _snController.text = _generateUniqueSn();
-                                 } else if (widget.existingOrder != null) {
-                                   _snController.text = widget.existingOrder!.sn ?? '';
-                                 }
-                               });
-                             },
+                            onChanged: (val) {
+                              setState(() {
+                                _saveAsNew = val ?? false;
+                                if (_saveAsNew) {
+                                  _snController.text = _generateUniqueSn();
+                                } else if (widget.existingOrder != null) {
+                                  _snController.text =
+                                      widget.existingOrder!.sn ?? '';
+                                }
+                              });
+                            },
                           ),
                         ),
                       _buildActionButtons(),
@@ -774,5 +827,4 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
       ),
     );
   }
-
 } // _YarnSalesOrderPageState

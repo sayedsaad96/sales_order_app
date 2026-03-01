@@ -420,7 +420,8 @@ class _SavedFabricsCmInvoicesPageState
   Widget _buildInvoiceList() {
     final filteredInvoices = _invoices
         .where((i) => (i.customerName ?? "بدون اسم") == _selectedCustomer)
-        .toList();
+        .toList()
+      ..sort((a, b) => b.orderDate.compareTo(a.orderDate));
 
     return CustomScrollView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,

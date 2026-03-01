@@ -172,11 +172,11 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
   String? _mapPaymentMethod(String? method) {
     if (method == null) return null;
     final mapping = {
-      'Cash': 'كاش',
+      'Cash': 'كاش مع المبيعات',
       'Bank transfer': 'تحويل بنكي',
       'Credit': 'اجل شهر',
       'Cheque': 'تحويل بنكي',
-      'Other': 'كاش',
+      'Other': 'كاش مع المبيعات',
     };
     return mapping[method] ?? method;
   }

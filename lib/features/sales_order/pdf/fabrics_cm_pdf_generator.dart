@@ -8,12 +8,14 @@ import '../data/models/fabrics_cm_sales_order.dart';
 class FabricsCmPdfGenerator {
   // Define Column Widths
   static const tableColumnWidths = {
-    0: pw.FixedColumnWidth(100), // اسم شركة الغزل
-    1: pw.FixedColumnWidth(85), // طول الغرزه
-    2: pw.FixedColumnWidth(40), // الجوج
-    3: pw.FixedColumnWidth(45), // البوصه
-    4: pw.FlexColumnWidth(3), // مواصفة القماش
-    5: pw.FixedColumnWidth(55), // الكميه (كجم)
+    0: pw.FlexColumnWidth(1), // الاجمالي (Rightmost)
+    1: pw.FlexColumnWidth(1.2), // شركة الغزل
+    2: pw.FlexColumnWidth(0.8), // السعر
+    3: pw.FlexColumnWidth(1), // طول الغرزة
+    4: pw.FlexColumnWidth(0.7), // الجوج
+    5: pw.FlexColumnWidth(0.7), // البوصة
+    6: pw.FlexColumnWidth(2.5), // مواصفة القماش - largest
+    7: pw.FlexColumnWidth(0.8), // الكمية (كجم) (Leftmost)
   };
 
   static Future<pw.Document> generate(FabricsCmSalesOrder order) async {
@@ -54,27 +56,33 @@ class FabricsCmPdfGenerator {
           if (context.pageNumber == 1) {
             return _buildHeaderRow(order, logoImage, primaryColor, accentColor);
           } else {
-            return pw.Column(children: [
-              pw.Table(
-                border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
-                columnWidths: tableColumnWidths,
-                children: [
-                  pw.TableRow(
-                    decoration: pw.BoxDecoration(color: primaryColor),
-                    children: [
-                      _buildTableHeader('اسم شركة الغزل', '(مصنعيات فقط)'),
-                      _buildTableHeader(
-                          'طول الغرزه', '(وزن المتر مربع قبل الصباغه)'),
-                      _buildTableHeader('الجوج'),
-                      _buildTableHeader('البوصه'),
-                      _buildTableHeader('مواصفة القماش'),
-                      _buildTableHeader('الكميه', '(كجم)'),
-                    ],
+            return pw.Column(
+              children: [
+                pw.Table(
+                  border: pw.TableBorder.all(
+                    color: PdfColors.grey300,
+                    width: 0.5,
                   ),
-                ],
-              ),
-              pw.SizedBox(height: 10),
-            ]);
+                  columnWidths: tableColumnWidths,
+                  children: [
+                    pw.TableRow(
+                      decoration: pw.BoxDecoration(color: primaryColor),
+                      children: [
+                        _buildTableHeader('الاجمالي'), // 0
+                        _buildTableHeader('شركة الغزل'), // 1
+                        _buildTableHeader('السعر'), // 2
+                        _buildTableHeader('طول الغرزة'), // 3
+                        _buildTableHeader('الجوج'), // 4
+                        _buildTableHeader('البوصة'), // 5
+                        _buildTableHeader('مواصفة القماش'), // 6
+                        _buildTableHeader('الكمية', '(كجم)'), // 7
+                      ],
+                    ),
+                  ],
+                ),
+                pw.SizedBox(height: 10),
+              ],
+            );
           }
         },
         footer: (context) => _buildPageFooter(context),
@@ -114,15 +122,15 @@ class FabricsCmPdfGenerator {
                         _buildInfoRow(
                           'تاريخ التوصيل:',
                           order.deliveryDate != null
-                              ? intl.DateFormat('yyyy-MM-dd')
-                                  .format(order.deliveryDate!)
+                              ? intl.DateFormat(
+                                  'yyyy-MM-dd',
+                                ).format(order.deliveryDate!)
                               : '-',
                         ),
                         _buildInfoRow('نوع الطلب:', order.orderType),
                         _buildInfoRow(
                           'التاريخ:',
-                          intl.DateFormat('yyyy-MM-dd')
-                              .format(order.orderDate),
+                          intl.DateFormat('yyyy-MM-dd').format(order.orderDate),
                         ),
                       ],
                     ),
@@ -142,13 +150,14 @@ class FabricsCmPdfGenerator {
                 pw.TableRow(
                   decoration: pw.BoxDecoration(color: primaryColor),
                   children: [
-                    _buildTableHeader('اسم شركة الغزل', '(مصنعيات فقط)'),
-                    _buildTableHeader(
-                        'طول الغرزه', '(وزن المتر مربع قبل الصباغه)'),
-                    _buildTableHeader('الجوج'),
-                    _buildTableHeader('البوصه'),
-                    _buildTableHeader('مواصفة القماش'),
-                    _buildTableHeader('الكميه', '(كجم)'),
+                    _buildTableHeader('الاجمالي'), // 0
+                    _buildTableHeader('شركة الغزل'), // 1
+                    _buildTableHeader('السعر'), // 2
+                    _buildTableHeader('طول الغرزة'), // 3
+                    _buildTableHeader('الجوج'), // 4
+                    _buildTableHeader('البوصة'), // 5
+                    _buildTableHeader('مواصفة القماش'), // 6
+                    _buildTableHeader('الكمية', '(كجم)'), // 7
                   ],
                 ),
                 // Rows
@@ -158,28 +167,26 @@ class FabricsCmPdfGenerator {
                   final isEven = index % 2 == 0;
                   final rowColor = isEven ? PdfColors.white : PdfColors.grey100;
                   return pw.TableRow(
-                    decoration: pw.BoxDecoration(
-                      color: rowColor,
-                    ),
+                    decoration: pw.BoxDecoration(color: rowColor),
                     children: [
-                      _buildTableCell(item.spinningCompany ?? ''),
                       _buildTableCell(
-                          numberFormat.format(item.stitchLength ?? 0.0)),
-                      _buildTableCell((item.gauge ?? 0).toString()),
+                        numberFormat.format(item.calculateTotal()),
+                      ), // 0: Total
+                      _buildTableCell(item.spinningCompany ?? ''), // 1: Spin Co
                       _buildTableCell(
-                          numberFormat.format(item.widthInches ?? 0.0)),
+                        numberFormat.format(item.price ?? 0.0),
+                      ), // 2: Price
                       _buildTableCell(
-                        'نوع الغزل: ${item.yarnType ?? ''}\n'
-                        'نمرة الغزل: ${item.yarnCount ?? ''}\n'
-                        'نوع القماش: ${item.fabricType ?? ''}\n'
-                        'نسبة الليكرا: ${item.lycraPercentage ?? 0.0}%\n'
-                        'نمرة الليكرا: ${item.lycraNumber ?? ''}',
-                      ),
-                      _buildEditableTableCell(
+                        item.stitchLength ?? '',
+                      ), // 3: Stitch Length
+                      _buildTableCell(item.gauge ?? ''), // 4: Gauge
+                      _buildTableCell(item.inch ?? ''), // 5: Inch
+                      _buildTableCell(
+                        item.fabricDetails ?? '',
+                      ), // 6: Fabric Spec
+                      _buildTableCell(
                         numberFormat.format(item.quantity),
-                        'quantity_$index',
-                        backgroundColor: rowColor,
-                      ),
+                      ), // 7: Qty
                     ],
                   );
                 }),
@@ -187,27 +194,6 @@ class FabricsCmPdfGenerator {
             ),
 
             pw.SizedBox(height: 10),
-            
-            // Global pricing params summary
-            pw.Container(
-              margin: const pw.EdgeInsets.symmetric(vertical: 10),
-              padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: pw.BoxDecoration(
-                border: pw.Border.all(color: PdfColors.grey300),
-                borderRadius: pw.BorderRadius.circular(4),
-                color: PdfColors.grey100,
-              ),
-              child: pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
-                children: [
-                  _buildPriceParamItem('سعر الغزل', order.yarnPrice ?? 0.0, numberFormat),
-                  _buildVerticalDivider(),
-                  _buildPriceParamItem('سعر الليكرا', order.lycraPrice ?? 0.0, numberFormat),
-                  _buildVerticalDivider(),
-                  _buildPriceParamItem('المصنعية', order.manufacturingPrice ?? 0.0, numberFormat),
-                ],
-              ),
-            ),
 
             // Totals Section
             pw.Row(
@@ -223,13 +209,13 @@ class FabricsCmPdfGenerator {
                   ),
                   child: pw.Column(
                     children: [
-                      _buildTotalRow('إجمالي السعر', order.baseTotal, numberFormat),
-                      if (order.wasteTotal > 0) ...[
-                        pw.SizedBox(height: 5),
-                        _buildTotalRow('الهالك (2%)', order.wasteTotal, numberFormat, color: PdfColors.red),
-                      ],
-                      pw.Divider(color: primaryColor, thickness: 1),
-                      _buildTotalRow('الإجمالي النهائي', order.totalValue, numberFormat, isBold: true, color: primaryColor),
+                      _buildTotalRow(
+                        'الاجمالي النهائي',
+                        order.totalValue,
+                        numberFormat,
+                        isBold: true,
+                        color: primaryColor,
+                      ),
                     ],
                   ),
                 ),
@@ -330,7 +316,8 @@ class FabricsCmPdfGenerator {
                     ),
                   ),
                   pw.SizedBox(height: 5),
-                  if (order.branch != null && (order.branch?.isNotEmpty ?? false))
+                  if (order.branch != null &&
+                      (order.branch?.isNotEmpty ?? false))
                     pw.Text(
                       _fixArabic(order.branch ?? ''),
                       style: pw.TextStyle(
@@ -436,10 +423,7 @@ class FabricsCmPdfGenerator {
               _fixArabic(subTitle),
               textAlign: pw.TextAlign.center,
               textDirection: pw.TextDirection.rtl,
-              style: pw.TextStyle(
-                color: PdfColors.white,
-                fontSize: 7,
-              ),
+              style: pw.TextStyle(color: PdfColors.white, fontSize: 7),
             ),
         ],
       ),
@@ -458,53 +442,13 @@ class FabricsCmPdfGenerator {
     );
   }
 
-  static pw.Widget _buildEditableTableCell(
-    String initialValue,
-    String fieldName, {
-    PdfColor? backgroundColor,
+  static pw.Widget _buildTotalRow(
+    String label,
+    double value,
+    intl.NumberFormat format, {
+    bool isBold = false,
+    PdfColor? color,
   }) {
-    return pw.Container(
-      padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-      child: pw.TextField(
-        name: fieldName,
-        value: initialValue,
-        textStyle: pw.TextStyle(
-          font: pw.Font.helvetica(),
-          fontSize: 10,
-        ),
-        backgroundColor: backgroundColor ?? PdfColors.white,
-      ),
-    );
-  }
-
-
-  static pw.Widget _buildPriceParamItem(String label, double value, intl.NumberFormat format) {
-    return pw.Column(
-      mainAxisSize: pw.MainAxisSize.min,
-      children: [
-        pw.Text(
-          _fixArabic(label),
-          style: const pw.TextStyle(fontSize: 10, color: PdfColor.fromInt(0xFF757575)),
-          textDirection: pw.TextDirection.rtl,
-        ),
-        pw.Text(
-          format.format(value),
-          style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: PdfColor.fromInt(0xFF37474F)),
-        ),
-      ],
-    );
-  }
-
-  static pw.Widget _buildVerticalDivider() {
-    return pw.Container(
-      height: 20,
-      width: 1,
-      color: PdfColors.grey300,
-      margin: const pw.EdgeInsets.symmetric(horizontal: 10),
-    );
-  }
-
-  static pw.Widget _buildTotalRow(String label, double value, intl.NumberFormat format, {bool isBold = false, PdfColor? color}) {
     return pw.Row(
       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
       children: [

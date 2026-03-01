@@ -126,8 +126,13 @@ class AnalysisService {
       'Other': 'كاش',
       'تحويل بنكي': 'كاش',
 
+      // New cash sub-types → grouped under كاش
+      'كاش مع المبيعات': 'كاش',
+      'كاش مع السيارة': 'كاش',
+
       // Short Arabic to Full Arabic mapping
       'شهر': 'اجل شهر',
+      'اسبوع': 'اجل اسبوع',
       'اسبوعين': 'اجل اسبوعين',
       '3 اسابيع': 'اجل 3 اسابيع',
       'شهرين': 'اجل شهرين',
@@ -139,6 +144,7 @@ class AnalysisService {
       // Fix trailing space versions
       'اجل اسبوعين ': 'اجل اسبوعين',
       'اجل 3 اسابيع ': 'اجل 3 اسابيع',
+      'اجل اسبوع ': 'اجل اسبوع',
     };
 
     return mapping[trimmed] ?? trimmed;

@@ -8,7 +8,7 @@ import 'package:intl/intl.dart' as intl;
 import 'package:annex_sales_order/features/sales_order/data/models/fabrics_cm_sales_order.dart';
 import 'package:annex_sales_order/features/sales_order/presentation/pages/saved_fabrics_cm_invoices_page.dart';
 import 'package:annex_sales_order/features/sales_order/presentation/widgets/fabrics_specific_widgets.dart';
-import 'package:annex_sales_order/features/sales_order/presentation/utils/sales_order_helpers.dart';
+import 'package:annex_sales_order/features/sales_order/presentation/pages/fabrics_formula_reference_page.dart';
 
 class FabricsCmOrderPage extends StatefulWidget {
   final FabricsCmSalesOrder? existingOrder;
@@ -40,104 +40,108 @@ class _FabricsCmOrderPageState extends State<FabricsCmOrderPage> {
           FabricsCmOrderProvider(existingOrder: widget.existingOrder),
       child: Consumer<FabricsCmOrderProvider>(
         builder: (context, provider, child) {
-          return Theme(
-            data: Theme.of(context).copyWith(
-              primaryColor: Colors.indigo,
-              colorScheme: Theme.of(context).colorScheme.copyWith(
-                primary: Colors.indigo,
-                secondary: Colors.indigoAccent,
-              ),
-            ),
-            child: Scaffold(
-              appBar: AppBar(
-                leading: widget.onMenuPressed != null
-                    ? IconButton(
-                        icon: const Icon(CupertinoIcons.list_dash),
-                        onPressed: widget.onMenuPressed,
-                        tooltip: 'Menu',
-                      )
-                    : IconButton(
-                        icon: const Icon(CupertinoIcons.back),
-                        onPressed: () => Navigator.of(context).pop(),
-                        tooltip: 'رجوع',
+          return Scaffold(
+            appBar: AppBar(
+              leading: widget.onMenuPressed != null
+                  ? IconButton(
+                      icon: const Icon(CupertinoIcons.list_dash),
+                      onPressed: widget.onMenuPressed,
+                      tooltip: 'Menu',
+                    )
+                  : IconButton(
+                      icon: const Icon(CupertinoIcons.back),
+                      onPressed: () => Navigator.of(context).pop(),
+                      tooltip: 'رجوع',
+                    ),
+              title: const Text('Annex Group'),
+              centerTitle: true,
+              actions: [
+                IconButton(
+                  icon: const Icon(CupertinoIcons.add),
+                  tooltip: 'طلب جديد',
+                  onPressed: provider.resetForm,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.calculate_outlined),
+                  tooltip: ' حساب القماش',
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const FabricsFormulaReferencePage(),
                       ),
-                title: const Text('Annex Group'),
-                centerTitle: true,
-                actions: [
-                  IconButton(
-                    icon: const Icon(CupertinoIcons.add),
-                    tooltip: 'طلب جديد',
-                    onPressed: provider.resetForm,
-                  ),
-                  IconButton(
-                    icon: const Icon(CupertinoIcons.folder),
-                    tooltip: 'الفواتير المحفوظة',
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              const SavedFabricsCmInvoicesPage(),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-              drawer: const AppDrawer(),
-              body: LayoutBuilder(
-                builder: (context, constraints) {
-                  final isMobile =
-                      constraints.maxWidth <
-                      ResponsiveConstants.kMobileBreakpoint;
-                  return Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 1200),
-                      child: Form(
-                        key: _formKey,
-                        child: CustomScrollView(
-                          slivers: [
-                            SliverPadding(
-                              padding: const EdgeInsets.all(16),
-                              sliver: SliverMainAxisGroup(
-                                slivers: [
-                                  _buildTopHeader(context, provider, isMobile),
+                    );
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(CupertinoIcons.folder),
+                  tooltip: 'الفواتير المحفوظة',
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const SavedFabricsCmInvoicesPage(),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+            drawer: const AppDrawer(),
+            body: LayoutBuilder(
+              builder: (context, constraints) {
+                final isMobile =
+                    constraints.maxWidth <
+                    ResponsiveConstants.kMobileBreakpoint;
+                return Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1200),
+                    child: Form(
+                      key: _formKey,
+                      child: CustomScrollView(
+                        slivers: [
+                          SliverPadding(
+                            padding: const EdgeInsets.all(16),
+                            sliver: SliverMainAxisGroup(
+                              slivers: [
+                                _buildTopHeader(context, provider, isMobile),
 
-                                  SliverToBoxAdapter(
-                                    child: FabricsBranchAndTypeSection(
-                                      selectedBranch: provider.selectedBranch,
-                                      orderTypes: provider.orderTypes,
-                                      onBranchChanged: provider.setBranch,
-                                      onTypeChanged: provider.setOrderTypeState,
-                                      isMobile: isMobile,
-                                    ),
+                                SliverToBoxAdapter(
+                                  child: FabricsBranchAndTypeSection(
+                                    selectedBranch: provider.selectedBranch,
+                                    orderTypes: provider.orderTypes,
+                                    onBranchChanged: provider.setBranch,
+                                    onTypeChanged: provider.setOrderTypeState,
+                                    isMobile: isMobile,
                                   ),
-                                  const SliverToBoxAdapter(
-                                    child: SizedBox(height: 20),
-                                  ),
-                                  _buildHeaderSection(
-                                    context,
-                                    provider,
-                                    isMobile,
-                                  ),
-                                  const SliverToBoxAdapter(
-                                    child: SizedBox(height: 20),
-                                  ),
-                                  _buildItemsList(context, provider, isMobile),
-                                  const SliverToBoxAdapter(
-                                    child: SizedBox(height: 20),
-                                  ),
-                                  _buildFooterSection(context, provider),
-                                ],
-                              ),
+                                ),
+                                const SliverToBoxAdapter(
+                                  child: SizedBox(height: 20),
+                                ),
+                                _buildHeaderSection(
+                                  context,
+                                  provider,
+                                  isMobile,
+                                ),
+                                const SliverToBoxAdapter(
+                                  child: SizedBox(height: 20),
+                                ),
+                                _buildItemsList(context, provider, isMobile),
+                                const SliverToBoxAdapter(
+                                  child: SizedBox(height: 20),
+                                ),
+                                _buildFooterSection(context, provider),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
-                  );
-                },
-              ),
+                  ),
+                );
+              },
             ),
           );
         },
@@ -160,11 +164,17 @@ class _FabricsCmOrderPageState extends State<FabricsCmOrderPage> {
           child: isMobile
               ? Column(
                   children: [
-                    Text(
-                      'Fabrics & CM Sales Order',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.headlineMedium
-                          ?.copyWith(fontWeight: FontWeight.bold, fontSize: 22),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        'Fabrics & CM Sales Order',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 22,
+                            ),
+                      ),
                     ),
                     const SizedBox(height: 15),
                     _buildTextField(
@@ -315,16 +325,18 @@ class _FabricsCmOrderPageState extends State<FabricsCmOrderPage> {
     return DropdownButtonFormField<String>(
       initialValue:
           [
-            'كاش',
+            'كاش مع المبيعات',
+            'كاش مع السيارة',
             'تحويل بنكي',
+            'اجل اسبوع',
             'اجل اسبوعين',
             'اجل 3 اسابيع',
             'اجل شهر',
             'اجل 45 يوم',
             'اجل شهرين',
+            'اجل شهرين ونصف',
             'اجل 3 شهور',
             'اجل 4 شهور',
-            'اجل شهرين ونصف',
           ].contains(provider.paymentMethod)
           ? provider.paymentMethod
           : null,
@@ -333,16 +345,18 @@ class _FabricsCmOrderPageState extends State<FabricsCmOrderPage> {
         border: OutlineInputBorder(),
       ),
       items: [
-        'كاش',
+        'كاش مع المبيعات',
+        'كاش مع السيارة',
         'تحويل بنكي',
+        'اجل اسبوع',
         'اجل اسبوعين',
         'اجل 3 اسابيع',
         'اجل شهر',
         'اجل 45 يوم',
         'اجل شهرين',
+        'اجل شهرين ونصف',
         'اجل 3 شهور',
         'اجل 4 شهور',
-        'اجل شهرين ونصف',
       ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
       onChanged: (v) => provider.setPaymentMethod(v),
       validator: (v) => v == null ? 'مطلوب' : null,
@@ -391,6 +405,7 @@ class _FabricsCmOrderPageState extends State<FabricsCmOrderPage> {
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Header for row with delete button
                 Row(
@@ -411,115 +426,146 @@ class _FabricsCmOrderPageState extends State<FabricsCmOrderPage> {
                   ],
                 ),
                 const Divider(),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildTextField(
-                        provider.quantityControllers[index],
-                        'الكمية (كجم)',
-                        isRequired: true,
-                        isNumeric: true,
-                      ),
-                    ),
-                  ],
+
+                // Row 1: Fabric Specs (Multi-line)
+                _buildTextField(
+                  provider.fabricDetailsControllers[index],
+                  'مواصفة القماش',
+                  maxLines: 3,
                 ),
-                const SizedBox(height: 8), // Qty, Price, Total (Auto calc)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-                  child: Text(
-                    'مواصفات القماش',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                // Row 3: Grid of other specs
+                const SizedBox(height: 10),
+
+                // Row 2: Inch, Gauge, Stitch Length
                 LayoutBuilder(
                   builder: (context, constraints) {
-                    final isWide = constraints.maxWidth > 600;
-                    final int cols = isWide ? 4 : 2;
-                    final List<Widget> gridFields = [
-                      _buildTextField(
-                        provider.yarnTypeControllers[index],
-                        'نوع الغزل',
-                        isRequired: true,
-                      ),
-                      _buildTextField(
-                        provider.yarnCountControllers[index],
-                        'نمرة الغزل',
-                      ),
-                      _buildTextField(
-                        provider.lycraNumControllers[index],
-                        'نمرة الليكرا',
-                      ),
-                      _buildTextField(
-                        provider.lycraPercentControllers[index],
-                        'نسبة الليكرا',
-                        isNumeric: true,
-                      ),
-                      _buildTextField(
-                        provider.fabricTypeControllers[index],
-                        'نوع القماش',
-                      ),
-                      _buildTextField(
-                        provider.widthControllers[index],
-                        'البوصة',
-                        isNumeric: true,
-                      ),
-                      _buildTextField(
-                        provider.gaugeControllers[index],
-                        'الجوج',
-                        isNumeric: true,
-                      ),
-                      _buildTextField(
-                        provider.stitchLengthControllers[index],
-                        'طول الغرزة',
-                        isNumeric: true,
-                      ),
-                      _buildTextField(
-                        provider.spinningCompanyControllers[index],
-                        'شركة الغزل',
-                      ),
-                    ];
-
-                    final List<Widget> rows = [];
-                    for (int i = 0; i < gridFields.length; i += cols) {
-                      final int end = (i + cols < gridFields.length)
-                          ? i + cols
-                          : gridFields.length;
-                      List<Widget> rowChildren = gridFields.sublist(i, end);
-
-                      // Pad with empty Expandeds if needed to maintain size
-                      while (rowChildren.length < cols) {
-                        rowChildren.add(const SizedBox());
-                      }
-
-                      rows.add(
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8.0),
-                          child: Row(
-                            children: rowChildren.asMap().entries.map((entry) {
-                              final w = entry.value;
-                              final isLast =
-                                  entry.key == rowChildren.length - 1;
-
-                              if (w is SizedBox && w.child == null) {
-                                return Expanded(child: w);
-                              }
-
-                              return Expanded(
-                                child: Padding(
-                                  padding: EdgeInsets.only(
-                                    left: isLast ? 0 : 8.0,
-                                  ), // Add spacing except for last item
-                                  child: w,
+                    final isNarrow =
+                        constraints.maxWidth <
+                        ResponsiveConstants.kMobileBreakpoint;
+                    if (isNarrow) {
+                      return Column(
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildTextField(
+                                  provider.inchControllers[index],
+                                  'البوصة',
                                 ),
-                              );
-                            }).toList(),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: _buildTextField(
+                                  provider.gaugeControllers[index],
+                                  'الجوج',
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
+                          const SizedBox(height: 10),
+                          _buildTextField(
+                            provider.stitchLengthControllers[index],
+                            'طول الغرزة',
+                          ),
+                        ],
+                      );
+                    } else {
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: _buildTextField(
+                              provider.inchControllers[index],
+                              'البوصة',
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _buildTextField(
+                              provider.gaugeControllers[index],
+                              'الجوج',
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _buildTextField(
+                              provider.stitchLengthControllers[index],
+                              'طول الغرزة',
+                            ),
+                          ),
+                        ],
                       );
                     }
-                    return Column(children: rows);
+                  },
+                ),
+                const SizedBox(height: 10),
+
+                // Row 2: Yarn Company & Price & Quantity
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    // Responsive layout
+                    if (constraints.maxWidth <
+                        ResponsiveConstants.kMobileBreakpoint) {
+                      // Mobile/Narrow: Stacked or 2x2
+                      return Column(
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildTextField(
+                                  provider.quantityControllers[index],
+                                  'الكمية (كجم)',
+                                  isRequired: true,
+                                  isNumeric: true,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: _buildTextField(
+                                  provider.priceControllers[index],
+                                  'السعر',
+                                  isNumeric: true,
+                                  isRequired: true,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          _buildTextField(
+                            provider.spinningCompanyControllers[index],
+                            'شركة الغزل',
+                          ),
+                        ],
+                      );
+                    } else {
+                      // Desktop/Wide: Row
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: _buildTextField(
+                              provider.quantityControllers[index],
+                              'الكمية (كجم)',
+                              isRequired: true,
+                              isNumeric: true,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _buildTextField(
+                              provider.priceControllers[index],
+                              'السعر',
+                              isNumeric: true,
+                              isRequired: true,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _buildTextField(
+                              provider.spinningCompanyControllers[index],
+                              'شركة الغزل',
+                            ),
+                          ),
+                        ],
+                      );
+                    }
                   },
                 ),
               ],
@@ -553,6 +599,8 @@ class _FabricsCmOrderPageState extends State<FabricsCmOrderPage> {
                   ).colorScheme.onPrimaryContainer,
                 ),
               ),
+              // Bulk Add Removed/Disabled for now as logic changed significantly, or keep if generic
+              /*
               ElevatedButton.icon(
                 icon: const Icon(CupertinoIcons.plus_square_on_square),
                 label: const Text('إضافة جماعية'),
@@ -571,80 +619,18 @@ class _FabricsCmOrderPageState extends State<FabricsCmOrderPage> {
                   ).colorScheme.onPrimaryContainer,
                 ),
               ),
+              */
             ],
           ),
           const SizedBox(height: 20),
-          Card(
-            elevation: 2,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    ' التكلفة',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildTextField(
-                          provider.globalYarnPriceController,
-                          'سعر الغزل',
-                          isRequired: true,
-                          isNumeric: true,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _buildTextField(
-                          provider.globalLycraPriceController,
-                          'سعر الليكرا',
-                          isRequired: true,
-                          isNumeric: true,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _buildTextField(
-                          provider.globalMfgPriceController,
-                          'المصنعية',
-                          isRequired: true,
-                          isNumeric: true,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
+
+          // Cost Section Removed
           Card(
             color: Theme.of(context).colorScheme.secondaryContainer,
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('إجمالي السعر:'),
-                      Text(provider.baseTotal.toStringAsFixed(2)),
-                    ],
-                  ),
-                  if (provider.wasteTotal > 0) ...[
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('الهالك (2%):'),
-                        Text(provider.wasteTotal.toStringAsFixed(2)),
-                      ],
-                    ),
-                  ],
-                  const Divider(),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
