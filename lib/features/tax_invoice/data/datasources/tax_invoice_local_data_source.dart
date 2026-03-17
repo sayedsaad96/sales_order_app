@@ -1,5 +1,5 @@
 import 'package:hive_flutter/hive_flutter.dart';
-import '../models/tax_invoice_request.dart';
+import 'package:annex_sales_order/features/tax_invoice/data/models/tax_invoice_request.dart';
 import 'package:flutter/foundation.dart';
 
 class TaxInvoiceLocalDataSource {

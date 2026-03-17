@@ -1,4 +1,3 @@
-
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:annex_sales_order/features/sales_order/data/models/fabrics_cm_sales_order.dart';
 
@@ -30,7 +29,9 @@ class FabricsCmInvoiceLocalDataSource {
     try {
       if (!Hive.isBoxOpen(_boxName)) return false;
       final box = Hive.box<FabricsCmSalesOrder>(_boxName);
-      return box.values.any((order) => order.sn == sn && order.key != excludeKey);
+      return box.values.any(
+        (order) => order.sn == sn && order.key != excludeKey,
+      );
     } catch (e) {
       return false;
     }

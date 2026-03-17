@@ -36,7 +36,9 @@ class AuthorizationLocalDataSource {
   Future<void> add(AuthorizedPerson person) async {
     try {
       // Check if already exists to avoid duplicates
-      final exists = _box.values.any((p) => p.name == person.name && p.nationalId == person.nationalId);
+      final exists = _box.values.any(
+        (p) => p.name == person.name && p.nationalId == person.nationalId,
+      );
       if (!exists) {
         await _box.add(person);
       }

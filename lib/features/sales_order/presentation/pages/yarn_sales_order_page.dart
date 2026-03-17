@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:annex_sales_order/core/widgets/confetti_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 import 'dart:io';
@@ -501,6 +502,7 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
           // Mobile: Share directly
           if (mounted) {
             Navigator.of(context).pop();
+            ConfettiOverlay.show(context);
             await Printing.sharePdf(bytes: bytes, filename: fileName);
           }
         } else {
@@ -537,25 +539,27 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
               await file.writeAsBytes(bytes);
             }
           }
-        }
 
-        if (mounted) {
-          Navigator.of(context).pop();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('تم حفظ الملف: $finalPath'),
-              duration: (!Platform.isAndroid && !Platform.isIOS)
-                  ? const Duration(seconds: 5)
-                  : const Duration(days: 365),
-              action: SnackBarAction(
-                label: 'مشاركة',
-                textColor: Colors.yellowAccent,
-                onPressed: () {
-                  Printing.sharePdf(bytes: bytes, filename: fileName);
-                },
+          // Desktop only success feedback
+          if (mounted) {
+            Navigator.of(context).pop();
+            ConfettiOverlay.show(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('تم حفظ الملف: $finalPath'),
+                duration: const Duration(seconds: 5),
+                showCloseIcon: true,
+                closeIconColor: Colors.yellowAccent,
+                action: SnackBarAction(
+                  label: 'مشاركة',
+                  textColor: Colors.yellowAccent,
+                  onPressed: () {
+                    Printing.sharePdf(bytes: bytes, filename: fileName);
+                  },
+                ),
               ),
-            ),
-          );
+            );
+          }
         }
       } catch (e) {
         if (mounted) {

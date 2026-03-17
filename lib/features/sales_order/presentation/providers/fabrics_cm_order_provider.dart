@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:annex_sales_order/core/widgets/confetti_overlay.dart';
 import 'package:annex_sales_order/features/analysis/data/analysis_service.dart';
 import '../../data/models/fabrics_cm_sales_order.dart';
 import '../../data/datasources/fabrics_cm_invoice_local_data_source.dart';
@@ -55,6 +56,14 @@ class FabricsCmOrderProvider extends ChangeNotifier {
       double qty = double.tryParse(quantityControllers[i].text) ?? 0;
       double price = double.tryParse(priceControllers[i].text) ?? 0;
       total += qty * price;
+    }
+    return total;
+  }
+
+  double get totalQuantity {
+    double total = 0;
+    for (int i = 0; i < quantityControllers.length; i++) {
+      total += double.tryParse(quantityControllers[i].text) ?? 0;
     }
     return total;
   }
@@ -181,6 +190,16 @@ class FabricsCmOrderProvider extends ChangeNotifier {
     int count = 1,
   }) {
     for (int i = 0; i < count; i++) {
+      // Pre-fill from the first item if current values are null and we already have items
+      if (quantityControllers.isNotEmpty) {
+        fabricDetails ??= fabricDetailsControllers[0].text;
+        price ??= double.tryParse(priceControllers[0].text);
+        spinCo ??= spinningCompanyControllers[0].text;
+        inch ??= inchControllers[0].text;
+        gauge ??= gaugeControllers[0].text;
+        stitchLength ??= stitchLengthControllers[0].text;
+      }
+
       final qc = TextEditingController(text: quantity?.toString() ?? '');
       final fdc = TextEditingController(text: fabricDetails ?? '');
       final pc = TextEditingController(text: price?.toString() ?? '');
@@ -522,6 +541,7 @@ class FabricsCmOrderProvider extends ChangeNotifier {
         // Mobile: Share directly
         if (!context.mounted) return;
         Navigator.of(context).pop(); // Dismiss loading
+        ConfettiOverlay.show(context);
         await Printing.sharePdf(bytes: bytes, filename: fileName);
       } else {
         // Desktop: Follow settings strategy
@@ -556,27 +576,28 @@ class FabricsCmOrderProvider extends ChangeNotifier {
             await file.writeAsBytes(bytes);
           }
         }
-      }
 
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('تم حفظ الملف: $finalPath'),
-          showCloseIcon: true,
-          closeIconColor: Colors.yellowAccent,
-          duration: (!Platform.isAndroid && !Platform.isIOS)
-              ? const Duration(seconds: 2)
-              : const Duration(days: 365),
-          action: SnackBarAction(
-            label: 'مشاركة',
-            textColor: Colors.yellowAccent,
-            backgroundColor: Colors.black,
-            onPressed: () {
-              Printing.sharePdf(bytes: bytes, filename: fileName);
-            },
+        if (!context.mounted) return;
+        ConfettiOverlay.show(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('تم حفظ الملف: $finalPath'),
+            showCloseIcon: true,
+            closeIconColor: Colors.yellowAccent,
+            duration: (!Platform.isAndroid && !Platform.isIOS)
+                ? const Duration(seconds: 2)
+                : const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'مشاركة',
+              textColor: Colors.yellowAccent,
+              backgroundColor: Colors.black,
+              onPressed: () {
+                Printing.sharePdf(bytes: bytes, filename: fileName);
+              },
+            ),
           ),
-        ),
-      );
+        );
+      }
     } catch (e) {
       if (!context.mounted) return;
       Navigator.of(context).pop(); // Dismiss loading

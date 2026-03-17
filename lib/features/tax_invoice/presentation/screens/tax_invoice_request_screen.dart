@@ -1,15 +1,16 @@
 import 'package:annex_sales_order/core/widgets/app_drawer.dart';
+import 'package:annex_sales_order/core/widgets/confetti_overlay.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:printing/printing.dart';
-import '../../data/models/tax_invoice_request.dart';
+import 'package:annex_sales_order/features/tax_invoice/data/models/tax_invoice_request.dart';
 import 'package:annex_sales_order/core/services/settings_service.dart';
-import '../../pdf/tax_invoice_pdf_generator.dart';
-import '../../data/datasources/tax_invoice_local_data_source.dart';
-import 'saved_tax_invoices_screen.dart';
+import 'package:annex_sales_order/features/tax_invoice/pdf/tax_invoice_pdf_generator.dart';
+import 'package:annex_sales_order/features/tax_invoice/data/datasources/tax_invoice_local_data_source.dart';
+import 'package:annex_sales_order/features/tax_invoice/presentation/screens/saved_tax_invoices_screen.dart';
 
 class TaxInvoiceRequestScreen extends StatefulWidget {
   final TaxInvoiceRequest? initialRequest;
@@ -234,6 +235,7 @@ class _TaxInvoiceRequestScreenState extends State<TaxInvoiceRequestScreen> {
           // Mobile: Share directly
           if (mounted) {
             Navigator.of(context).pop(); // Dismiss loading
+            ConfettiOverlay.show(context);
             await Printing.sharePdf(bytes: bytes, filename: fileName);
           }
         } else {
@@ -268,6 +270,7 @@ class _TaxInvoiceRequestScreenState extends State<TaxInvoiceRequestScreen> {
           // Dismiss loading and show success
           if (mounted) {
             Navigator.of(context).pop();
+            ConfettiOverlay.show(context);
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 showCloseIcon: true,

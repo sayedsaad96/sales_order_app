@@ -6,6 +6,7 @@ import 'package:annex_sales_order/features/sales_order/data/models/fabrics_cm_sa
 import 'package:annex_sales_order/features/sales_order/presentation/pages/fabrics_cm_order_page.dart';
 import 'package:annex_sales_order/core/widgets/app_drawer.dart';
 import 'package:annex_sales_order/core/utils/performance_utils.dart';
+import 'package:annex_sales_order/core/widgets/staggered_animated_item.dart';
 
 class SavedFabricsCmInvoicesPage extends StatefulWidget {
   const SavedFabricsCmInvoicesPage({super.key});
@@ -113,9 +114,11 @@ class _SavedFabricsCmInvoicesPageState
     _filteredCustomers = _searchQuery.isEmpty
         ? _sortedCustomers
         : _sortedCustomers
-            .where((name) =>
-                name.toLowerCase().contains(_searchQuery.toLowerCase()))
-            .toList();
+              .where(
+                (name) =>
+                    name.toLowerCase().contains(_searchQuery.toLowerCase()),
+              )
+              .toList();
   }
 
   Future<void> _deleteInvoice(FabricsCmSalesOrder invoice) async {
@@ -303,7 +306,11 @@ class _SavedFabricsCmInvoicesPageState
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(CupertinoIcons.search, size: 64, color: Colors.grey[400]),
+                  Icon(
+                    CupertinoIcons.search,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'لا توجد نتائج للبحث',
@@ -328,83 +335,86 @@ class _SavedFabricsCmInvoicesPageState
               delegate: SliverChildBuilderDelegate((context, index) {
                 final customerName = _filteredCustomers[index];
                 final count = _customerCounts[customerName] ?? 0;
-                return Stack(
-                  children: [
-                    Card(
-                      elevation: 4,
-                      margin: EdgeInsets.zero,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: InkWell(
-                        onTap: () {
-                          setState(() {
-                            _selectedCustomer = customerName;
-                            _searchController.clear();
-                          });
-                        },
-                        borderRadius: BorderRadius.circular(15),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(
-                                  CupertinoIcons.folder,
-                                  size: 44,
-                                  color: Colors.blue,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  customerName,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '$count فواتير',
-                                  style: const TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                return StaggeredAnimatedItem(
+                  index: index,
+                  child: Stack(
+                    children: [
+                      Card(
+                        elevation: 4,
+                        margin: EdgeInsets.zero,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
                         ),
-                      ),
-                    ),
-                    Positioned(
-                      top: 4,
-                      left: 4,
-                      child: Material(
-                        color: Colors.transparent,
                         child: InkWell(
-                          borderRadius: BorderRadius.circular(20),
-                          onTap: () =>
-                              _confirmDeleteFolder(context, customerName),
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: Colors.red.withAlpha(30),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                                CupertinoIcons.trash,
-                              color: Colors.red,
-                              size: 18,
+                          onTap: () {
+                            setState(() {
+                              _selectedCustomer = customerName;
+                              _searchController.clear();
+                            });
+                          },
+                          borderRadius: BorderRadius.circular(15),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    CupertinoIcons.folder,
+                                    size: 44,
+                                    color: Colors.blue,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    customerName,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '$count فواتير',
+                                    style: const TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                      Positioned(
+                        top: 4,
+                        left: 4,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(20),
+                            onTap: () =>
+                                _confirmDeleteFolder(context, customerName),
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: Colors.red.withAlpha(30),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                CupertinoIcons.trash,
+                                color: Colors.red,
+                                size: 18,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 );
               }, childCount: _filteredCustomers.length),
             ),
@@ -418,10 +428,11 @@ class _SavedFabricsCmInvoicesPageState
   }
 
   Widget _buildInvoiceList() {
-    final filteredInvoices = _invoices
-        .where((i) => (i.customerName ?? "بدون اسم") == _selectedCustomer)
-        .toList()
-      ..sort((a, b) => b.orderDate.compareTo(a.orderDate));
+    final filteredInvoices =
+        _invoices
+            .where((i) => (i.customerName ?? "بدون اسم") == _selectedCustomer)
+            .toList()
+          ..sort((a, b) => b.orderDate.compareTo(a.orderDate));
 
     return CustomScrollView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -444,48 +455,57 @@ class _SavedFabricsCmInvoicesPageState
           delegate: SliverChildBuilderDelegate((context, index) {
             final invoice = filteredInvoices[index];
             final totalValue = _calculateTotalValue(invoice);
-            return Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 800),
-                child: Dismissible(
-                  key: Key(invoice.key.toString()),
-                  background: Container(
-                    color: Colors.red,
-                    alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.only(right: 20),
-                    child: const Icon(CupertinoIcons.trash_fill, color: Colors.white),
-                  ),
-                  direction: DismissDirection.startToEnd,
-                  onDismissed: (direction) {
-                    _deleteInvoice(invoice);
-                  },
-                  child: Card(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 5,
+            return StaggeredAnimatedItem(
+              index: index,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 800),
+                  child: Dismissible(
+                    key: Key(invoice.key.toString()),
+                    background: Container(
+                      color: Colors.red,
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.only(right: 20),
+                      child: const Icon(
+                        CupertinoIcons.trash_fill,
+                        color: Colors.white,
+                      ),
                     ),
-                    child: ListTile(
-                      title: Text(
-                        '${invoice.customerName ?? "بدون اسم"} - ${invoice.sn}',
+                    direction: DismissDirection.startToEnd,
+                    onDismissed: (direction) {
+                      _deleteInvoice(invoice);
+                    },
+                    child: Card(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
                       ),
-                      subtitle: Text(
-                        'التاريخ: ${DateFormat('dd-MMM-yyyy').format(invoice.orderDate)}\nالقيمة: ${totalValue.toStringAsFixed(2)}',
-                      ),
-                      isThreeLine: true,
-                      trailing: IconButton(
-                        icon: const Icon(CupertinoIcons.trash_fill, color: Colors.red),
-                        onPressed: () => _confirmDelete(context, invoice),
-                      ),
-                      onTap: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                FabricsCmOrderPage(existingOrder: invoice),
+                      child: ListTile(
+                        title: Text(
+                          '${invoice.customerName ?? "بدون اسم"} - ${invoice.sn}',
+                        ),
+                        subtitle: Text(
+                          'التاريخ: ${DateFormat('dd-MMM-yyyy').format(invoice.orderDate)}\nالقيمة: ${totalValue.toStringAsFixed(2)}',
+                        ),
+                        isThreeLine: true,
+                        trailing: IconButton(
+                          icon: const Icon(
+                            CupertinoIcons.trash_fill,
+                            color: Colors.red,
                           ),
-                        );
-                        _loadInvoices();
-                      },
+                          onPressed: () => _confirmDelete(context, invoice),
+                        ),
+                        onTap: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  FabricsCmOrderPage(existingOrder: invoice),
+                            ),
+                          );
+                          _loadInvoices();
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -526,7 +546,19 @@ class _SavedFabricsCmInvoicesPageState
         },
         child: Scaffold(
           appBar: AppBar(
-            title: Text(_selectedCustomer ?? 'فواتير القماش المحفوظة'),
+            title: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_selectedCustomer == null) ...[
+                  const Hero(
+                    tag: 'saved_invoices_icon',
+                    child: Icon(CupertinoIcons.folder, color: Colors.blue),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                Text(_selectedCustomer ?? 'فواتير القماش المحفوظة'),
+              ],
+            ),
             leading: _selectedCustomer != null
                 ? IconButton(
                     icon: const Icon(CupertinoIcons.back),
@@ -546,17 +578,26 @@ class _SavedFabricsCmInvoicesPageState
           ),
           drawer: const AppDrawer(),
           body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1200),
-          child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _selectedCustomer == null
-                  ? _buildCustomerFolders()
-                  : _buildInvoiceList(),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1200),
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: _selectedCustomer == null
+                          ? KeyedSubtree(
+                              key: const ValueKey('customerFolders'),
+                              child: _buildCustomerFolders(),
+                            )
+                          : KeyedSubtree(
+                              key: const ValueKey('invoiceList'),
+                              child: _buildInvoiceList(),
+                            ),
+                    ),
+            ),
+          ),
         ),
       ),
-    ),
-  ),
-);
-}
+    );
+  }
 }

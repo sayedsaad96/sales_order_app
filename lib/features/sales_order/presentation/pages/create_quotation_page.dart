@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:annex_sales_order/core/widgets/confetti_overlay.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
@@ -253,11 +254,27 @@ class _CreateQuotationView extends StatelessWidget {
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: _buildDateTile(
-                      context,
-                      'صالح حتى',
-                      provider.validUntil,
-                      (date) => provider.setValidity(date),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade400),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const ListTile(
+                        dense: true,
+                        title: Text(
+                          'الصلاحية',
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                        subtitle: Text(
+                          'ساري حتى اشعار اخر',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        trailing: Icon(
+                          CupertinoIcons.checkmark_seal_fill,
+                          size: 20,
+                          color: Colors.green,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -290,11 +307,27 @@ class _CreateQuotationView extends StatelessWidget {
                 (date) => provider.updateDate(date),
               ),
               const SizedBox(height: 10),
-              _buildDateTile(
-                context,
-                'صالح حتى',
-                provider.validUntil,
-                (date) => provider.setValidity(date),
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade400),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: const ListTile(
+                  dense: true,
+                  title: Text(
+                    'الصلاحية',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  subtitle: Text(
+                    'ساري حتى اشعار اخر',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  trailing: Icon(
+                    CupertinoIcons.checkmark_seal_fill,
+                    size: 20,
+                    color: Colors.green,
+                  ),
+                ),
               ),
             ],
           ],
@@ -773,12 +806,13 @@ class _CreateQuotationView extends StatelessWidget {
         RegExp(r'[^\w\s\u0600-\u06FF]'),
         '',
       );
-      final fileName = '${safeName}_Quotation_${quotation.sn}.pdf';
+      final fileName = '${safeName}_${quotation.sn}.pdf';
 
       if (Platform.isAndroid || Platform.isIOS) {
         // Mobile: Share directly
         if (context.mounted) {
           Navigator.pop(context); // Dismiss loading
+          ConfettiOverlay.show(context);
           await Printing.sharePdf(bytes: bytes, filename: fileName);
         }
       } else {
@@ -816,12 +850,13 @@ class _CreateQuotationView extends StatelessWidget {
         }
 
         if (context.mounted) {
+          ConfettiOverlay.show(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('تم حفظ الملف: $finalPath'),
               duration: (!Platform.isAndroid && !Platform.isIOS)
                   ? const Duration(seconds: 5)
-                  : const Duration(days: 365),
+                  : const Duration(seconds: 5),
               action: SnackBarAction(
                 label: 'مشاركة',
                 textColor: Colors.yellowAccent,

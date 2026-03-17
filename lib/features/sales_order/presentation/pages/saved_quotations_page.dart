@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:annex_sales_order/core/widgets/confetti_overlay.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 import 'package:annex_sales_order/features/sales_order/data/datasources/quotation_local_data_source.dart';
@@ -176,13 +177,14 @@ class _SavedQuotationsPageState extends State<SavedQuotationsPage> {
         final file = File(finalPath);
         await file.writeAsBytes(bytes);
         if (mounted) {
+          ConfettiOverlay.show(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('تم حفظ الملف: $finalPath'),
               duration:
                   (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
                   ? const Duration(seconds: 1)
-                  : const Duration(days: 365),
+                  : const Duration(seconds: 5),
               action: SnackBarAction(
                 label: 'مشاركة',
                 textColor: Colors.yellowAccent,
@@ -207,13 +209,14 @@ class _SavedQuotationsPageState extends State<SavedQuotationsPage> {
           final file = File(result);
           await file.writeAsBytes(bytes);
           if (mounted) {
+            ConfettiOverlay.show(context);
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('تم حفظ الملف بنجاح'),
                 duration:
                     (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
                     ? const Duration(seconds: 1)
-                    : const Duration(days: 365),
+                    : const Duration(seconds: 5),
                 action: SnackBarAction(
                   label: 'مشاركة',
                   onPressed: () =>

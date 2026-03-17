@@ -120,26 +120,44 @@ class _SalesOrderContainerPageState extends State<SalesOrderContainerPage> {
           color: isSelected ? activeBg : Colors.transparent,
           borderRadius: BorderRadius.circular(15),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? activeColor : Colors.grey.shade700,
-              size: 20,
-            ),
-            if (isSelected) ...[
-              const SizedBox(width: 10),
-              Text(
-                label,
-                style: TextStyle(
-                  color: activeColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
+        child: AnimatedSize(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutQuart,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                transitionBuilder: (child, animation) {
+                  return ScaleTransition(scale: animation, child: child);
+                },
+                child: Icon(
+                  icon,
+                  key: ValueKey<bool>(isSelected),
+                  color: isSelected ? activeColor : Colors.grey.shade700,
+                  size: 20,
                 ),
               ),
+              if (isSelected) ...[
+                const SizedBox(width: 10),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  transitionBuilder: (child, animation) {
+                    return FadeTransition(opacity: animation, child: child);
+                  },
+                  child: Text(
+                    label,
+                    key: ValueKey<String>(label),
+                    style: TextStyle(
+                      color: activeColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

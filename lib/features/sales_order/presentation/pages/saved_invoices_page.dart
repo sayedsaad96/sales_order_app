@@ -9,6 +9,7 @@ import 'package:annex_sales_order/features/sales_order/presentation/pages/sales_
 import 'package:annex_sales_order/core/widgets/app_drawer.dart';
 
 import 'package:annex_sales_order/core/utils/performance_utils.dart';
+import 'package:annex_sales_order/core/widgets/staggered_animated_item.dart';
 
 class SavedInvoicesPage extends StatefulWidget {
   const SavedInvoicesPage({super.key});
@@ -47,7 +48,7 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
         },
       );
     });
-    
+
     _setupBoxListener();
     _loadInvoices();
   }
@@ -75,9 +76,9 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
       setState(() {
         _isLoading = true;
       });
-      
+
       final invoices = _invoiceDataSource.getAllInvoices();
-      
+
       setState(() {
         _invoices = invoices;
         _isLoading = false;
@@ -99,9 +100,9 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
         _isLoading = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('خطأ في تحميل الفواتير: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('خطأ في تحميل الفواتير: $e')));
       }
     }
   }
@@ -130,9 +131,11 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
     _filteredCustomers = _searchQuery.isEmpty
         ? _sortedCustomers
         : _sortedCustomers
-            .where((name) =>
-                name.toLowerCase().contains(_searchQuery.toLowerCase()))
-            .toList();
+              .where(
+                (name) =>
+                    name.toLowerCase().contains(_searchQuery.toLowerCase()),
+              )
+              .toList();
   }
 
   Future<void> _deleteInvoice(SalesOrder invoice) async {
@@ -146,18 +149,18 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
 
     try {
       // Find all invoices for this customer
-      final customerInvoices = _invoices.where(
-        (i) => (i.customerName ?? "بدون اسم") == customerName,
-      ).toList();
+      final customerInvoices = _invoices
+          .where((i) => (i.customerName ?? "بدون اسم") == customerName)
+          .toList();
 
       // Delete them all
       for (var invoice in customerInvoices) {
         await _invoiceDataSource.deleteInvoice(invoice);
       }
-      
+
       // Reload
       _loadInvoices();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('تم حذف مجلد $customerName بنجاح')),
@@ -165,20 +168,25 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-           SnackBar(content: Text('خطأ أثناء الحذف: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('خطأ أثناء الحذف: $e')));
       }
       _loadInvoices(); // Reload to reset state
     }
   }
 
-  Future<void> _confirmDeleteFolder(BuildContext context, String customerName) async {
+  Future<void> _confirmDeleteFolder(
+    BuildContext context,
+    String customerName,
+  ) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('حذف المجلد'),
-        content: Text('هل أنت متأكد من حذف مجلد "$customerName" وجميع الفواتير بداخله؟\nلا يمكن التراجع عن هذا الإجراء.'),
+        content: Text(
+          'هل أنت متأكد من حذف مجلد "$customerName" وجميع الفواتير بداخله؟\nلا يمكن التراجع عن هذا الإجراء.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -233,7 +241,11 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Center(
-              child: Image.asset('assets/images/logo.png', width: 150, height: 150),
+              child: Image.asset(
+                'assets/images/logo.png',
+                width: 150,
+                height: 150,
+              ),
             ),
             const SizedBox(height: 20),
             const Center(
@@ -299,7 +311,7 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
             ],
           ),
         ),
-        
+
         if (_filteredCustomers.isEmpty)
           SliverFillRemaining(
             hasScrollBody: false,
@@ -307,14 +319,15 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(CupertinoIcons.search, size: 64, color: Colors.grey[400]),
+                  Icon(
+                    CupertinoIcons.search,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'لا توجد نتائج للبحث',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 18, color: Colors.grey[600]),
                   ),
                 ],
               ),
@@ -325,18 +338,19 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
             padding: const EdgeInsets.all(10),
             sliver: SliverGrid(
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: MediaQuery.of(context).size.width > 900 
-                    ? 5 
+                crossAxisCount: MediaQuery.of(context).size.width > 900
+                    ? 5
                     : (MediaQuery.of(context).size.width > 600 ? 3 : 2),
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
                 childAspectRatio: 1.1,
               ),
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final customerName = _filteredCustomers[index];
-                  final count = _customerCounts[customerName] ?? 0;
-                  return Stack(
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final customerName = _filteredCustomers[index];
+                final count = _customerCounts[customerName] ?? 0;
+                return StaggeredAnimatedItem(
+                  index: index,
+                  child: Stack(
                     children: [
                       Card(
                         elevation: 4,
@@ -378,7 +392,9 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
                                   Text(
                                     '$count فواتير',
                                     style: const TextStyle(
-                                        color: Colors.grey, fontSize: 12),
+                                      color: Colors.grey,
+                                      fontSize: 12,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -412,10 +428,9 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
                         ),
                       ),
                     ],
-                  );
-                },
-                childCount: _filteredCustomers.length,
-              ),
+                  ),
+                );
+              }, childCount: _filteredCustomers.length),
             ),
           ),
       ],
@@ -423,10 +438,11 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
   }
 
   Widget _buildInvoiceList() {
-    final filteredInvoices = _invoices
-        .where((i) => (i.customerName ?? "بدون اسم") == _selectedCustomer)
-        .toList()
-      ..sort((a, b) => b.orderDate.compareTo(a.orderDate));
+    final filteredInvoices =
+        _invoices
+            .where((i) => (i.customerName ?? "بدون اسم") == _selectedCustomer)
+            .toList()
+          ..sort((a, b) => b.orderDate.compareTo(a.orderDate));
 
     return CustomScrollView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -437,16 +453,20 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
             child: Center(
               child: Text(
                 'عدد الفواتير: ${filteredInvoices.length}',
-                style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
         ),
         SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              final invoice = filteredInvoices[index];
-              return Center(
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final invoice = filteredInvoices[index];
+            return StaggeredAnimatedItem(
+              index: index,
+              child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 800),
                   child: Dismissible(
@@ -455,14 +475,20 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
                       color: Colors.red,
                       alignment: Alignment.centerRight,
                       padding: const EdgeInsets.only(right: 20),
-                      child: const Icon(CupertinoIcons.trash_fill, color: Colors.white),
+                      child: const Icon(
+                        CupertinoIcons.trash_fill,
+                        color: Colors.white,
+                      ),
                     ),
                     direction: DismissDirection.startToEnd,
                     onDismissed: (direction) {
                       _deleteInvoice(invoice);
                     },
                     child: Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
                       child: ListTile(
                         title: Text(
                           '${invoice.customerName ?? "بدون اسم"} - ${invoice.sn}',
@@ -472,14 +498,18 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
                         ),
                         isThreeLine: true,
                         trailing: IconButton(
-                          icon: const Icon(CupertinoIcons.trash_fill, color: Colors.red),
+                          icon: const Icon(
+                            CupertinoIcons.trash_fill,
+                            color: Colors.red,
+                          ),
                           onPressed: () => _confirmDelete(context, invoice),
                         ),
                         onTap: () async {
                           await Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => SalesOrderPage(existingOrder: invoice),
+                              builder: (context) =>
+                                  SalesOrderPage(existingOrder: invoice),
                             ),
                           );
                           _loadInvoices();
@@ -488,16 +518,14 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
                     ),
                   ),
                 ),
-              );
-            },
-            childCount: filteredInvoices.length,
-          ),
+              ),
+            );
+          }, childCount: filteredInvoices.length),
         ),
         const SliverPadding(padding: EdgeInsets.only(bottom: 20)),
       ],
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -515,7 +543,19 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(_selectedCustomer ?? 'الفواتير المحفوظة'),
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_selectedCustomer == null) ...[
+                const Hero(
+                  tag: 'saved_invoices_icon',
+                  child: Icon(CupertinoIcons.folder, color: Colors.blue),
+                ),
+                const SizedBox(width: 8),
+              ],
+              Text(_selectedCustomer ?? 'الفواتير المحفوظة'),
+            ],
+          ),
           leading: _selectedCustomer != null
               ? IconButton(
                   icon: const Icon(CupertinoIcons.back),
@@ -535,14 +575,23 @@ class _SavedInvoicesPageState extends State<SavedInvoicesPage> {
         ),
         drawer: const AppDrawer(),
         body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1200),
-          child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _selectedCustomer == null
-                  ? _buildCustomerFolders()
-                  : _buildInvoiceList(),
-        ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: _selectedCustomer == null
+                        ? KeyedSubtree(
+                            key: const ValueKey('customerFolders'),
+                            child: _buildCustomerFolders(),
+                          )
+                        : KeyedSubtree(
+                            key: const ValueKey('invoiceList'),
+                            child: _buildInvoiceList(),
+                          ),
+                  ),
+          ),
         ),
       ),
     );

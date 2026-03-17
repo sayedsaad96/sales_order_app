@@ -56,32 +56,34 @@ class YarnPdfGenerator {
           if (context.pageNumber == 1) {
             return _buildHeaderRow(order, logoImage, primaryColor, accentColor);
           } else {
-            return pw.Column(children: [
-              pw.Table(
-                border: pw.TableBorder(
-                  horizontalInside: pw.BorderSide(
-                    color: PdfColors.grey200,
-                    width: 0.5,
+            return pw.Column(
+              children: [
+                pw.Table(
+                  border: pw.TableBorder(
+                    horizontalInside: pw.BorderSide(
+                      color: PdfColors.grey200,
+                      width: 0.5,
+                    ),
+                    bottom: pw.BorderSide(color: PdfColors.grey300, width: 1),
                   ),
-                  bottom: pw.BorderSide(color: PdfColors.grey300, width: 1),
+                  columnWidths: tableColumnWidths,
+                  children: [
+                    pw.TableRow(
+                      decoration: pw.BoxDecoration(color: primaryColor),
+                      children: [
+                        _buildTableHeader('القيمة'),
+                        _buildTableHeader('السعر'),
+                        _buildTableHeader('الوحدة'),
+                        _buildTableHeader('الكمية'),
+                        _buildTableHeader('الصنف', align: pw.TextAlign.center),
+                        _buildTableHeader('تعليق'),
+                      ],
+                    ),
+                  ],
                 ),
-                columnWidths: tableColumnWidths,
-                children: [
-                  pw.TableRow(
-                    decoration: pw.BoxDecoration(color: primaryColor),
-                    children: [
-                      _buildTableHeader('القيمة'),
-                      _buildTableHeader('السعر'),
-                      _buildTableHeader('الوحدة'),
-                      _buildTableHeader('الكمية'),
-                      _buildTableHeader('الصنف', align: pw.TextAlign.center),
-                      _buildTableHeader('تعليق'),
-                    ],
-                  ),
-                ],
-              ),
-              pw.SizedBox(height: 10),
-            ]);
+                pw.SizedBox(height: 10),
+              ],
+            );
           }
         },
         footer: (context) => _buildPageFooter(context),
@@ -135,14 +137,14 @@ class YarnPdfGenerator {
                         _buildInfoRow('طريقة السداد:', order.paymentMethod),
                         _buildInfoRow(
                           'تاريخ الطلب:',
-                          intl.DateFormat('dd/MM/yyyy')
-                              .format(order.orderDate),
+                          intl.DateFormat('dd/MM/yyyy').format(order.orderDate),
                         ),
                         _buildInfoRow(
                           'تاريخ التسليم:',
                           order.deliveryDate != null
-                              ? intl.DateFormat('dd/MM/yyyy')
-                                  .format(order.deliveryDate!)
+                              ? intl.DateFormat(
+                                  'dd/MM/yyyy',
+                                ).format(order.deliveryDate!)
                               : '-',
                         ),
                         _buildInfoRow(
@@ -187,12 +189,11 @@ class YarnPdfGenerator {
                     final index = e.key;
                     final item = e.value;
                     final isEven = index % 2 == 0;
-                    final rowColor =
-                        isEven ? PdfColors.white : PdfColors.grey50;
+                    final rowColor = isEven
+                        ? PdfColors.white
+                        : PdfColors.grey50;
                     return pw.TableRow(
-                      decoration: pw.BoxDecoration(
-                        color: rowColor,
-                      ),
+                      decoration: pw.BoxDecoration(color: rowColor),
                       children: [
                         _buildEditableTableCell(
                           numberFormat.format(item.value),
@@ -210,8 +211,10 @@ class YarnPdfGenerator {
                           'quantity_$index',
                           backgroundColor: rowColor,
                         ),
-                        _buildTableCell(item.description,
-                            align: pw.TextAlign.center),
+                        _buildTableCell(
+                          item.description,
+                          align: pw.TextAlign.center,
+                        ),
                         _buildEditableTableCell(
                           '',
                           'comment_$index',
@@ -321,7 +324,7 @@ class YarnPdfGenerator {
             // --- Payment Schedule Section ---
             // Show installments only if there are any with data
             ...(() {
-              if (order.installments.isEmpty) return [];
+              if (order.installments.isEmpty) return <pw.Widget>[];
 
               final validInstallments = order.installments
                   .where(
@@ -329,9 +332,9 @@ class YarnPdfGenerator {
                   )
                   .toList();
 
-              if (validInstallments.isEmpty) return [];
+              if (validInstallments.isEmpty) return <pw.Widget>[];
 
-              return [
+              return <pw.Widget>[
                 pw.SizedBox(height: 30),
                 _buildSectionHeader(
                   'طريقة السداد في حالة تعدد الدفعات',
@@ -484,7 +487,8 @@ class YarnPdfGenerator {
                     ),
                   ),
                   pw.SizedBox(height: 5),
-                  if (order.branch != null && (order.branch?.isNotEmpty ?? false))
+                  if (order.branch != null &&
+                      (order.branch?.isNotEmpty ?? false))
                     pw.Text(
                       _fixArabic(order.branch ?? ''),
                       style: pw.TextStyle(
@@ -677,15 +681,11 @@ class YarnPdfGenerator {
       child: pw.TextField(
         name: fieldName,
         value: initialValue,
-        textStyle: pw.TextStyle(
-          font: pw.Font.helvetica(),
-          fontSize: 10,
-        ),
+        textStyle: pw.TextStyle(font: pw.Font.helvetica(), fontSize: 10),
         backgroundColor: backgroundColor ?? PdfColors.white,
       ),
     );
   }
-
 
   static pw.Widget _buildInstallmentRow(
     int number,
@@ -739,5 +739,4 @@ class YarnPdfGenerator {
   static String _fixArabic(String text) {
     return text;
   }
-
 }

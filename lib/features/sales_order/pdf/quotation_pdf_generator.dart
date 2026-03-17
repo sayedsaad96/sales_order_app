@@ -48,7 +48,6 @@ class QuotationPdfGenerator {
 
     final theme = pw.ThemeData.withFont(base: arabicFont, bold: arabicFontBold);
     final numberFormat = intl.NumberFormat('#,###.##');
-    final dateFormat = intl.DateFormat('yyyy-MM-dd');
 
     pdf.addPage(
       pw.MultiPage(
@@ -178,68 +177,56 @@ class QuotationPdfGenerator {
             ),
 
             // Validity and Terms
-            if (quotation.validUntil != null ||
-                (quotation.termsAndConditions != null &&
-                    quotation.termsAndConditions!.isNotEmpty)) ...[
-              pw.SizedBox(height: 20),
-              pw.Container(
-                width: double.infinity,
-                padding: const pw.EdgeInsets.all(12),
-                decoration: pw.BoxDecoration(
-                  color: PdfColors.grey50,
-                  borderRadius: pw.BorderRadius.circular(4),
-                  border: pw.Border.all(color: PdfColors.grey300),
-                ),
-                child: pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    if (quotation.validUntil != null)
-                      pw.Row(
-                        children: [
-                          pw.Text(
-                            'هذا العرض صالح حتى: ',
-                            style: pw.TextStyle(
-                              fontWeight: pw.FontWeight.bold,
-                              color: primaryColor,
-                            ),
-                          ),
-                          pw.Text(
-                            dateFormat.format(
-                              quotation.validUntil ?? DateTime.now(),
-                            ),
-                          ),
-                        ],
-                      ),
-                    if (quotation.validUntil != null &&
-                        quotation.termsAndConditions != null &&
-                        quotation.termsAndConditions!.isNotEmpty)
-                      pw.SizedBox(height: 10),
-                    if (quotation.termsAndConditions != null &&
-                        (quotation.termsAndConditions?.isNotEmpty ?? false))
-                      pw.Column(
-                        crossAxisAlignment: pw.CrossAxisAlignment.start,
-                        children: [
-                          pw.Text(
-                            'الشروط والأحكام:',
-                            style: pw.TextStyle(
-                              fontWeight: pw.FontWeight.bold,
-                              color: primaryColor,
-                            ),
-                          ),
-                          pw.SizedBox(height: 4),
-                          pw.Text(
-                            quotation.termsAndConditions ?? '',
-                            style: const pw.TextStyle(
-                              fontSize: 10,
-                              lineSpacing: 1.2,
-                            ),
-                          ),
-                        ],
-                      ),
-                  ],
-                ),
+            pw.SizedBox(height: 20),
+            pw.Container(
+              width: double.infinity,
+              padding: const pw.EdgeInsets.all(12),
+              decoration: pw.BoxDecoration(
+                color: PdfColors.grey50,
+                borderRadius: pw.BorderRadius.circular(4),
+                border: pw.Border.all(color: PdfColors.grey300),
               ),
-            ],
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Row(
+                    children: [
+                      pw.Text(
+                        'هذا العرض سارى حتى اشعار اخر',
+                        style: pw.TextStyle(
+                          fontWeight: pw.FontWeight.bold,
+                          color: primaryColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (quotation.termsAndConditions != null &&
+                      (quotation.termsAndConditions?.isNotEmpty ?? false)) ...[
+                    pw.SizedBox(height: 10),
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text(
+                          'الشروط والأحكام:',
+                          style: pw.TextStyle(
+                            fontWeight: pw.FontWeight.bold,
+                            color: primaryColor,
+                          ),
+                        ),
+                        pw.SizedBox(height: 4),
+                        pw.Text(
+                          quotation.termsAndConditions ?? '',
+                          style: const pw.TextStyle(
+                            fontSize: 10,
+                            lineSpacing: 1.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
 
             pw.SizedBox(height: 15),
 

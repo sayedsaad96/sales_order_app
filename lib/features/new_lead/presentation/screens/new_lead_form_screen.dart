@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:annex_sales_order/core/widgets/confetti_overlay.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
@@ -204,6 +205,7 @@ class _NewLeadFormScreenState extends State<NewLeadFormScreen> {
 
           if (mounted) {
             Navigator.of(context).pop();
+            ConfettiOverlay.show(context);
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 showCloseIcon: true,

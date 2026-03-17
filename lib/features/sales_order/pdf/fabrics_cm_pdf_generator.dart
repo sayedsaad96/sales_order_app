@@ -40,8 +40,8 @@ class FabricsCmPdfGenerator {
       // Ignore
     }
 
-    const primaryColor = PdfColor.fromInt(0xFF3F51B5); // Indigo
-    const accentColor = PdfColor.fromInt(0xFFF3E5F5); // Light Purple
+    const primaryColor = PdfColor.fromInt(0xFF1565C0); // Blue
+    const accentColor = PdfColor.fromInt(0xFFE3F2FD); // Light Blue
 
     final theme = pw.ThemeData.withFont(base: arabicFont, bold: arabicFontBold);
     final numberFormat = intl.NumberFormat('#,###.##', 'en_US');
@@ -95,7 +95,7 @@ class FabricsCmPdfGenerator {
               children: [
                 pw.Expanded(
                   child: pw.Container(
-                    padding: const pw.EdgeInsets.all(8),
+                    padding: const pw.EdgeInsets.all(6),
                     decoration: pw.BoxDecoration(
                       border: pw.Border.all(color: PdfColors.grey300),
                       borderRadius: pw.BorderRadius.circular(5),
@@ -112,7 +112,7 @@ class FabricsCmPdfGenerator {
                 pw.SizedBox(width: 10),
                 pw.Expanded(
                   child: pw.Container(
-                    padding: const pw.EdgeInsets.all(8),
+                    padding: const pw.EdgeInsets.all(6),
                     decoration: pw.BoxDecoration(
                       border: pw.Border.all(color: PdfColors.grey300),
                       borderRadius: pw.BorderRadius.circular(5),
@@ -200,8 +200,8 @@ class FabricsCmPdfGenerator {
               mainAxisAlignment: pw.MainAxisAlignment.end,
               children: [
                 pw.Container(
-                  width: 200,
-                  padding: const pw.EdgeInsets.all(10),
+                  width: 180,
+                  padding: const pw.EdgeInsets.all(8),
                   decoration: pw.BoxDecoration(
                     color: PdfColors.grey100,
                     borderRadius: pw.BorderRadius.circular(4),
@@ -210,10 +210,23 @@ class FabricsCmPdfGenerator {
                   child: pw.Column(
                     children: [
                       _buildTotalRow(
+                        'إجمالي الكمية (كجم)',
+                        order.items.fold(
+                          0.0,
+                          (sum, item) => sum + item.quantity,
+                        ),
+                        numberFormat,
+                        isBold: false, // Font size 10
+                        color: primaryColor,
+                      ),
+                      pw.SizedBox(height: 5),
+                      pw.Divider(color: PdfColors.grey300, thickness: 0.5),
+                      pw.SizedBox(height: 5),
+                      _buildTotalRow(
                         'الاجمالي النهائي',
                         order.totalValue,
                         numberFormat,
-                        isBold: true,
+                        isBold: true, // Font size 12
                         color: primaryColor,
                       ),
                     ],
@@ -225,11 +238,14 @@ class FabricsCmPdfGenerator {
               pw.SizedBox(height: 10),
               pw.Text(
                 _fixArabic('ملاحظات:'),
-                style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                style: pw.TextStyle(
+                  fontWeight: pw.FontWeight.bold,
+                  fontSize: 8,
+                ),
               ),
               pw.Text(
                 _fixArabic(order.notes ?? ''),
-                style: const pw.TextStyle(fontSize: 10),
+                style: const pw.TextStyle(fontSize: 8),
                 textDirection: pw.TextDirection.rtl,
               ),
             ],
@@ -310,30 +326,31 @@ class FabricsCmPdfGenerator {
                   pw.Text(
                     'طلب بيع',
                     style: pw.TextStyle(
-                      fontSize: 18,
+                      fontSize: 14,
                       fontWeight: pw.FontWeight.bold,
                       color: primaryColor,
                     ),
                   ),
-                  pw.SizedBox(height: 5),
+                  pw.SizedBox(height: 2),
                   if (order.branch != null &&
                       (order.branch?.isNotEmpty ?? false))
                     pw.Text(
                       _fixArabic(order.branch ?? ''),
                       style: pw.TextStyle(
-                        fontSize: 12,
+                        fontSize: 10,
                         fontWeight: pw.FontWeight.bold,
                         color: PdfColors.black,
                       ),
                       textDirection: pw.TextDirection.rtl,
                     ),
-                  pw.SizedBox(height: 10), // Space for missing delivery info
+                  pw.SizedBox(height: 2),
                   pw.Text(
-                    'Fabrics & CM Sales Order',
+                    _fixArabic(order.orderType ?? 'Fabrics & CM Sales Order'),
                     style: const pw.TextStyle(
-                      fontSize: 10,
+                      fontSize: 8,
                       color: PdfColors.grey700,
                     ),
+                    textDirection: pw.TextDirection.rtl,
                   ),
                 ],
               ),
@@ -347,7 +364,7 @@ class FabricsCmPdfGenerator {
                 children: [
                   if (logoImage != null)
                     pw.Container(
-                      height: 50,
+                      height: 40,
                       child: pw.Image(logoImage, fit: pw.BoxFit.contain),
                     ),
                 ],
@@ -384,7 +401,7 @@ class FabricsCmPdfGenerator {
             child: pw.Text(
               label,
               style: pw.TextStyle(
-                fontSize: 10,
+                fontSize: 8,
                 color: PdfColors.grey700,
                 fontWeight: pw.FontWeight.bold,
               ),
@@ -393,7 +410,7 @@ class FabricsCmPdfGenerator {
           pw.Expanded(
             child: pw.Text(
               value ?? '-',
-              style: const pw.TextStyle(fontSize: 10),
+              style: const pw.TextStyle(fontSize: 8),
               maxLines: 2,
             ),
           ),
@@ -464,7 +481,7 @@ class FabricsCmPdfGenerator {
         pw.Text(
           format.format(value),
           style: pw.TextStyle(
-            fontSize: isBold ? 14 : 12,
+            fontSize: isBold ? 12 : 10,
             fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal,
             color: color ?? PdfColors.black,
           ),

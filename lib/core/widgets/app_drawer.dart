@@ -14,6 +14,8 @@ import 'package:annex_sales_order/features/customer_list/presentation/pages/cust
 import 'package:annex_sales_order/features/authorization/presentation/screens/authorization_screen.dart';
 import 'package:annex_sales_order/features/tax_invoice/presentation/screens/tax_invoice_request_screen.dart';
 import 'package:annex_sales_order/features/new_lead/presentation/screens/new_lead_form_screen.dart';
+import 'package:annex_sales_order/core/utils/app_page_transitions.dart';
+import 'package:annex_sales_order/core/widgets/staggered_animated_item.dart';
 
 class AppDrawer extends StatefulWidget {
   const AppDrawer({super.key});
@@ -128,6 +130,7 @@ class _AppDrawerState extends State<AppDrawer> {
                   _buildSectionHeader(_t('main_menu')),
                   _buildModernMenuItem(
                     context,
+                    index: 0,
                     icon: Icons.ac_unit_outlined,
                     title: _t('essential_so'),
                     subtitle: _t('essential_so_sub'),
@@ -135,15 +138,15 @@ class _AppDrawerState extends State<AppDrawer> {
                       Navigator.pop(context);
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              const SalesOrderContainerPage(initialIndex: 0),
+                        AppPageTransitions.slideFade(
+                          page: const SalesOrderContainerPage(initialIndex: 0),
                         ),
                       );
                     },
                   ),
                   _buildModernMenuItem(
                     context,
+                    index: 1,
                     icon: CupertinoIcons.layers_alt,
                     title: _t('yarn_so'),
                     subtitle: _t('yarn_so_sub'),
@@ -151,15 +154,15 @@ class _AppDrawerState extends State<AppDrawer> {
                       Navigator.pop(context);
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              const SalesOrderContainerPage(initialIndex: 1),
+                        AppPageTransitions.slideFade(
+                          page: const SalesOrderContainerPage(initialIndex: 1),
                         ),
                       );
                     },
                   ),
                   _buildModernMenuItem(
                     context,
+                    index: 2,
                     icon: CupertinoIcons.scissors,
                     title: _t('fabrics_so'),
                     subtitle: _t('fabrics_so_sub'),
@@ -167,15 +170,15 @@ class _AppDrawerState extends State<AppDrawer> {
                       Navigator.pop(context);
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              const SalesOrderContainerPage(initialIndex: 2),
+                        AppPageTransitions.slideFade(
+                          page: const SalesOrderContainerPage(initialIndex: 2),
                         ),
                       );
                     },
                   ),
                   _buildModernMenuItem(
                     context,
+                    index: 3,
                     icon: CupertinoIcons.doc_text,
                     title: _t('quotations'),
                     subtitle: _t('quotations_sub'),
@@ -183,14 +186,15 @@ class _AppDrawerState extends State<AppDrawer> {
                       Navigator.pop(context);
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => const SavedQuotationsPage(),
+                        AppPageTransitions.slideFade(
+                          page: const SavedQuotationsPage(),
                         ),
                       );
                     },
                   ),
                   _buildModernMenuItem(
                     context,
+                    index: 4,
                     icon: CupertinoIcons.arrow_counterclockwise,
                     title: _t('return_order'),
                     subtitle: _t('return_order_sub'),
@@ -198,15 +202,15 @@ class _AppDrawerState extends State<AppDrawer> {
                       Navigator.pop(context);
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => const ReturnOrderPage(),
+                        AppPageTransitions.slideFade(
+                          page: const ReturnOrderPage(),
                         ),
                       );
                     },
                   ),
-
                   _buildModernMenuItem(
                     context,
+                    index: 5,
                     icon: CupertinoIcons.graph_square,
                     title: _t('sales_analysis'),
                     subtitle: _t('sales_analysis_sub'),
@@ -214,14 +218,15 @@ class _AppDrawerState extends State<AppDrawer> {
                       Navigator.pop(context);
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => const SalesAnalysisPage(),
+                        AppPageTransitions.slideFade(
+                          page: const SalesAnalysisPage(),
                         ),
                       );
                     },
                   ),
                   _buildModernMenuItem(
                     context,
+                    index: 6,
                     icon: CupertinoIcons.person_2_fill,
                     title: _t('customer_list'),
                     subtitle: _t('customer_list_sub'),
@@ -229,15 +234,15 @@ class _AppDrawerState extends State<AppDrawer> {
                       Navigator.pop(context);
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => const CustomerListPage(),
+                        AppPageTransitions.slideFade(
+                          page: const CustomerListPage(),
                         ),
                       );
                     },
                   ),
-
                   _buildModernMenuItem(
                     context,
+                    index: 7,
                     icon: CupertinoIcons.doc_person,
                     title: _t('auth_pdf'),
                     subtitle: _t('auth_pdf_sub'),
@@ -245,15 +250,15 @@ class _AppDrawerState extends State<AppDrawer> {
                       Navigator.pop(context);
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => const AuthorizationPdfScreen(),
+                        AppPageTransitions.slideFade(
+                          page: const AuthorizationPdfScreen(),
                         ),
                       );
                     },
                   ),
-                  
                   _buildModernMenuItem(
                     context,
+                    index: 8,
                     icon: CupertinoIcons.doc_plaintext,
                     title: _t('tax_invoice'),
                     subtitle: _t('tax_invoice_sub'),
@@ -261,15 +266,15 @@ class _AppDrawerState extends State<AppDrawer> {
                       Navigator.pop(context);
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => const TaxInvoiceRequestScreen(),
+                        AppPageTransitions.slideFade(
+                          page: const TaxInvoiceRequestScreen(),
                         ),
                       );
                     },
                   ),
-
                   _buildModernMenuItem(
                     context,
+                    index: 9,
                     icon: CupertinoIcons.person_add,
                     title: _t('new_lead'),
                     subtitle: _t('new_lead_sub'),
@@ -277,8 +282,8 @@ class _AppDrawerState extends State<AppDrawer> {
                       Navigator.pop(context);
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => const NewLeadFormScreen(),
+                        AppPageTransitions.slideFade(
+                          page: const NewLeadFormScreen(),
                         ),
                       );
                     },
@@ -289,6 +294,7 @@ class _AppDrawerState extends State<AppDrawer> {
                   _buildSectionHeader(_t('information')),
                   _buildModernMenuItem(
                     context,
+                    index: 10,
                     icon: CupertinoIcons.info,
                     title: _t('about_us'),
                     subtitle: _t('about_us_sub'),
@@ -296,14 +302,13 @@ class _AppDrawerState extends State<AppDrawer> {
                       Navigator.pop(context);
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => const AboutPage(),
-                        ),
+                        AppPageTransitions.slideFade(page: const AboutPage()),
                       );
                     },
                   ),
                   _buildModernMenuItem(
                     context,
+                    index: 11,
                     icon: CupertinoIcons.money_dollar_circle,
                     title: _t('price_lists'),
                     subtitle: _t('price_lists_sub'),
@@ -311,8 +316,8 @@ class _AppDrawerState extends State<AppDrawer> {
                       Navigator.pop(context);
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => const PriceListPage(),
+                        AppPageTransitions.slideFade(
+                          page: const PriceListPage(),
                         ),
                       );
                     },
@@ -323,6 +328,7 @@ class _AppDrawerState extends State<AppDrawer> {
                   _buildSectionHeader(_t('settings')),
                   _buildModernMenuItem(
                     context,
+                    index: 12,
                     icon: CupertinoIcons.settings,
                     title: _t('settings'),
                     subtitle: _t('settings_sub'),
@@ -330,8 +336,8 @@ class _AppDrawerState extends State<AppDrawer> {
                       Navigator.pop(context);
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => const SettingsPage(),
+                        AppPageTransitions.slideFade(
+                          page: const SettingsPage(),
                         ),
                       );
                     },
@@ -416,11 +422,22 @@ class _AppDrawerState extends State<AppDrawer> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Image.asset(
-              'assets/images/logo.png',
-              width: 80,
-              height: 80,
-              fit: BoxFit.contain,
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: const Duration(milliseconds: 600),
+              curve: Curves.easeOutBack,
+              builder: (context, value, child) {
+                return Transform.scale(
+                  scale: value,
+                  child: Opacity(opacity: value.clamp(0.0, 1.0), child: child),
+                );
+              },
+              child: Image.asset(
+                'assets/images/logo.png',
+                width: 80,
+                height: 80,
+                fit: BoxFit.contain,
+              ),
             ),
             const SizedBox(height: 16),
           ],
@@ -446,32 +463,37 @@ class _AppDrawerState extends State<AppDrawer> {
 
   Widget _buildModernMenuItem(
     BuildContext context, {
+    required int index,
     required IconData icon,
     required String title,
     required String subtitle,
     required VoidCallback onTap,
   }) {
     final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      child: ListTile(
-        shape: const StadiumBorder(),
-        onTap: onTap,
-        leading: Icon(icon, color: theme.colorScheme.onSurfaceVariant),
-        title: Text(
-          title,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w500,
+    return StaggeredAnimatedItem(
+      index: index,
+      startOffset: const Offset(-50, 0), // Slide in from left
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        child: ListTile(
+          shape: const StadiumBorder(),
+          onTap: onTap,
+          leading: Icon(icon, color: theme.colorScheme.onSurfaceVariant),
+          title: Text(
+            title,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
           ),
+          subtitle: subtitle.isNotEmpty
+              ? Text(
+                  subtitle,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                )
+              : null,
         ),
-        subtitle: subtitle.isNotEmpty
-            ? Text(
-                subtitle,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              )
-            : null,
       ),
     );
   }

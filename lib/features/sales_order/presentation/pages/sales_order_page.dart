@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:annex_sales_order/core/widgets/confetti_overlay.dart';
 import 'package:flutter/material.dart';
 
 import 'package:annex_sales_order/features/sales_order/data/models/sales_order.dart';
@@ -548,6 +549,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
           // Mobile: Share directly
           if (mounted) {
             Navigator.of(context).pop();
+            ConfettiOverlay.show(context);
             await Printing.sharePdf(bytes: bytes, filename: fileName);
           }
         } else {
@@ -593,6 +595,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
           // Dismiss loading indicator and show success (Desktop only path)
           if (mounted) {
             Navigator.of(context).pop();
+            ConfettiOverlay.show(context);
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 showCloseIcon: true,
@@ -600,7 +603,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                 content: Text('تم حفظ الملف: $finalPath'),
                 duration: (!Platform.isAndroid && !Platform.isIOS)
                     ? const Duration(seconds: 1)
-                    : const Duration(days: 365),
+                    : const Duration(seconds: 5),
                 action: SnackBarAction(
                   label: 'مشاركة',
                   textColor: Colors.yellowAccent,
@@ -649,7 +652,10 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
             onPressed: _resetForm,
           ),
           IconButton(
-            icon: const Icon(CupertinoIcons.folder),
+            icon: const Hero(
+              tag: 'saved_invoices_icon',
+              child: Icon(CupertinoIcons.folder),
+            ),
             tooltip: 'الفواتير المحفوظة',
             onPressed: () {
               Navigator.push(
@@ -1114,211 +1120,210 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
     bool isMobile,
   ) {
     return [
-      // Section Header (Category)
       SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         sliver: SliverToBoxAdapter(
-          child: Card(
-            margin: EdgeInsets.zero,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(
-                top: Radius.circular(12),
-                bottom: Radius.circular(12),
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: TextFormField(
-                      textCapitalization: TextCapitalization.sentences,
-                      controller: section.categoryController,
-                      decoration: const InputDecoration(
-                        labelText: 'التصنيف',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    flex: 2,
-                    child: TextFormField(
-                      controller: section.defaultUnitController,
-                      decoration: const InputDecoration(
-                        labelText: 'الوحدة',
-                        border: OutlineInputBorder(),
-                      ),
-                      onChanged: (value) {
-                        setState(() {
-                          for (var item in section.items) {
-                            item.unit = value;
-                          }
-                          for (var controller in section.itemControllers) {
-                            controller.unitController.text = value;
-                          }
-                        });
-                      },
-                    ),
-                  ),
-                  if (_sections.length > 1)
-                    IconButton(
-                      icon: const Icon(
-                        CupertinoIcons.delete,
-                        color: Colors.red,
-                      ),
-                      onPressed: () => _removeSection(sectionIndex),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-
-      // Table Header
-      if (!isMobile)
-        SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          sliver: SliverToBoxAdapter(
-            child: Container(
-              color: Theme.of(context).cardColor,
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(8),
-                  ),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: const Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        'الصنف',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Text(
-                        'الكمية',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Text(
-                        'الوحدة',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Text(
-                        'السعر',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Text(
-                        'القيمة',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 40), // For delete button
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-
-      // Items List
-      SliverPadding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        sliver: SliverList(
-          delegate: SliverChildBuilderDelegate((context, index) {
-            final item = section.items[index];
-            final controllers = section.itemControllers[index];
-            return Container(
-              color: Theme.of(context).cardColor,
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-
-              child: Container(
-                decoration: BoxDecoration(
-                  border: Border(bottom: BorderSide(color: Colors.grey)),
-                ),
-                child: SalesOrderItemRow(
-                  key: ObjectKey(item),
-                  index: index,
-                  item: item,
-                  controllers: controllers,
-                  isMobile: isMobile,
-                  onDelete: () => _removeItem(sectionIndex, index),
-                  onStateChanged: _calculateTotal,
-                ),
-              ),
-            );
-          }, childCount: section.items.length),
-        ),
-      ),
-
-      // Add Item Button (Footer of section)
-      SliverPadding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        sliver: SliverToBoxAdapter(
-          child: Container(
-            decoration: BoxDecoration(
-              color: Theme.of(context).cardColor,
-              borderRadius: const BorderRadius.vertical(
-                bottom: Radius.circular(12),
-              ),
-            ),
-            padding: const EdgeInsets.all(8.0),
-            margin: const EdgeInsets.only(bottom: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          child: AnimatedSize(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutQuart,
+            alignment: Alignment.topCenter,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                TextButton.icon(
-                  onPressed: () => _addItem(sectionIndex),
-                  icon: const Icon(CupertinoIcons.add),
-                  label: const Text('إضافة صنف'),
+                // Section Header (Category)
+                Card(
+                  key: const ValueKey('section_header'),
+                  margin: EdgeInsets.zero,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(12),
+                      bottom: Radius.circular(12),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: TextFormField(
+                            textCapitalization: TextCapitalization.sentences,
+                            controller: section.categoryController,
+                            decoration: const InputDecoration(
+                              labelText: 'التصنيف',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          flex: 2,
+                          child: TextFormField(
+                            controller: section.defaultUnitController,
+                            decoration: const InputDecoration(
+                              labelText: 'الوحدة',
+                              border: OutlineInputBorder(),
+                            ),
+                            onChanged: (value) {
+                              setState(() {
+                                for (var item in section.items) {
+                                  item.unit = value;
+                                }
+                                for (var controller
+                                    in section.itemControllers) {
+                                  controller.unitController.text = value;
+                                }
+                              });
+                            },
+                          ),
+                        ),
+                        if (_sections.length > 1)
+                          IconButton(
+                            icon: const Icon(
+                              CupertinoIcons.delete,
+                              color: Colors.red,
+                            ),
+                            onPressed: () => _removeSection(sectionIndex),
+                          ),
+                      ],
+                    ),
+                  ),
                 ),
-                TextButton.icon(
-                  onPressed: () async {
-                    final count = await showBulkAddDialog(context);
-                    if (count != null) {
-                      _addItem(sectionIndex, count: count);
-                    }
-                  },
-                  icon: const Icon(CupertinoIcons.plus_square_on_square),
-                  label: const Text('إضافة جماعية'),
+
+                // Table Header
+                if (!isMobile)
+                  Container(
+                    key: const ValueKey('table_header'),
+                    color: Theme.of(context).cardColor,
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).primaryColor,
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(8),
+                        ),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: const Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              'الصنف',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 1,
+                            child: Text(
+                              'الكمية',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 1,
+                            child: Text(
+                              'الوحدة',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 1,
+                            child: Text(
+                              'السعر',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 1,
+                            child: Text(
+                              'القيمة',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 40), // For delete button
+                        ],
+                      ),
+                    ),
+                  ),
+
+                // Items List
+                ...List.generate(section.items.length, (index) {
+                  final item = section.items[index];
+                  final controllers = section.itemControllers[index];
+                  return Container(
+                    key: ObjectKey(item),
+                    color: Theme.of(context).cardColor,
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        border: Border(bottom: BorderSide(color: Colors.grey)),
+                      ),
+                      child: SalesOrderItemRow(
+                        key: ObjectKey(item),
+                        index: index,
+                        item: item,
+                        controllers: controllers,
+                        isMobile: isMobile,
+                        onDelete: () => _removeItem(sectionIndex, index),
+                        onStateChanged: _calculateTotal,
+                      ),
+                    ),
+                  );
+                }),
+
+                // Add Item Button (Footer of section)
+                Container(
+                  key: const ValueKey('add_item_footer'),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    borderRadius: const BorderRadius.vertical(
+                      bottom: Radius.circular(12),
+                    ),
+                  ),
+                  padding: const EdgeInsets.all(8.0),
+                  margin: const EdgeInsets.only(bottom: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      TextButton.icon(
+                        onPressed: () => _addItem(sectionIndex),
+                        icon: const Icon(CupertinoIcons.add),
+                        label: const Text('إضافة صنف'),
+                      ),
+                      TextButton.icon(
+                        onPressed: () async {
+                          final count = await showBulkAddDialog(context);
+                          if (count != null) {
+                            _addItem(sectionIndex, count: count);
+                          }
+                        },
+                        icon: const Icon(CupertinoIcons.plus_square_on_square),
+                        label: const Text('إضافة جماعية'),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),

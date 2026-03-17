@@ -60,32 +60,31 @@ class ReturnOrderPdfGenerator {
           if (context.pageNumber == 1) {
             return _buildHeaderRow(order, logoImage, primaryColor, accentColor);
           } else {
-            return pw.Column(children: [
-              pw.Table(
-                border: pw.TableBorder(
-                  horizontalInside: pw.BorderSide(
-                    color: PdfColors.grey200,
-                    width: 0.5,
+            return pw.Column(
+              children: [
+                pw.Table(
+                  border: pw.TableBorder(
+                    horizontalInside: pw.BorderSide(
+                      color: PdfColors.grey200,
+                      width: 0.5,
+                    ),
+                    bottom: pw.BorderSide(color: PdfColors.grey300, width: 1),
                   ),
-                  bottom: pw.BorderSide(color: PdfColors.grey300, width: 1),
+                  columnWidths: tableColumnWidths,
+                  children: [
+                    pw.TableRow(
+                      decoration: const pw.BoxDecoration(color: primaryColor),
+                      children: [
+                        _buildTableHeader('الوحدة'),
+                        _buildTableHeader('الكمية'),
+                        _buildTableHeader('الصنف', align: pw.TextAlign.center),
+                      ],
+                    ),
+                  ],
                 ),
-                columnWidths: tableColumnWidths,
-                children: [
-                  pw.TableRow(
-                    decoration: const pw.BoxDecoration(color: primaryColor),
-                    children: [
-                      _buildTableHeader('الوحدة'),
-                      _buildTableHeader('الكمية'),
-                      _buildTableHeader(
-                        'الصنف',
-                        align: pw.TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              pw.SizedBox(height: 10),
-            ]);
+                pw.SizedBox(height: 10),
+              ],
+            );
           }
         },
         footer: (context) => _buildPageFooter(context),
@@ -144,16 +143,16 @@ class ReturnOrderPdfGenerator {
                         ),
                         _buildInfoRow(
                           'تاريخ المرتجع:',
-                          intl.DateFormat('dd/MM/yyyy').format(
-                            order.returnDate,
-                          ),
+                          intl.DateFormat(
+                            'dd/MM/yyyy',
+                          ).format(order.returnDate),
                         ),
                         if (order.deliveryDate != null)
                           _buildInfoRow(
                             'تاريخ التوصيل:',
-                            intl.DateFormat('dd/MM/yyyy').format(
-                              order.deliveryDate!,
-                            ),
+                            intl.DateFormat(
+                              'dd/MM/yyyy',
+                            ).format(order.deliveryDate!),
                           ),
                         _buildInfoRow('سبب المرتجع:', order.returnReason),
                       ],
@@ -180,12 +179,14 @@ class ReturnOrderPdfGenerator {
                       (category != 'عام' && category.isNotEmpty))
                     pw.Container(
                       padding: const pw.EdgeInsets.only(top: 10, bottom: 5),
-                      child: pw.Text(
-                        'تصنيف: $category',
-                        style: pw.TextStyle(
-                          fontSize: 14,
-                          fontWeight: pw.FontWeight.bold,
-                          color: primaryColor,
+                      child: pw.Center(
+                        child: pw.Text(
+                          'تصنيف: $category',
+                          style: pw.TextStyle(
+                            fontSize: 14,
+                            fontWeight: pw.FontWeight.bold,
+                            color: primaryColor,
+                          ),
                         ),
                       ),
                     ),
@@ -226,15 +227,17 @@ class ReturnOrderPdfGenerator {
                             _buildEditableTableCell(
                               item.unit,
                               'unit_${category}_$index',
-                              backgroundColor:
-                                  isEven ? PdfColors.white : accentColor,
+                              backgroundColor: isEven
+                                  ? PdfColors.white
+                                  : accentColor,
                               font: arabicFont,
                             ),
                             _buildEditableTableCell(
                               numberFormat.format(item.quantity),
                               'quantity_${category}_$index',
-                              backgroundColor:
-                                  isEven ? PdfColors.white : accentColor,
+                              backgroundColor: isEven
+                                  ? PdfColors.white
+                                  : accentColor,
                             ),
                             _buildTableCell(
                               item.item,
@@ -429,7 +432,8 @@ class ReturnOrderPdfGenerator {
                     ),
                   ),
                   pw.SizedBox(height: 3),
-                  if (order.branch != null && (order.branch?.isNotEmpty ?? false))
+                  if (order.branch != null &&
+                      (order.branch?.isNotEmpty ?? false))
                     pw.Text(
                       _fixArabic(order.branch ?? ''),
                       style: pw.TextStyle(
@@ -440,7 +444,8 @@ class ReturnOrderPdfGenerator {
                       textDirection: pw.TextDirection.rtl,
                     ),
                   pw.SizedBox(height: 2),
-                  if (order.category != null && (order.category?.isNotEmpty ?? false))
+                  if (order.category != null &&
+                      (order.category?.isNotEmpty ?? false))
                     pw.Text(
                       _fixArabic(order.category ?? ''),
                       style: const pw.TextStyle(

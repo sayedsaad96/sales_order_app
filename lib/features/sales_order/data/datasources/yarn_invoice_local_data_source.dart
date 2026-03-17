@@ -20,14 +20,15 @@ class YarnInvoiceLocalDataSource {
 
   Future<void> saveInvoice(YarnSalesOrder order) async {
     final box = _getBox();
-    
+
     if (order.isInBox) {
       await order.save();
     } else {
       // Group invoices by customer name
       final customerName = order.customerName ?? 'Unknown';
-      final key = '${customerName}_${order.sn}_${DateTime.now().millisecondsSinceEpoch}';
-      
+      final key =
+          '${customerName}_${order.sn}_${DateTime.now().millisecondsSinceEpoch}';
+
       await box.put(key, order);
     }
   }
@@ -46,7 +47,9 @@ class YarnInvoiceLocalDataSource {
     try {
       if (!Hive.isBoxOpen(_boxName)) return false;
       final box = Hive.box<YarnSalesOrder>(_boxName);
-      return box.values.any((order) => order.sn == sn && order.key != excludeKey);
+      return box.values.any(
+        (order) => order.sn == sn && order.key != excludeKey,
+      );
     } catch (e) {
       return false;
     }
@@ -62,17 +65,17 @@ class YarnInvoiceLocalDataSource {
   Map<String, List<YarnSalesOrder>> getInvoicesByCustomer() {
     final invoices = getAllInvoices();
     final Map<String, List<YarnSalesOrder>> grouped = {};
-    
+
     for (var invoice in invoices) {
       final customerName = invoice.customerName ?? 'Unknown';
       grouped.putIfAbsent(customerName, () => []).add(invoice);
     }
-    
+
     // Sort each customer's invoices by date (most recent first)
     grouped.forEach((key, value) {
       value.sort((a, b) => b.orderDate.compareTo(a.orderDate));
     });
-    
+
     return grouped;
   }
 

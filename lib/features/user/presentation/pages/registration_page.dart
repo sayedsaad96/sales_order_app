@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:annex_sales_order/features/user/data/datasources/user_local_data_source.dart';
 import 'package:annex_sales_order/features/user/data/models/user_model.dart';
 import 'package:annex_sales_order/features/sales_order/presentation/pages/sales_order_container_page.dart';
+import 'package:annex_sales_order/core/widgets/staggered_animated_item.dart';
+import 'package:annex_sales_order/core/utils/app_page_transitions.dart';
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
@@ -32,7 +34,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
         if (mounted) {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const SalesOrderContainerPage()),
+            AppPageTransitions.slideFade(page: const SalesOrderContainerPage()),
           );
         }
       } catch (e) {
@@ -68,81 +70,102 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Container(
-                      height: 100,
-                      decoration: const BoxDecoration(
-                        image: DecorationImage(
-                          image: AssetImage('assets/images/logo.png'),
-                          fit: BoxFit.contain,
+                    StaggeredAnimatedItem(
+                      index: 0,
+                      child: Container(
+                        height: 100,
+                        decoration: const BoxDecoration(
+                          image: DecorationImage(
+                            image: AssetImage('assets/images/logo.png'),
+                            fit: BoxFit.contain,
+                          ),
                         ),
                       ),
                     ),
-                    Text(
-                      'مرحباً بك في أنكس جروب',
-                      style: Theme.of(context).textTheme.headlineSmall,
-                      textAlign: TextAlign.center,
+                    StaggeredAnimatedItem(
+                      index: 1,
+                      child: Text(
+                        'مرحباً بك في أنكس جروب',
+                        style: Theme.of(context).textTheme.headlineSmall,
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                     const SizedBox(height: 30),
-                    TextFormField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'الاسم بالكامل',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(CupertinoIcons.person),
+                    StaggeredAnimatedItem(
+                      index: 2,
+                      child: TextFormField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'الاسم بالكامل',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(CupertinoIcons.person),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'برجاء إدخال الاسم';
+                          }
+                          return null;
+                        },
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'برجاء إدخال الاسم';
-                        }
-                        return null;
-                      },
                     ),
                     const SizedBox(height: 20),
-                    TextFormField(
-                      controller: _mobileController,
-                      decoration: const InputDecoration(
-                        labelText: 'رقم الموبايل',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(CupertinoIcons.phone),
+                    StaggeredAnimatedItem(
+                      index: 3,
+                      child: TextFormField(
+                        controller: _mobileController,
+                        decoration: const InputDecoration(
+                          labelText: 'رقم الموبايل',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(CupertinoIcons.phone),
+                        ),
+                        keyboardType: TextInputType.phone,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'برجاء إدخال رقم الموبايل';
+                          }
+                          if (value.length < 11) {
+                            return 'رقم الموبايل غير صحيح';
+                          }
+                          return null;
+                        },
                       ),
-                      keyboardType: TextInputType.phone,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'برجاء إدخال رقم الموبايل';
-                        }
-                        if (value.length < 11) {
-                          return 'رقم الموبايل غير صحيح';
-                        }
-                        return null;
-                      },
                     ),
                     const SizedBox(height: 20),
-                    TextFormField(
-                      controller: _emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'البريد الإلكتروني (اختياري)',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(CupertinoIcons.mail),
+                    StaggeredAnimatedItem(
+                      index: 4,
+                      child: TextFormField(
+                        controller: _emailController,
+                        decoration: const InputDecoration(
+                          labelText: 'البريد الإلكتروني (اختياري)',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(CupertinoIcons.mail),
+                        ),
+                        keyboardType: TextInputType.emailAddress,
                       ),
-                      keyboardType: TextInputType.emailAddress,
                     ),
                     const SizedBox(height: 30),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: _register,
-                        child: const Text(
-                          'تسجيل الدخول',
-                          style: TextStyle(fontSize: 18),
+                    StaggeredAnimatedItem(
+                      index: 5,
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: _register,
+                          child: const Text(
+                            'تسجيل الدخول',
+                            style: TextStyle(fontSize: 18),
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 20),
-                    const Text(
-                      'All rights reserved © Annex Group 2026\n Developed by Sayed Saad',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    StaggeredAnimatedItem(
+                      index: 6,
+                      child: const Text(
+                        'All rights reserved © Annex Group 2026\n Developed by Sayed Saad',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
                     ),
                   ],
                 ),

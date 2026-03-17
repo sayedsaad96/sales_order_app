@@ -27,7 +27,6 @@ import 'package:annex_sales_order/features/authorization/data/datasources/author
 import 'package:annex_sales_order/features/tax_invoice/data/models/tax_invoice_request.dart';
 import 'package:annex_sales_order/features/tax_invoice/data/datasources/tax_invoice_local_data_source.dart';
 
-
 void main() async {
   runZonedGuarded<Future<void>>(
     () async {
@@ -47,6 +46,8 @@ void main() async {
 
       try {
         await Hive.initFlutter();
+
+        // Register all adapters first
         Hive.registerAdapter(UserModelAdapter());
         Hive.registerAdapter(SalesOrderAdapter());
         Hive.registerAdapter(SalesOrderItemAdapter());
@@ -55,44 +56,28 @@ void main() async {
         Hive.registerAdapter(YarnInstallmentAdapter());
         Hive.registerAdapter(ReturnOrderAdapter());
         Hive.registerAdapter(ReturnOrderItemAdapter());
-        
-        // Register Fabrics & CM adapters
         Hive.registerAdapter(FabricsCmSalesOrderAdapter());
         Hive.registerAdapter(FabricsCmLineItemAdapter());
-
-        // Register Quotation adapters
         Hive.registerAdapter(QuotationAdapter());
         Hive.registerAdapter(QuotationItemAdapter());
+        Hive.registerAdapter(CustomerAdapter());
+        Hive.registerAdapter(AuthorizedPersonAdapter());
+        Hive.registerAdapter(TaxInvoiceRequestAdapter());
 
+        // Initialize Data Sources
         final userDataSource = UserLocalDataSource();
         await userDataSource.init();
         await InvoiceLocalDataSource().init();
-        
-        // Initialize Yarn invoice data source
         await YarnInvoiceLocalDataSource().init();
-        // Initialize Return Order data source
         await ReturnOrderLocalDataSource().init();
-        // Initialize Fabrics & CM data source
         await FabricsCmInvoiceLocalDataSource().init();
-        
-        // Initialize Quotation data source
         await QuotationLocalDataSource().init();
-
+        await CustomerLocalDataSource().init();
+        await AuthorizationLocalDataSource().init();
+        await TaxInvoiceLocalDataSource().init();
 
         // Initialize Notification Service (Background checks)
         await UpdateNotificationService().init();
-
-        // Initialize Customer data source
-        Hive.registerAdapter(CustomerAdapter());
-        await CustomerLocalDataSource().init();
-
-        // Initialize Authorization data source
-        Hive.registerAdapter(AuthorizedPersonAdapter());
-        await AuthorizationLocalDataSource().init();
-
-        // Initialize Tax Invoice data source
-        Hive.registerAdapter(TaxInvoiceRequestAdapter());
-        await TaxInvoiceLocalDataSource().init();
       } catch (e, stack) {
         debugPrint('Initialization Error: $e\n$stack');
         // Consider showing a fallback UI here if critical init fails
@@ -100,9 +85,7 @@ void main() async {
 
       runApp(
         MultiProvider(
-          providers: [
-            ChangeNotifierProvider(create: (_) => ThemeProvider()),
-          ],
+          providers: [ChangeNotifierProvider(create: (_) => ThemeProvider())],
           child: const SalesOrderApp(isRegistered: true),
         ),
       );

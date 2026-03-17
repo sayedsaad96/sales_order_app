@@ -9,7 +9,7 @@ class QuotationProvider extends ChangeNotifier {
   final snController = TextEditingController();
   final customerController = TextEditingController();
   final notesController = TextEditingController();
-  final termsController = TextEditingController(); 
+  final termsController = TextEditingController();
   DateTime orderDate = DateTime.now();
   DateTime? validUntil;
 
@@ -40,16 +40,16 @@ class QuotationProvider extends ChangeNotifier {
     } else {
       // Start fresh
       generateUniqueSN();
-      // Default validity +7 days
-      validUntil = DateTime.now().add(const Duration(days: 7));
-      termsController.text = 'الدفع كاش عند الاستلام أو حسب الاتفاق.\nالبضاعة المباعة لا ترد ولا تستبدل بعد خروجها من المخزن.';
+      // No specific validity date - "ساري حتى اشعار اخر"
+      termsController.text =
+          'الدفع كاش عند الاستلام أو حسب الاتفاق.\nالبضاعة المباعة لا ترد ولا تستبدل بعد خروجها من المخزن.';
     }
   }
 
   void generateUniqueSN() {
     final box = _dataSource.getQuotations();
     final existingSns = box.map((e) => e.sn ?? '').toSet();
-    
+
     final List<int> available = [];
     for (int i = 1; i <= 999; i++) {
       final sn = 'Q-${i.toString().padLeft(3, '0')}';
@@ -59,18 +59,20 @@ class QuotationProvider extends ChangeNotifier {
     }
 
     if (available.isNotEmpty) {
-      final randomIndex = (DateTime.now().microsecondsSinceEpoch % available.length);
+      final randomIndex =
+          (DateTime.now().microsecondsSinceEpoch % available.length);
       final chosen = available[randomIndex.toInt()];
       snController.text = 'Q-${chosen.toString().padLeft(3, '0')}';
     } else {
-      snController.text = 'Q-${DateTime.now().millisecondsSinceEpoch.toString().substring(10)}';
+      snController.text =
+          'Q-${DateTime.now().millisecondsSinceEpoch.toString().substring(10)}';
     }
     notifyListeners();
   }
 
   void setValidity(DateTime date) {
-      validUntil = date;
-      notifyListeners();
+    validUntil = date;
+    notifyListeners();
   }
 
   void addItem(QuotationItem item) {
@@ -91,18 +93,18 @@ class QuotationProvider extends ChangeNotifier {
 
   void updateItem(int index, QuotationItem item) {
     if (index < 0 || index >= _items.length) return;
-    
+
     _items[index] = item;
-    
+
     // Update controllers if valid
     // Note: If user edits Qty/Price in dialog, we should sync back to controllers
     if (index < quantityControllers.length) {
-        quantityControllers[index].text = item.quantity.toString();
+      quantityControllers[index].text = item.quantity.toString();
     }
     if (index < priceControllers.length) {
-        priceControllers[index].text = item.price.toString();
+      priceControllers[index].text = item.price.toString();
     }
-    
+
     notifyListeners();
   }
 
@@ -118,7 +120,6 @@ class QuotationProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
-
 
   void updateDate(DateTime date) {
     orderDate = date;
@@ -156,7 +157,9 @@ class QuotationProvider extends ChangeNotifier {
     final sn = snController.text;
     final isDuplicate = _dataSource.isSnExists(
       sn,
-      excludeKey: (_existingQuotation != null && _existingQuotation!.isInBox) ? _existingQuotation!.key : null,
+      excludeKey: (_existingQuotation != null && _existingQuotation!.isInBox)
+          ? _existingQuotation!.key
+          : null,
     );
 
     if (isDuplicate) {

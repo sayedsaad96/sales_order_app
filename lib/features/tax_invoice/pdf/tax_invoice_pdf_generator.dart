@@ -128,12 +128,12 @@ class TaxInvoicePdfGenerator {
                               decoration: const pw.BoxDecoration(
                                 color: boxColor,
                               ),
-                                child: pw.Text(
-                                  request.fromDate != null
-                                      ? dateFormat.format(request.fromDate!)
-                                      : '',
-                                  style: const pw.TextStyle(fontSize: 12),
-                                ),
+                              child: pw.Text(
+                                request.fromDate != null
+                                    ? dateFormat.format(request.fromDate!)
+                                    : '',
+                                style: const pw.TextStyle(fontSize: 12),
+                              ),
                             ),
                             pw.Padding(
                               padding: const pw.EdgeInsets.symmetric(
@@ -155,12 +155,12 @@ class TaxInvoicePdfGenerator {
                               decoration: const pw.BoxDecoration(
                                 color: boxColor,
                               ),
-                                child: pw.Text(
-                                  request.toDate != null
-                                      ? dateFormat.format(request.toDate!)
-                                      : '',
-                                  style: const pw.TextStyle(fontSize: 12),
-                                ),
+                              child: pw.Text(
+                                request.toDate != null
+                                    ? dateFormat.format(request.toDate!)
+                                    : '',
+                                style: const pw.TextStyle(fontSize: 12),
+                              ),
                             ),
                           ],
                         ),

@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:annex_sales_order/core/widgets/confetti_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as intl;
 import 'dart:io';
@@ -320,13 +321,17 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
       final defaultPath = settingsService.getDefaultSavePath();
 
       String? finalPath;
-      final safeName = (returnOrder.customerName ?? 'Client').replaceAll(RegExp(r'[^\w\s\u0600-\u06FF]'), '');
+      final safeName = (returnOrder.customerName ?? 'Client').replaceAll(
+        RegExp(r'[^\w\s\u0600-\u06FF]'),
+        '',
+      );
       final fileName = '${safeName}_${returnOrder.sn}.pdf';
 
       if (Platform.isAndroid || Platform.isIOS) {
         // Mobile: Share directly
         if (mounted) {
           Navigator.of(context).pop(); // Dismiss dialog
+          ConfettiOverlay.show(context);
           await Printing.sharePdf(bytes: bytes, filename: fileName);
         }
       } else {
@@ -366,16 +371,15 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
 
         if (mounted) {
           Navigator.of(context).pop(); // Dismiss dialog
+          ConfettiOverlay.show(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('تم حفظ الملف: $finalPath'),
-              duration: (!Platform.isAndroid && !Platform.isIOS)
-                  ? const Duration(seconds: 5)
-                  : const Duration(days: 365),
+              duration: const Duration(seconds: 5),
+              showCloseIcon: true,
               action: SnackBarAction(
                 label: 'مشاركة',
                 textColor: Colors.yellowAccent,
-                backgroundColor: Colors.black,
                 onPressed: () {
                   Printing.sharePdf(bytes: bytes, filename: fileName);
                 },
@@ -883,9 +887,7 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
               child: Container(
                 decoration: const BoxDecoration(
                   color: Color(0xFFD32F2F),
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(8),
-                  ),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: const Row(
@@ -896,7 +898,9 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
                         'الصنف',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold),
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     Expanded(
@@ -905,7 +909,9 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
                         'الكمية',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold),
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     Expanded(
@@ -914,7 +920,9 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
                         'الوحدة',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold),
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     SizedBox(width: 40),

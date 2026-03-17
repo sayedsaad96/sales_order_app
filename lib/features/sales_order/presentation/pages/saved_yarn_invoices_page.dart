@@ -8,6 +8,7 @@ import 'package:annex_sales_order/features/sales_order/data/models/yarn_sales_or
 import 'package:annex_sales_order/features/sales_order/presentation/pages/yarn_sales_order_page.dart';
 import 'package:annex_sales_order/core/widgets/app_drawer.dart';
 import 'package:annex_sales_order/core/utils/performance_utils.dart';
+import 'package:annex_sales_order/core/widgets/staggered_animated_item.dart';
 
 class SavedYarnInvoicesPage extends StatefulWidget {
   const SavedYarnInvoicesPage({super.key});
@@ -46,7 +47,7 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
         },
       );
     });
-    
+
     _setupBoxListener();
     _loadInvoices();
   }
@@ -129,10 +130,13 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
     _filteredCustomers = _searchQuery.isEmpty
         ? _sortedCustomers
         : _sortedCustomers
-            .where((name) =>
-                name.toLowerCase().contains(_searchQuery.toLowerCase()))
-            .toList();
+              .where(
+                (name) =>
+                    name.toLowerCase().contains(_searchQuery.toLowerCase()),
+              )
+              .toList();
   }
+
   Future<void> _deleteInvoice(YarnSalesOrder invoice) async {
     await _invoiceDataSource.deleteInvoice(invoice);
     _loadInvoices();
@@ -239,7 +243,11 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Center(
-              child: Image.asset('assets/images/logo.png', width: 150, height: 150),
+              child: Image.asset(
+                'assets/images/logo.png',
+                width: 150,
+                height: 150,
+              ),
             ),
             const SizedBox(height: 20),
             const Center(
@@ -295,8 +303,10 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
               ),
               if (_searchQuery.isNotEmpty)
                 Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   child: Text(
                     'النتائج: ${_filteredCustomers.length} من ${_sortedCustomers.length}',
                     style: TextStyle(color: Colors.grey[600]),
@@ -314,7 +324,11 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(CupertinoIcons.search, size: 64, color: Colors.grey[400]),
+                  Icon(
+                    CupertinoIcons.search,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'لا توجد نتائج للبحث',
@@ -336,11 +350,12 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
                 mainAxisSpacing: 10,
                 childAspectRatio: 1.1,
               ),
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final customerName = _filteredCustomers[index];
-                  final count = _customerCounts[customerName] ?? 0;
-                  return Stack(
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final customerName = _filteredCustomers[index];
+                final count = _customerCounts[customerName] ?? 0;
+                return StaggeredAnimatedItem(
+                  index: index,
+                  child: Stack(
                     children: [
                       Card(
                         elevation: 4,
@@ -360,8 +375,7 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
                             padding: const EdgeInsets.all(8.0),
                             child: Center(
                               child: Column(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.center,
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   const Icon(
                                     CupertinoIcons.folder,
@@ -400,10 +414,8 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
                           color: Colors.transparent,
                           child: InkWell(
                             borderRadius: BorderRadius.circular(20),
-                            onTap: () => _confirmDeleteFolder(
-                              context,
-                              customerName,
-                            ),
+                            onTap: () =>
+                                _confirmDeleteFolder(context, customerName),
                             child: Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
@@ -420,10 +432,9 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
                         ),
                       ),
                     ],
-                  );
-                },
-                childCount: _filteredCustomers.length,
-              ),
+                  ),
+                );
+              }, childCount: _filteredCustomers.length),
             ),
           ),
       ],
@@ -439,10 +450,11 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
   }
 
   Widget _buildInvoiceList() {
-    final filteredInvoices = _invoices
-        .where((i) => (i.customerName ?? "بدون اسم") == _selectedCustomer)
-        .toList()
-      ..sort((a, b) => b.orderDate.compareTo(a.orderDate));
+    final filteredInvoices =
+        _invoices
+            .where((i) => (i.customerName ?? "بدون اسم") == _selectedCustomer)
+            .toList()
+          ..sort((a, b) => b.orderDate.compareTo(a.orderDate));
 
     return CustomScrollView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -453,17 +465,21 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
             child: Center(
               child: Text(
                 'عدد الفواتير: ${filteredInvoices.length}',
-                style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
         ),
         SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              final invoice = filteredInvoices[index];
-              final totalValue = _calculateTotalValue(invoice);
-              return Center(
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final invoice = filteredInvoices[index];
+            final totalValue = _calculateTotalValue(invoice);
+            return StaggeredAnimatedItem(
+              index: index,
+              child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 800),
                   child: Dismissible(
@@ -472,14 +488,20 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
                       color: Colors.red,
                       alignment: Alignment.centerRight,
                       padding: const EdgeInsets.only(right: 20),
-                      child: const Icon(CupertinoIcons.trash_fill, color: Colors.white),
+                      child: const Icon(
+                        CupertinoIcons.trash_fill,
+                        color: Colors.white,
+                      ),
                     ),
                     direction: DismissDirection.startToEnd,
                     onDismissed: (direction) {
                       _deleteInvoice(invoice);
                     },
                     child: Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
                       child: ListTile(
                         title: Text(
                           '${invoice.customerName ?? "بدون اسم"} - ${invoice.sn}',
@@ -489,7 +511,10 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
                         ),
                         isThreeLine: true,
                         trailing: IconButton(
-                          icon: const Icon(CupertinoIcons.trash_fill, color: Colors.red),
+                          icon: const Icon(
+                            CupertinoIcons.trash_fill,
+                            color: Colors.red,
+                          ),
                           onPressed: () => _confirmDelete(context, invoice),
                         ),
                         onTap: () async {
@@ -506,10 +531,9 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
                     ),
                   ),
                 ),
-              );
-            },
-            childCount: filteredInvoices.length,
-          ),
+              ),
+            );
+          }, childCount: filteredInvoices.length),
         ),
         // Bottom padding for scrollability
         const SliverPadding(padding: EdgeInsets.only(bottom: 20)),
@@ -562,7 +586,19 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
         },
         child: Scaffold(
           appBar: AppBar(
-            title: Text(_selectedCustomer ?? 'فواتير الغزول المحفوظة'),
+            title: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_selectedCustomer == null) ...[
+                  const Hero(
+                    tag: 'saved_invoices_icon',
+                    child: Icon(CupertinoIcons.folder, color: Colors.blue),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                Text(_selectedCustomer ?? 'فواتير الغزول المحفوظة'),
+              ],
+            ),
             leading: _selectedCustomer != null
                 ? IconButton(
                     icon: const Icon(CupertinoIcons.back),
@@ -586,9 +622,18 @@ class _SavedYarnInvoicesPageState extends State<SavedYarnInvoicesPage> {
               constraints: const BoxConstraints(maxWidth: 1200),
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
-                  : _selectedCustomer == null
-                  ? _buildCustomerFolders()
-                  : _buildInvoiceList(),
+                  : AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: _selectedCustomer == null
+                          ? KeyedSubtree(
+                              key: const ValueKey('customerFolders'),
+                              child: _buildCustomerFolders(),
+                            )
+                          : KeyedSubtree(
+                              key: const ValueKey('invoiceList'),
+                              child: _buildInvoiceList(),
+                            ),
+                    ),
             ),
           ),
         ),

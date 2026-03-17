@@ -635,6 +635,27 @@ class _FabricsCmOrderPageState extends State<FabricsCmOrderPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
+                        'إجمالي الكمية (كجم):',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        provider.totalQuantity.toStringAsFixed(2),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Divider(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
                         'الإجمالي النهائي:',
                         style: TextStyle(
                           fontSize: 18,

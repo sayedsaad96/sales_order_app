@@ -26,7 +26,6 @@ class CustomerLocalDataSource {
     throw HiveError('Customer box is not open. Call init() first.');
   }
 
-
   List<Customer> getAllCustomers() {
     return _box.values.toList();
   }
@@ -54,10 +53,10 @@ class CustomerLocalDataSource {
       rethrow;
     }
   }
-  
+
   Future<void> updateCustomerKey(dynamic key, Customer customer) async {
     try {
-        await _box.put(key, customer);
+      await _box.put(key, customer);
     } catch (e) {
       debugPrint('Error updating customer: $e');
       rethrow;
