@@ -57,8 +57,8 @@ class _AppDrawerState extends State<AppDrawer> {
       'price_lists_sub': 'View pricing information',
       'settings': 'Settings',
       'settings_sub': 'App and invoice save settings',
-      'language': 'Language / اللغة',
-      'switch_lang': 'تغير للغة العربية',
+      'language': 'Language ',
+      'switch_lang': ' العربية ',
     },
     'ar': {
       'main_menu': 'القائمة الرئيسية',
@@ -89,8 +89,8 @@ class _AppDrawerState extends State<AppDrawer> {
       'price_lists_sub': 'عرض معلومات الأسعار',
       'settings': 'الإعدادات',
       'settings_sub': 'إعدادات التطبيق وحفظ الفواتير',
-      'language': 'اللغة / Language',
-      'switch_lang': 'Switch to English',
+      'language': 'اللغة',
+      'switch_lang': 'English',
     },
   };
 

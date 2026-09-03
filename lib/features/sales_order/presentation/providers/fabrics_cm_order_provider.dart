@@ -31,7 +31,7 @@ class FabricsCmOrderProvider extends ChangeNotifier {
 
   // Header State
   DateTime orderDate = DateTime.now();
-  DateTime? deliveryDate;
+  DateTime? deliveryDate = DateTime.now().add(const Duration(days: 1));
   String? orderType; // Legacy
   String? paymentMethod;
   String? selectedBranch = 'القاهرة';
@@ -130,7 +130,7 @@ class FabricsCmOrderProvider extends ChangeNotifier {
     notesController.clear();
 
     orderDate = DateTime.now();
-    deliveryDate = null;
+    deliveryDate = DateTime.now().add(const Duration(days: 1));
     orderType = null;
     paymentMethod = null;
     selectedBranch = 'القاهرة';
@@ -148,8 +148,8 @@ class FabricsCmOrderProvider extends ChangeNotifier {
     final existingSns = box.map((e) => e.sn ?? '').toSet();
 
     final List<int> available = [];
-    for (int i = 1; i <= 999; i++) {
-      final sn = 'FCM-${i.toString().padLeft(3, '0')}';
+    for (int i = 10; i <= 9999; i++) {
+      final sn = 'FCM-$i';
       if (!existingSns.contains(sn)) {
         available.add(i);
       }
@@ -159,7 +159,7 @@ class FabricsCmOrderProvider extends ChangeNotifier {
       final randomIndex =
           (DateTime.now().microsecondsSinceEpoch % available.length);
       final chosen = available[randomIndex.toInt()];
-      snController.text = 'FCM-${chosen.toString().padLeft(3, '0')}';
+      snController.text = 'FCM-$chosen';
     } else {
       snController.text =
           'FCM-${DateTime.now().millisecondsSinceEpoch.toString().substring(10)}';
@@ -330,8 +330,10 @@ class FabricsCmOrderProvider extends ChangeNotifier {
     saveAsNew = value;
     if (saveAsNew) {
       generateUniqueSN();
+      orderDate = DateTime.now();
     } else if (existingOrder != null) {
       snController.text = existingOrder!.sn ?? '';
+      orderDate = existingOrder!.orderDate;
     }
     notifyListeners();
   }

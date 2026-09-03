@@ -38,8 +38,8 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
     final existingSns = box.map((e) => e.sn ?? '').toSet();
 
     final List<int> available = [];
-    for (int i = 1; i <= 999; i++) {
-      final sn = 'SO-${i.toString().padLeft(3, '0')}';
+    for (int i = 10; i <= 9999; i++) {
+      final sn = 'SO-$i';
       if (!existingSns.contains(sn)) {
         available.add(i);
       }
@@ -49,7 +49,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
       final randomIndex =
           (DateTime.now().microsecondsSinceEpoch % available.length);
       final chosen = available[randomIndex.toInt()];
-      return 'SO-${chosen.toString().padLeft(3, '0')}';
+      return 'SO-$chosen';
     }
 
     return 'SO-${DateTime.now().millisecondsSinceEpoch.toString().substring(10)}';
@@ -68,7 +68,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
   final Map<String, bool> _orderTypes = {'مستلزمات': true, 'جوما': false};
   bool _deliveryIncluded = true;
   DateTime _orderDate = DateTime.now();
-  DateTime? _deliveryDate;
+  DateTime? _deliveryDate = DateTime.now().add(const Duration(days: 1));
 
   String? _paymentMethod;
   bool _isEditing = false;
@@ -209,7 +209,7 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
       _paymentMethod = null;
       _deliveryIncluded = true;
       _orderDate = DateTime.now();
-      _deliveryDate = null;
+      _deliveryDate = DateTime.now().add(const Duration(days: 1));
 
       // Reset order types
       _orderTypes.updateAll((key, value) => false);
@@ -290,6 +290,40 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
         _calculateTotal();
       }
     }
+  }
+
+  void _sortSection(int sectionIndex, bool ascending) {
+    setState(() {
+      final section = _sections[sectionIndex];
+      if (section.items.isEmpty) return;
+
+      final indices = List.generate(section.items.length, (i) => i);
+      
+      indices.sort((i, j) {
+        final a = section.items[i];
+        final b = section.items[j];
+        final numA = _extractNumber(a.itemName);
+        final numB = _extractNumber(b.itemName);
+        if (numA == numB) {
+          return a.itemName.compareTo(b.itemName) * (ascending ? 1 : -1);
+        }
+        return numA.compareTo(numB) * (ascending ? 1 : -1);
+      });
+
+      final newItems = indices.map((i) => section.items[i]).toList();
+      final newControllers = indices.map((i) => section.itemControllers[i]).toList();
+
+      section.items = newItems;
+      section.itemControllers = newControllers;
+    });
+  }
+
+  double _extractNumber(String text) {
+    final match = RegExp(r'\d+(\.\d+)?').firstMatch(text);
+    if (match != null) {
+      return double.parse(match.group(0)!);
+    }
+    return double.maxFinite;
   }
 
   List<SalesOrderItem> get _allValidItems {
@@ -997,12 +1031,19 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                                         fontSize: 18,
                                       ),
                                     ),
-                                    Text(
-                                      total.toStringAsFixed(2),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 18,
+                                    const SizedBox(width: 8),
+                                    Flexible(
+                                      child: FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        alignment: AlignmentDirectional.centerEnd,
+                                        child: Text(
+                                          total.toStringAsFixed(2),
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 18,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -1038,9 +1079,11 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                                     _saveAsNew = val ?? false;
                                     if (_saveAsNew) {
                                       _snController.text = _generateUniqueSn();
+                                      _orderDate = DateTime.now();
                                     } else if (widget.existingOrder != null) {
                                       _snController.text =
                                           widget.existingOrder!.sn ?? '';
+                                      _orderDate = widget.existingOrder!.orderDate;
                                     }
                                   });
                                 },
@@ -1304,8 +1347,9 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                   ),
                   padding: const EdgeInsets.all(8.0),
                   margin: const EdgeInsets.only(bottom: 20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  child: Wrap(
+                    alignment: WrapAlignment.spaceEvenly,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       TextButton.icon(
                         onPressed: () => _addItem(sectionIndex),
@@ -1321,6 +1365,16 @@ class _SalesOrderPageState extends State<SalesOrderPage> {
                         },
                         icon: const Icon(CupertinoIcons.plus_square_on_square),
                         label: const Text('إضافة جماعية'),
+                      ),
+                      IconButton(
+                        tooltip: 'ترتيب تصاعدي',
+                        onPressed: () => _sortSection(sectionIndex, true),
+                        icon: const Icon(CupertinoIcons.sort_up),
+                      ),
+                      IconButton(
+                        tooltip: 'ترتيب تنازلي',
+                        onPressed: () => _sortSection(sectionIndex, false),
+                        icon: const Icon(CupertinoIcons.sort_down),
                       ),
                     ],
                   ),

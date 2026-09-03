@@ -66,32 +66,35 @@ class _SalesOrderContainerPageState extends State<SalesOrderContainerPage> {
             ),
           ],
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildNavItem(
-              index: 0,
-              icon: Icons.ac_unit_outlined,
-              label: 'مستلزمات',
-              activeColor: Colors.blue.shade600,
-              activeBg: Colors.blue.shade50,
-            ),
-            _buildNavItem(
-              index: 1,
-              icon: CupertinoIcons.layers_alt_fill,
-              label: 'غزل',
-              activeColor: Colors.teal.shade600,
-              activeBg: Colors.teal.shade50,
-            ),
-            _buildNavItem(
-              index: 2,
-              icon: CupertinoIcons.scissors,
-              label: 'قماش',
-              activeColor: Colors.purple.shade600,
-              activeBg: Colors.purple.shade50,
-            ),
-          ],
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem(
+                index: 0,
+                icon: Icons.ac_unit_outlined,
+                label: 'مستلزمات',
+                activeColor: Colors.blue.shade600,
+                activeBg: Colors.blue.shade50,
+              ),
+              _buildNavItem(
+                index: 1,
+                icon: CupertinoIcons.layers_alt_fill,
+                label: 'غزل',
+                activeColor: Colors.teal.shade600,
+                activeBg: Colors.teal.shade50,
+              ),
+              _buildNavItem(
+                index: 2,
+                icon: CupertinoIcons.scissors,
+                label: 'قماش',
+                activeColor: Colors.purple.shade600,
+                activeBg: Colors.purple.shade50,
+              ),
+            ],
+          ),
         ),
       ),
     );

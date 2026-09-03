@@ -51,11 +51,13 @@ class AnalysisPaymentMethodChart extends StatelessWidget {
                 const SizedBox(height: 8),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(10),
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    minHeight: 10,
-                    backgroundColor: isDark ? Colors.white10 : Colors.grey[200],
-                    valueColor: AlwaysStoppedAnimation<Color>(_getColorForMethod(entry.key)),
+                  child: SizedBox(
+                    height: 10,
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      backgroundColor: isDark ? Colors.white10 : Colors.grey[200],
+                      valueColor: AlwaysStoppedAnimation<Color>(_getColorForMethod(entry.key)),
+                    ),
                   ),
                 ),
               ],
@@ -67,9 +69,9 @@ class AnalysisPaymentMethodChart extends StatelessWidget {
   }
 
   Color _getColorForMethod(String method) {
-    if (method.contains('كاش')) return Colors.green;
-    if (method.contains('بنكي')) return Colors.blue;
-    if (method.contains('اجل')) return Colors.orange;
+    if (method.contains('كاش')) return const Color(0xFF43A047);
+    if (method.contains('بنكي')) return const Color(0xFF1E88E5);
+    if (method.contains('اجل')) return const Color(0xFFFB8C00);
     return Colors.teal;
   }
 }

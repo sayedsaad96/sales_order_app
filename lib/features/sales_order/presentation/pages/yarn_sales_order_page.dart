@@ -43,7 +43,7 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
 
   // Selected values
   DateTime _orderDate = DateTime.now();
-  DateTime? _deliveryDate;
+  DateTime? _deliveryDate = DateTime.now().add(const Duration(days: 1));
   String? _selectedBranch = 'القاهرة';
   String _editQuantity = 'الكمية المحددة';
   String _deliveryResponsibility = 'العميل';
@@ -68,8 +68,8 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
     final existingSns = box.map((e) => e.sn ?? '').toSet();
 
     final List<int> available = [];
-    for (int i = 1; i <= 999; i++) {
-      final sn = 'YSO-${i.toString().padLeft(3, '0')}';
+    for (int i = 10; i <= 9999; i++) {
+      final sn = 'YSO-$i';
       if (!existingSns.contains(sn)) {
         available.add(i);
       }
@@ -79,7 +79,7 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
       final randomIndex =
           (DateTime.now().microsecondsSinceEpoch % available.length);
       final chosen = available[randomIndex.toInt()];
-      return 'YSO-${chosen.toString().padLeft(3, '0')}';
+      return 'YSO-$chosen';
     }
 
     return 'YSO-${DateTime.now().millisecondsSinceEpoch.toString().substring(10)}';
@@ -589,7 +589,7 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
       _deliveryResponsibility = "العميل";
       _editQuantity = "الكمية المحددة";
       _orderDate = DateTime.now();
-      _deliveryDate = null;
+      _deliveryDate = DateTime.now().add(const Duration(days: 1));
 
       _orderTypes['غزل'] = true;
 
@@ -772,9 +772,11 @@ class _YarnSalesOrderPageState extends State<YarnSalesOrderPage> {
                                 _saveAsNew = val ?? false;
                                 if (_saveAsNew) {
                                   _snController.text = _generateUniqueSn();
+                                  _orderDate = DateTime.now();
                                 } else if (widget.existingOrder != null) {
                                   _snController.text =
                                       widget.existingOrder!.sn ?? '';
+                                  _orderDate = widget.existingOrder!.orderDate;
                                 }
                               });
                             },

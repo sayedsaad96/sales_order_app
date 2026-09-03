@@ -130,7 +130,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
             if (constraints.maxWidth < 900) {
               return _buildMobileView(customers);
             } else {
-              return _buildDesktopView(customers);
+              return _buildDesktopView(customers, constraints);
             }
           },
         );
@@ -229,7 +229,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
   }
 
   // --- Desktop View (Enhanced Table) ---
-  Widget _buildDesktopView(List<Customer> customers) {
+  Widget _buildDesktopView(List<Customer> customers, BoxConstraints constraints) {
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Card(
@@ -237,9 +237,11 @@ class _CustomerListPageState extends State<CustomerListPage> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
-          child: SizedBox(
-            width: double.infinity,
-            child: Theme(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SizedBox(
+              width: constraints.maxWidth > 1000 ? constraints.maxWidth - 100 : 900,
+              child: Theme(
               data: Theme.of(context).copyWith(
                 dividerColor: Colors.grey.withValues(alpha: 0.2),
                 dataTableTheme: DataTableThemeData(
@@ -371,8 +373,9 @@ class _CustomerListPageState extends State<CustomerListPage> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildTag(String? text) {
     if (text == null || text.isEmpty) return const Text('-');

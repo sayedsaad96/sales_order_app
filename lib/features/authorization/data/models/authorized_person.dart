@@ -13,6 +13,16 @@ class AuthorizedPerson extends HiveObject {
     required this.nationalId,
   });
 
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'nationalId': nationalId,
+  };
+
+  factory AuthorizedPerson.fromJson(Map<String, dynamic> json) => AuthorizedPerson(
+    name: json['name'] ?? '',
+    nationalId: json['nationalId'] ?? '',
+  );
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||

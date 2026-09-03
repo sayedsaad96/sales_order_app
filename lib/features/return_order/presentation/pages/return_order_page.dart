@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'package:annex_sales_order/core/widgets/confetti_overlay.dart';
+import 'package:annex_sales_order/core/widgets/loss_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as intl;
 import 'dart:io';
@@ -46,7 +46,7 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
   final _routeToController = TextEditingController();
   final _returnReasonController = TextEditingController();
   final _notesController = TextEditingController();
-  DateTime? _deliveryDate;
+  DateTime? _deliveryDate = DateTime.now().add(const Duration(days: 1));
 
   // Sections
   final List<ReturnOrderSection> _sections = [];
@@ -314,6 +314,11 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
 
     try {
       final returnOrder = _buildReturnOrderFromForm();
+      
+      // الحفظ التلقائي
+      await _dataSource.saveReturnOrder(returnOrder);
+      AnalysisService.clearCache();
+
       final bytes = await ReturnOrderPdfGenerator.generate(returnOrder);
 
       final settingsService = SettingsService();
@@ -331,7 +336,7 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
         // Mobile: Share directly
         if (mounted) {
           Navigator.of(context).pop(); // Dismiss dialog
-          ConfettiOverlay.show(context);
+          LossOverlay.show(context);
           await Printing.sharePdf(bytes: bytes, filename: fileName);
         }
       } else {
@@ -371,7 +376,7 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
 
         if (mounted) {
           Navigator.of(context).pop(); // Dismiss dialog
-          ConfettiOverlay.show(context);
+          LossOverlay.show(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('تم حفظ الملف: $finalPath'),

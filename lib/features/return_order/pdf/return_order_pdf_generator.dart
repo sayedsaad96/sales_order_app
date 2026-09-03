@@ -181,7 +181,7 @@ class ReturnOrderPdfGenerator {
                       padding: const pw.EdgeInsets.only(top: 10, bottom: 5),
                       child: pw.Center(
                         child: pw.Text(
-                          'تصنيف: $category',
+                          ' #  $category',
                           style: pw.TextStyle(
                             fontSize: 14,
                             fontWeight: pw.FontWeight.bold,

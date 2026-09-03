@@ -73,8 +73,8 @@ class _AnalysisBarChartState extends State<AnalysisBarChart> {
         _chartFabric[date] = dailyFabric[date] ?? 0;
       }
 
-      if (_allDates.length > 15) {
-        final recentDates = _allDates.sublist(_allDates.length - 15);
+      if (_allDates.length > 12) {
+        final recentDates = _allDates.sublist(_allDates.length - 12);
         final filteredGeneral = <String, int>{};
         final filteredYarn = <String, int>{};
         final filteredFabric = <String, int>{};
@@ -110,7 +110,7 @@ class _AnalysisBarChartState extends State<AnalysisBarChart> {
         : Colors.black.withValues(alpha: 0.05);
 
     return SizedBox(
-      height: 300,
+      height: 350,
       child: Column(
         children: [
           Expanded(
@@ -126,6 +126,7 @@ class _AnalysisBarChartState extends State<AnalysisBarChart> {
 
                   return BarChartGroupData(
                     x: e.key,
+                    barsSpace: 4,
                     barRods: [
                       BarChartRodData(
                         toY: generalCount.toDouble(),
@@ -134,9 +135,9 @@ class _AnalysisBarChartState extends State<AnalysisBarChart> {
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
                         ),
-                        width: 12,
+                        width: 6,
                         borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(4),
+                          top: Radius.circular(3),
                         ),
                       ),
                       BarChartRodData(
@@ -146,9 +147,9 @@ class _AnalysisBarChartState extends State<AnalysisBarChart> {
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
                         ),
-                        width: 12,
+                        width: 6,
                         borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(4),
+                          top: Radius.circular(3),
                         ),
                       ),
                       BarChartRodData(
@@ -158,9 +159,9 @@ class _AnalysisBarChartState extends State<AnalysisBarChart> {
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
                         ),
-                        width: 12,
+                        width: 6,
                         borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(4),
+                          top: Radius.circular(3),
                         ),
                       ),
                     ],
@@ -171,6 +172,8 @@ class _AnalysisBarChartState extends State<AnalysisBarChart> {
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
+                      reservedSize: 40,
+                      interval: 1,
                       getTitlesWidget: (val, meta) {
                         if (val.toInt() >= _chartKeys.length) {
                           return const SizedBox();
@@ -182,11 +185,17 @@ class _AnalysisBarChartState extends State<AnalysisBarChart> {
                                   ? key.substring(key.length - 5)
                                   : key);
 
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 10.0),
+                        return SideTitleWidget(
+                          meta: meta,
+                          space: 10,
+                          angle: _isMonthlyBarChart ? 0 : 0.5,
                           child: Text(
                             displayKey,
-                            style: TextStyle(fontSize: 10, color: labelColor),
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              color: labelColor,
+                            ),
                           ),
                         );
                       },

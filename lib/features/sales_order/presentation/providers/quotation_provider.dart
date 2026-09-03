@@ -51,8 +51,8 @@ class QuotationProvider extends ChangeNotifier {
     final existingSns = box.map((e) => e.sn ?? '').toSet();
 
     final List<int> available = [];
-    for (int i = 1; i <= 999; i++) {
-      final sn = 'Q-${i.toString().padLeft(3, '0')}';
+    for (int i = 10; i <= 9999; i++) {
+      final sn = 'Q-$i';
       if (!existingSns.contains(sn)) {
         available.add(i);
       }
@@ -62,7 +62,7 @@ class QuotationProvider extends ChangeNotifier {
       final randomIndex =
           (DateTime.now().microsecondsSinceEpoch % available.length);
       final chosen = available[randomIndex.toInt()];
-      snController.text = 'Q-${chosen.toString().padLeft(3, '0')}';
+      snController.text = 'Q-$chosen';
     } else {
       snController.text =
           'Q-${DateTime.now().millisecondsSinceEpoch.toString().substring(10)}';

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 import 'package:hive/hive.dart';
 
@@ -45,6 +46,38 @@ class TaxInvoiceRequest extends HiveObject {
     this.taxCardImage,
     this.unit,
   });
+
+  Map<String, dynamic> toJson() => {
+    'sapCustomerCode': sapCustomerCode,
+    'customerNameOnTaxCard': customerNameOnTaxCard,
+    'taxCardNumber': taxCardNumber,
+    'itemName': itemName,
+    'quantity': quantity,
+    'unitPrice': unitPrice,
+    'fromDate': fromDate?.toIso8601String(),
+    'toDate': toDate?.toIso8601String(),
+    'totalBeforeTax': totalBeforeTax,
+    'totalAfterTax': totalAfterTax,
+    'additionalInfo': additionalInfo,
+    'taxCardImage': taxCardImage != null ? base64Encode(taxCardImage!) : null,
+    'unit': unit,
+  };
+
+  factory TaxInvoiceRequest.fromJson(Map<String, dynamic> json) => TaxInvoiceRequest(
+    sapCustomerCode: json['sapCustomerCode'] ?? '',
+    customerNameOnTaxCard: json['customerNameOnTaxCard'] ?? '',
+    taxCardNumber: json['taxCardNumber'],
+    itemName: json['itemName'] ?? '',
+    quantity: (json['quantity'] as num?)?.toDouble(),
+    unitPrice: (json['unitPrice'] as num?)?.toDouble(),
+    fromDate: json['fromDate'] != null ? DateTime.parse(json['fromDate']) : null,
+    toDate: json['toDate'] != null ? DateTime.parse(json['toDate']) : null,
+    totalBeforeTax: (json['totalBeforeTax'] as num?)?.toDouble(),
+    totalAfterTax: (json['totalAfterTax'] as num?)?.toDouble(),
+    additionalInfo: json['additionalInfo'],
+    taxCardImage: json['taxCardImage'] != null ? base64Decode(json['taxCardImage']) : null,
+    unit: json['unit'],
+  );
 }
 
 class TaxInvoiceRequestAdapter extends TypeAdapter<TaxInvoiceRequest> {
