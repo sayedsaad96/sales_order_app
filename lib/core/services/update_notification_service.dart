@@ -196,7 +196,7 @@ class UpdateNotificationService {
       } else if (response.statusCode == 302 || response.statusCode == 301) {
         // Follow redirect
         final newUrl = response.headers['location'];
-        if (newUrl != null) return _getFileSize(newUrl);
+        if (newUrl != null) return await _getFileSize(newUrl);
       } else if (response.statusCode == 403 || response.statusCode == 429) {
         // explicitly return null to signfiy unknown
         return null;

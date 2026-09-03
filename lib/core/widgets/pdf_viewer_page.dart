@@ -46,7 +46,7 @@ class PdfViewerPage extends StatelessWidget {
                 assetPath,
                 filename,
               );
-              return file.readAsBytes();
+              return await file.readAsBytes();
             } else {
               final byteData = await rootBundle.load(assetPath);
               return byteData.buffer.asUint8List();
