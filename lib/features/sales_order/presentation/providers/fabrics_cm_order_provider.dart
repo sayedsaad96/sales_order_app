@@ -542,7 +542,6 @@ class FabricsCmOrderProvider extends ChangeNotifier {
       if (Platform.isAndroid || Platform.isIOS) {
         // Mobile: Share directly
         if (!context.mounted) return;
-        Navigator.of(context).pop(); // Dismiss loading
         ConfettiOverlay.show(context);
         await Printing.sharePdf(bytes: bytes, filename: fileName);
       } else {

@@ -88,11 +88,12 @@ class _SavedTaxInvoicesScreenState extends State<SavedTaxInvoicesScreen> {
                             Icons.delete_outline,
                             color: Colors.red,
                           ),
-                          onPressed: () => _confirmDelete(context, actualIndex),
+                          onPressed: () => _confirmDelete(context, request),
                         ),
                         onTap: () {
                           Navigator.pop(context, {
                             'request': request,
+                            'key': request.key,
                             'index': actualIndex,
                           });
                         },
@@ -108,7 +109,7 @@ class _SavedTaxInvoicesScreenState extends State<SavedTaxInvoicesScreen> {
     );
   }
 
-  void _confirmDelete(BuildContext context, int index) {
+  void _confirmDelete(BuildContext context, TaxInvoiceRequest request) {
     showDialog(
       context: context,
       builder: (context) => Directionality(
@@ -122,9 +123,15 @@ class _SavedTaxInvoicesScreenState extends State<SavedTaxInvoicesScreen> {
               child: const Text('إلغاء'),
             ),
             TextButton(
-              onPressed: () {
-                _dataSource.delete(index);
-                Navigator.pop(context);
+              onPressed: () async {
+                if (request.isInBox) {
+                  await request.delete();
+                } else if (request.key != null) {
+                  await _dataSource.deleteByKey(request.key);
+                }
+                if (context.mounted) {
+                  Navigator.pop(context);
+                }
               },
               child: const Text('حذف', style: TextStyle(color: Colors.red)),
             ),

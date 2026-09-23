@@ -426,18 +426,18 @@ class _CustomerListPageState extends State<CustomerListPage> {
         IconButton(
           tooltip: 'Delete',
           icon: const Icon(Icons.delete_outline, color: Colors.red),
-          onPressed: () => _confirmDelete(index),
+          onPressed: () => _confirmDelete(customer),
         ),
       ],
     );
   }
 
-  void _confirmDelete(int index) {
+  void _confirmDelete(Customer customer) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('تأكيد الحذف'),
-        content: const Text('هل أنت متأكد من حذف هذا العميل؟'),
+        content: Text('هل أنت متأكد من حذف العميل "${customer.customerName}"؟'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -445,9 +445,15 @@ class _CustomerListPageState extends State<CustomerListPage> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () {
-              _dataSource.deleteCustomer(index);
-              Navigator.pop(context);
+            onPressed: () async {
+              if (customer.key != null) {
+                await _dataSource.deleteCustomerByKey(customer.key);
+              } else {
+                await customer.delete();
+              }
+              if (context.mounted) {
+                Navigator.pop(context);
+              }
             },
             child: const Text('حذف', style: TextStyle(color: Colors.white)),
           ),

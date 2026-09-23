@@ -20,12 +20,16 @@ class AnalysisPieChart extends StatelessWidget {
 
     final sections = <PieChartSectionData>[];
 
+    final totalValue = metrics.totalSalesValue;
+
     if (hasGeneral) {
+      final pct = totalValue > 0
+          ? (metrics.totalGeneralSales / totalValue * 100).toStringAsFixed(1)
+          : '0.0';
       sections.add(
         PieChartSectionData(
           value: metrics.totalGeneralSales,
-          title:
-              '${(metrics.totalGeneralSales / metrics.totalSalesValue * 100).toStringAsFixed(1)}%',
+          title: '$pct%',
           color: const Color(0xFF00B4DB),
           radius: 60,
           titleStyle: const TextStyle(
@@ -38,11 +42,13 @@ class AnalysisPieChart extends StatelessWidget {
     }
 
     if (hasYarn) {
+      final pct = totalValue > 0
+          ? (metrics.totalYarnSales / totalValue * 100).toStringAsFixed(1)
+          : '0.0';
       sections.add(
         PieChartSectionData(
           value: metrics.totalYarnSales,
-          title:
-              '${(metrics.totalYarnSales / metrics.totalSalesValue * 100).toStringAsFixed(1)}%',
+          title: '$pct%',
           color: Colors.teal,
           radius: 60,
           titleStyle: const TextStyle(
@@ -55,11 +61,13 @@ class AnalysisPieChart extends StatelessWidget {
     }
 
     if (hasFabric) {
+      final pct = totalValue > 0
+          ? (metrics.totalFabricSales / totalValue * 100).toStringAsFixed(1)
+          : '0.0';
       sections.add(
         PieChartSectionData(
           value: metrics.totalFabricSales,
-          title:
-              '${(metrics.totalFabricSales / metrics.totalSalesValue * 100).toStringAsFixed(1)}%',
+          title: '$pct%',
           color: Colors.deepPurpleAccent,
           radius: 60,
           titleStyle: const TextStyle(

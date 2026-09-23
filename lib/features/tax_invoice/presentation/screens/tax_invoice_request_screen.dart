@@ -42,6 +42,8 @@ class _TaxInvoiceRequestScreenState extends State<TaxInvoiceRequestScreen> {
 
   bool _isAfterTaxSelected = true;
   int? _editingIndex;
+  dynamic _editingKey;
+  TaxInvoiceRequest? _editingRequest;
 
   DateTime? _fromDate;
   DateTime? _toDate;
@@ -55,11 +57,11 @@ class _TaxInvoiceRequestScreenState extends State<TaxInvoiceRequestScreen> {
   void initState() {
     super.initState();
     if (widget.initialRequest != null) {
-      _loadRequest(widget.initialRequest!, widget.initialIndex);
+      _loadRequest(widget.initialRequest!, widget.initialIndex, key: widget.initialRequest!.key);
     }
   }
 
-  void _loadRequest(TaxInvoiceRequest request, int? index) {
+  void _loadRequest(TaxInvoiceRequest request, int? index, {dynamic key}) {
     _sapCodeController.text = request.sapCustomerCode;
     _nameController.text = request.customerNameOnTaxCard;
     _taxNumberController.text = request.taxCardNumber ?? '';
@@ -82,6 +84,8 @@ class _TaxInvoiceRequestScreenState extends State<TaxInvoiceRequestScreen> {
     }
 
     _editingIndex = index;
+    _editingKey = key ?? request.key;
+    _editingRequest = request;
     setState(() {});
   }
 
@@ -135,14 +139,16 @@ class _TaxInvoiceRequestScreenState extends State<TaxInvoiceRequestScreen> {
       );
 
       try {
-        if (_editingIndex != null) {
+        if (_editingKey != null) {
+          await _dataSource.updateByKey(_editingKey, request);
+        } else if (_editingRequest != null && _editingRequest!.key != null) {
+          await _dataSource.updateByKey(_editingRequest!.key, request);
+        } else if (_editingIndex != null) {
           await _dataSource.update(_editingIndex!, request);
         } else {
           await _dataSource.add(request);
-          // After adding, we want to know its index if we want to stay in "edit mode"
-          // but for simplicity, we'll just show success and let user continue or reset.
-          // Let's set the index to the last one.
-          _editingIndex = _dataSource.getAll().length - 1;
+          _editingKey = request.key;
+          _editingRequest = request;
         }
 
         if (mounted) {
@@ -331,18 +337,20 @@ class _TaxInvoiceRequestScreenState extends State<TaxInvoiceRequestScreen> {
                   ),
                 );
                 if (result != null && result is Map) {
-                  _loadRequest(result['request'], result['index']);
+                  _loadRequest(result['request'], result['index'], key: result['key']);
                 }
               }
             },
             tooltip: 'الطلبات المحفوظة',
           ),
-          if (_editingIndex != null)
+          if (_editingKey != null || _editingIndex != null)
             IconButton(
               icon: const Icon(Icons.add_circle_outline),
               onPressed: () {
                 setState(() {
                   _editingIndex = null;
+                  _editingKey = null;
+                  _editingRequest = null;
                   _formKey.currentState?.reset();
                   _sapCodeController.clear();
                   _nameController.clear();

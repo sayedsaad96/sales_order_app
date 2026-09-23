@@ -58,7 +58,16 @@ class CustomerLocalDataSource {
     try {
       await _box.put(key, customer);
     } catch (e) {
-      debugPrint('Error updating customer: $e');
+      debugPrint('Error updating customer by key: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> deleteCustomerByKey(dynamic key) async {
+    try {
+      await _box.delete(key);
+    } catch (e) {
+      debugPrint('Error deleting customer by key: $e');
       rethrow;
     }
   }

@@ -536,7 +536,7 @@ class _AppDrawerState extends State<AppDrawer> {
 }
 
 class _ModernSocialIcon extends StatefulWidget {
-  final IconData icon;
+  final FaIconData icon;
   final VoidCallback onTap;
   final Color color;
 
@@ -575,7 +575,7 @@ class _ModernSocialIconState extends State<_ModernSocialIcon> {
               width: 2,
             ),
           ),
-          child: Icon(
+          child: FaIcon(
             widget.icon,
             size: 24,
             color: _isHovered ? widget.color : Colors.grey[600],

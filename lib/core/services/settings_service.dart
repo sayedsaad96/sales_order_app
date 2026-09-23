@@ -15,7 +15,20 @@ class SettingsService {
 
   SettingsService._internal();
 
-  Box get _box => Hive.box(_settingsBoxName);
+  Future<void> init() async {
+    if (!Hive.isBoxOpen(_settingsBoxName)) {
+      await Hive.openBox(_settingsBoxName);
+    }
+  }
+
+  Box get _box {
+    if (!Hive.isBoxOpen(_settingsBoxName)) {
+      throw HiveError(
+        'Settings box is not open. Call SettingsService().init() before accessing settings.',
+      );
+    }
+    return Hive.box(_settingsBoxName);
+  }
 
   InvoiceSaveStrategy getInvoiceSaveStrategy() {
     final String? strategy = _box.get(_keySaveStrategy);

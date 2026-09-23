@@ -811,7 +811,6 @@ class _CreateQuotationView extends StatelessWidget {
       if (Platform.isAndroid || Platform.isIOS) {
         // Mobile: Share directly
         if (context.mounted) {
-          Navigator.pop(context); // Dismiss loading
           ConfettiOverlay.show(context);
           await Printing.sharePdf(bytes: bytes, filename: fileName);
         }

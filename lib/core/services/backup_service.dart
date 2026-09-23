@@ -182,109 +182,141 @@ class BackupService {
           }
         }
 
-        // Restore User
+        // Phase 1: In-memory parsing and validation (No DB modifications)
+        UserModel? parsedUser;
         if (backupData.containsKey('user')) {
+          parsedUser = UserModel.fromJson(backupData['user']);
+        }
+
+        List<SalesOrder>? parsedInvoices;
+        if (backupData.containsKey('invoices')) {
+          final List<dynamic> list = backupData['invoices'];
+          parsedInvoices = list.map((e) => SalesOrder.fromJson(e)).toList();
+        }
+
+        List<YarnSalesOrder>? parsedYarnInvoices;
+        if (backupData.containsKey('yarn_invoices')) {
+          final List<dynamic> list = backupData['yarn_invoices'];
+          parsedYarnInvoices =
+              list.map((e) => YarnSalesOrder.fromJson(e)).toList();
+        }
+
+        List<Quotation>? parsedQuotations;
+        if (backupData.containsKey('quotations')) {
+          final List<dynamic> list = backupData['quotations'];
+          parsedQuotations = list.map((e) => Quotation.fromJson(e)).toList();
+        }
+
+        List<FabricsCmSalesOrder>? parsedFabricsCmOrders;
+        if (backupData.containsKey('fabrics_cm_orders')) {
+          final List<dynamic> list = backupData['fabrics_cm_orders'];
+          parsedFabricsCmOrders =
+              list.map((e) => FabricsCmSalesOrder.fromJson(e)).toList();
+        }
+
+        List<ReturnOrder>? parsedReturnOrders;
+        if (backupData.containsKey('return_orders')) {
+          final List<dynamic> list = backupData['return_orders'];
+          parsedReturnOrders =
+              list.map((e) => ReturnOrder.fromJson(e)).toList();
+        }
+
+        List<Customer>? parsedCustomers;
+        if (backupData.containsKey('customers')) {
+          final List<dynamic> list = backupData['customers'];
+          parsedCustomers = list.map((e) => Customer.fromJson(e)).toList();
+        }
+
+        List<AuthorizedPerson>? parsedAuthorizedPersons;
+        if (backupData.containsKey('authorized_persons')) {
+          final List<dynamic> list = backupData['authorized_persons'];
+          parsedAuthorizedPersons =
+              list.map((e) => AuthorizedPerson.fromJson(e)).toList();
+        }
+
+        List<TaxInvoiceRequest>? parsedTaxInvoices;
+        if (backupData.containsKey('tax_invoice_requests')) {
+          final List<dynamic> list = backupData['tax_invoice_requests'];
+          parsedTaxInvoices =
+              list.map((e) => TaxInvoiceRequest.fromJson(e)).toList();
+        }
+
+        Map<String, dynamic>? parsedSettings;
+        if (backupData.containsKey('settings')) {
+          parsedSettings = Map<String, dynamic>.from(backupData['settings']);
+        }
+
+        // Phase 2: Safe Commit (Only reached if all collections parse successfully)
+        if (parsedUser != null) {
           final userBox = await _openBox<UserModel>(_userBoxName);
           await userBox.clear();
-          await userBox.put(
-            'currentUser',
-            UserModel.fromJson(backupData['user']),
-          );
+          await userBox.put('currentUser', parsedUser);
         }
 
-        // Restore Invoices
-        if (backupData.containsKey('invoices')) {
+        if (parsedInvoices != null) {
           final box = await _openBox<SalesOrder>(_invoiceBoxName);
           await box.clear();
-          final List<dynamic> list = backupData['invoices'];
-          await box.addAll(list.map((e) => SalesOrder.fromJson(e)).toList());
-          debugPrint('Restored ${list.length} invoices');
+          await box.addAll(parsedInvoices);
+          debugPrint('Restored ${parsedInvoices.length} invoices');
         }
 
-        // Restore Yarn Invoices
-        if (backupData.containsKey('yarn_invoices')) {
+        if (parsedYarnInvoices != null) {
           final box = await _openBox<YarnSalesOrder>(_yarnInvoiceBoxName);
           await box.clear();
-          final List<dynamic> list = backupData['yarn_invoices'];
-          await box.addAll(
-            list.map((e) => YarnSalesOrder.fromJson(e)).toList(),
-          );
-          debugPrint('Restored ${list.length} yarn invoices');
+          await box.addAll(parsedYarnInvoices);
+          debugPrint('Restored ${parsedYarnInvoices.length} yarn invoices');
         }
 
-        // Restore Quotations
-        if (backupData.containsKey('quotations')) {
+        if (parsedQuotations != null) {
           final box = await _openBox<Quotation>(_quotationBoxName);
           await box.clear();
-          final List<dynamic> list = backupData['quotations'];
-          await box.addAll(list.map((e) => Quotation.fromJson(e)).toList());
-          debugPrint('Restored ${list.length} quotations');
+          await box.addAll(parsedQuotations);
+          debugPrint('Restored ${parsedQuotations.length} quotations');
         }
 
-        // Restore Fabrics/CM
-        if (backupData.containsKey('fabrics_cm_orders')) {
+        if (parsedFabricsCmOrders != null) {
           final box = await _openBox<FabricsCmSalesOrder>(_fabricsCmBoxName);
           await box.clear();
-          final List<dynamic> list = backupData['fabrics_cm_orders'];
-          await box.addAll(
-            list.map((e) => FabricsCmSalesOrder.fromJson(e)).toList(),
-          );
-          debugPrint('Restored ${list.length} fabrics/cm orders');
+          await box.addAll(parsedFabricsCmOrders);
+          debugPrint('Restored ${parsedFabricsCmOrders.length} fabrics/cm orders');
         }
 
-        // Restore Return Orders
-        if (backupData.containsKey('return_orders')) {
+        if (parsedReturnOrders != null) {
           final box = await _openBox<ReturnOrder>(_returnOrderBoxName);
           await box.clear();
-          final List<dynamic> list = backupData['return_orders'];
-          await box.addAll(list.map((e) => ReturnOrder.fromJson(e)).toList());
-          debugPrint('Restored ${list.length} return orders');
+          await box.addAll(parsedReturnOrders);
+          debugPrint('Restored ${parsedReturnOrders.length} return orders');
         }
 
-        // Restore Customers
-        if (backupData.containsKey('customers')) {
+        if (parsedCustomers != null) {
           final box = await _openBox<Customer>(_customersBoxName);
           await box.clear();
-          final List<dynamic> list = backupData['customers'];
-          await box.addAll(list.map((e) => Customer.fromJson(e)).toList());
-          debugPrint('Restored ${list.length} customers');
+          await box.addAll(parsedCustomers);
+          debugPrint('Restored ${parsedCustomers.length} customers');
         }
 
-        // Restore Authorized Persons
-        if (backupData.containsKey('authorized_persons')) {
-          final box = await _openBox<AuthorizedPerson>(
-            _authorizedPersonsBoxName,
-          );
+        if (parsedAuthorizedPersons != null) {
+          final box =
+              await _openBox<AuthorizedPerson>(_authorizedPersonsBoxName);
           await box.clear();
-          final List<dynamic> list = backupData['authorized_persons'];
-          await box.addAll(
-            list.map((e) => AuthorizedPerson.fromJson(e)).toList(),
-          );
-          debugPrint('Restored ${list.length} authorized persons');
+          await box.addAll(parsedAuthorizedPersons);
+          debugPrint('Restored ${parsedAuthorizedPersons.length} authorized persons');
         }
 
-        // Restore Tax Invoice Requests
-        if (backupData.containsKey('tax_invoice_requests')) {
+        if (parsedTaxInvoices != null) {
           final box = await _openBox<TaxInvoiceRequest>(_taxInvoiceBoxName);
           await box.clear();
-          final List<dynamic> list = backupData['tax_invoice_requests'];
-          await box.addAll(
-            list.map((e) => TaxInvoiceRequest.fromJson(e)).toList(),
-          );
-          debugPrint('Restored ${list.length} tax invoice requests');
+          await box.addAll(parsedTaxInvoices);
+          debugPrint('Restored ${parsedTaxInvoices.length} tax invoice requests');
         }
 
-        // Restore Settings
-        if (backupData.containsKey('settings')) {
+        if (parsedSettings != null) {
           final box = await _openBox(_settingsBoxName);
           await box.clear();
-          final Map<String, dynamic> settings = Map<String, dynamic>.from(
-            backupData['settings'],
-          );
-          for (final entry in settings.entries) {
+          for (final entry in parsedSettings.entries) {
             await box.put(entry.key, entry.value);
           }
-          debugPrint('Restored ${settings.length} settings');
+          debugPrint('Restored ${parsedSettings.length} settings');
         }
 
         onSuccess('تم استعادة البيانات بنجاح. يرجى إعادة تشغيل التطبيق.');

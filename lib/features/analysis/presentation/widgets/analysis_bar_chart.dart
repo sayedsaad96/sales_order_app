@@ -175,10 +175,11 @@ class _AnalysisBarChartState extends State<AnalysisBarChart> {
                       reservedSize: 40,
                       interval: 1,
                       getTitlesWidget: (val, meta) {
-                        if (val.toInt() >= _chartKeys.length) {
+                        final idx = val.toInt();
+                        if (idx < 0 || idx >= _chartKeys.length) {
                           return const SizedBox();
                         }
-                        final key = _chartKeys[val.toInt()];
+                        final key = _chartKeys[idx];
                         final displayKey = _isMonthlyBarChart
                             ? key
                             : (key.length >= 5
@@ -237,8 +238,12 @@ class _AnalysisBarChartState extends State<AnalysisBarChart> {
                       } else {
                         type = "قماش";
                       }
+                      final keyText =
+                          (groupIndex >= 0 && groupIndex < _chartKeys.length)
+                              ? _chartKeys[groupIndex]
+                              : '';
                       return BarTooltipItem(
-                        "${_chartKeys[groupIndex]}\n$type: ${rod.toY.toInt()}",
+                        "$keyText\n$type: ${rod.toY.toInt()}",
                         const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,

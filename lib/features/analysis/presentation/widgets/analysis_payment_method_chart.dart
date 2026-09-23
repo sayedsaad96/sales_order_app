@@ -24,8 +24,12 @@ class AnalysisPaymentMethodChart extends StatelessWidget {
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: sortedMethods.map((entry) {
-          final percentage = (entry.value / totalOrders * 100).toStringAsFixed(1);
-          final progress = entry.value / totalOrders;
+          final percentage = totalOrders > 0
+              ? (entry.value / totalOrders * 100).toStringAsFixed(1)
+              : '0.0';
+          final progress = totalOrders > 0
+              ? (entry.value / totalOrders).clamp(0.0, 1.0)
+              : 0.0;
 
           return Padding(
             padding: const EdgeInsets.only(bottom: 16.0),

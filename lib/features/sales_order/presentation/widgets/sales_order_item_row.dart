@@ -159,7 +159,7 @@ class _SalesOrderItemRowState extends State<SalesOrderItemRow> {
           child: TextFormField(
             controller: widget.controllers.quantityController,
             keyboardType: TextInputType.number,
-            textAlign: TextAlign.right,
+            textAlign: TextAlign.start,
             decoration: const InputDecoration(
               border: InputBorder.none,
               contentPadding: EdgeInsets.symmetric(horizontal: 8),

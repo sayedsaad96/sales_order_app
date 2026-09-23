@@ -61,7 +61,7 @@ Future<int?> showBulkAddDialog(BuildContext context) async {
             controller: controller,
             keyboardType: TextInputType.number,
             autofocus: true,
-            textAlign: TextAlign.center,
+            textAlign: TextAlign.start,
             decoration: const InputDecoration(
               border: OutlineInputBorder(),
             ),

@@ -52,6 +52,7 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
   final List<ReturnOrderSection> _sections = [];
   final ValueNotifier<double> _totalQuantityNotifier = ValueNotifier(0.0);
   String? _currentSn;
+  final _snController = TextEditingController();
 
   // Data Source
   final _dataSource = ReturnOrderLocalDataSource();
@@ -72,6 +73,7 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
       _loadCurrentUser();
       _currentSn = 'RET-${DateTime.now().millisecondsSinceEpoch % 10000}';
     }
+    _snController.text = _currentSn ?? '';
     _updateTotalQuantity();
   }
 
@@ -141,6 +143,7 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
 
   @override
   void dispose() {
+    _snController.dispose();
     _customerNameController.dispose();
     _regionController.dispose();
     _returnResponsibleController.dispose();
@@ -651,7 +654,7 @@ class _ReturnOrderPageState extends State<ReturnOrderPage> {
             const SizedBox(height: 20),
             _buildTextField(
               'رقم المرتجع',
-              TextEditingController(text: _currentSn),
+              _snController,
               readOnly: true,
             ),
             const SizedBox(height: 10),

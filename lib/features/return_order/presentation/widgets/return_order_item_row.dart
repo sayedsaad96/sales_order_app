@@ -142,7 +142,7 @@ class _ReturnOrderItemRowState extends State<ReturnOrderItemRow> {
           child: TextFormField(
             controller: widget.controllers.quantityController,
             keyboardType: TextInputType.number,
-            textAlign: TextAlign.right,
+            textAlign: TextAlign.start,
             decoration: const InputDecoration(
               border: InputBorder.none,
               enabledBorder: InputBorder.none,

@@ -26,6 +26,7 @@ import 'package:annex_sales_order/features/authorization/data/models/authorized_
 import 'package:annex_sales_order/features/authorization/data/datasources/authorization_local_data_source.dart';
 import 'package:annex_sales_order/features/tax_invoice/data/models/tax_invoice_request.dart';
 import 'package:annex_sales_order/features/tax_invoice/data/datasources/tax_invoice_local_data_source.dart';
+import 'package:annex_sales_order/core/services/settings_service.dart';
 
 void main() async {
   runZonedGuarded<Future<void>>(
@@ -34,12 +35,25 @@ void main() async {
 
       // Global Error Handling for Flutter Framework Errors
       FlutterError.onError = (FlutterErrorDetails details) {
+        final exceptionStr = details.exception.toString();
+        if (details.exception is AssertionError &&
+            exceptionStr.contains('editable.dart') &&
+            exceptionStr.contains('isValid')) {
+          // Suppress known framework-level caret navigation assertion bug on desktop
+          return;
+        }
         FlutterError.presentError(details);
         debugPrint('Flutter Error: ${details.exception}');
       };
 
       // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to me
       PlatformDispatcher.instance.onError = (error, stack) {
+        final errorStr = error.toString();
+        if (error is AssertionError &&
+            errorStr.contains('editable.dart') &&
+            errorStr.contains('isValid')) {
+          return true;
+        }
         debugPrint('PlatformDispatcher Error: $error\n$stack');
         return true;
       };
@@ -75,9 +89,34 @@ void main() async {
         await CustomerLocalDataSource().init();
         await AuthorizationLocalDataSource().init();
         await TaxInvoiceLocalDataSource().init();
+        await SettingsService().init();
 
         // Initialize Notification Service (Background checks)
         await UpdateNotificationService().init();
+
+        // Background Hive compaction to reclaim disk space
+        unawaited(
+          Future.microtask(() async {
+            for (final boxName in [
+              'user',
+              'invoices',
+              'yarn_invoices',
+              'return_orders',
+              'fabrics_cm_orders',
+              'quotations',
+              'customers',
+              'authorized_persons',
+              'tax_invoice_requests',
+              'settings',
+            ]) {
+              try {
+                if (Hive.isBoxOpen(boxName)) {
+                  await Hive.box(boxName).compact();
+                }
+              } catch (_) {}
+            }
+          }),
+        );
       } catch (e, stack) {
         debugPrint('Initialization Error: $e\n$stack');
         // Consider showing a fallback UI here if critical init fails

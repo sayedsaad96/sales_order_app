@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/services/backup_service.dart';
+import '../../../splash/presentation/pages/splash_screen.dart';
 
 class BackupPage extends StatefulWidget {
   const BackupPage({super.key});
@@ -75,7 +76,12 @@ class _BackupPageState extends State<BackupPage> {
               actions: [
                 TextButton(
                   onPressed: () {
-                    Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(
+                        builder: (_) => const SplashScreen(),
+                      ),
+                      (route) => false,
+                    );
                   },
                   child: const Text('حسنًا'),
                 ),

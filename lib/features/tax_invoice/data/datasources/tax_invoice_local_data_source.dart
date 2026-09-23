@@ -57,6 +57,26 @@ class TaxInvoiceLocalDataSource {
     }
   }
 
+  Future<void> updateByKey(dynamic key, TaxInvoiceRequest request) async {
+    await ensureInitialized();
+    try {
+      await _box.put(key, request);
+    } catch (e) {
+      debugPrint('Error updating tax invoice request by key: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> deleteByKey(dynamic key) async {
+    await ensureInitialized();
+    try {
+      await _box.delete(key);
+    } catch (e) {
+      debugPrint('Error deleting tax invoice request by key: $e');
+      rethrow;
+    }
+  }
+
   Future<void> delete(int index) async {
     await ensureInitialized();
     try {

@@ -254,7 +254,7 @@ class _SocialLinksRow extends StatelessWidget {
 }
 
 class _SocialIcon extends StatelessWidget {
-  final IconData icon;
+  final FaIconData icon;
   final ColorScheme colorScheme;
   final VoidCallback onTap;
 
@@ -268,7 +268,7 @@ class _SocialIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return IconButton.filledTonal(
       onPressed: onTap,
-      icon: Icon(icon, size: 18),
+      icon: FaIcon(icon, size: 18),
       style: IconButton.styleFrom(
         backgroundColor: colorScheme.primaryContainer.withValues(alpha: 0.5),
         foregroundColor: colorScheme.onPrimaryContainer,

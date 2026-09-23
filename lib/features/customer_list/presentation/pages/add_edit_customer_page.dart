@@ -85,8 +85,21 @@ class _AddEditCustomerPageState extends State<AddEditCustomerPage> {
       );
 
       try {
-        if (widget.index != null) {
-          await _dataSource.updateCustomer(widget.index!, customer);
+        if (widget.customer != null) {
+          if (widget.customer!.isInBox) {
+            widget.customer!.customerName = customer.customerName;
+            widget.customer!.customerCode = customer.customerCode;
+            widget.customer!.paymentTerm = customer.paymentTerm;
+            widget.customer!.archtype = customer.archtype;
+            widget.customer!.customerType = customer.customerType;
+            widget.customer!.industry = customer.industry;
+            widget.customer!.additionalInfo = customer.additionalInfo;
+            await widget.customer!.save();
+          } else if (widget.customer!.key != null) {
+            await _dataSource.updateCustomerKey(widget.customer!.key, customer);
+          } else if (widget.index != null) {
+            await _dataSource.updateCustomer(widget.index!, customer);
+          }
         } else {
           await _dataSource.addCustomer(customer);
         }

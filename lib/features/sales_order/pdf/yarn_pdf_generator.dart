@@ -22,11 +22,18 @@ class YarnPdfGenerator {
     pw.Font arabicFont;
     pw.Font arabicFontBold;
     try {
-      arabicFont = await PdfGoogleFonts.cairoRegular();
-      arabicFontBold = await PdfGoogleFonts.cairoBold();
+      final fontData = await rootBundle.load('assets/fonts/Cairo-Regular.ttf');
+      arabicFont = pw.Font.ttf(fontData);
+      final fontBoldData = await rootBundle.load('assets/fonts/Cairo-Bold.ttf');
+      arabicFontBold = pw.Font.ttf(fontBoldData);
     } catch (e) {
-      arabicFont = pw.Font.courier();
-      arabicFontBold = pw.Font.courierBold();
+      try {
+        arabicFont = await PdfGoogleFonts.cairoRegular();
+        arabicFontBold = await PdfGoogleFonts.cairoBold();
+      } catch (_) {
+        arabicFont = pw.Font.courier();
+        arabicFontBold = pw.Font.courierBold();
+      }
     }
 
     // Load Logo
